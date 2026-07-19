@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import type { AxiosHeaders } from 'axios';
-import { apiClient } from './client';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import axios, { AxiosError, type AxiosHeaders } from 'axios';
+import { apiClient, clearSession, getStoredUser, setSession } from './client';
 
 // Verifies the request interceptor actually attaches the Bearer token from
 // localStorage (or omits it) — the piece every advertisements/advertisers
@@ -31,5 +31,109 @@ describe('apiClient auth interceptor', () => {
 
     const headers = response.config.headers as AxiosHeaders;
     expect(headers.get('Authorization')).toBeUndefined();
+  });
+});
+
+describe('session storage helpers', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('persists and reads back the session', () => {
+    setSession(
+      { id: 'u1', email: 'a@b.com', displayName: 'A', role: 'USER' },
+      { accessToken: 'access-1', refreshToken: 'refresh-1' },
+    );
+
+    expect(getStoredUser()).toEqual({ id: 'u1', email: 'a@b.com', displayName: 'A', role: 'USER' });
+    expect(localStorage.getItem('access_token')).toBe('access-1');
+    expect(localStorage.getItem('refresh_token')).toBe('refresh-1');
+  });
+
+  it('clears all stored session data', () => {
+    setSession(
+      { id: 'u1', email: 'a@b.com', displayName: 'A', role: 'USER' },
+      { accessToken: 'access-1', refreshToken: 'refresh-1' },
+    );
+
+    clearSession();
+
+    expect(getStoredUser()).toBeNull();
+    expect(localStorage.getItem('access_token')).toBeNull();
+    expect(localStorage.getItem('refresh_token')).toBeNull();
+  });
+});
+
+describe('apiClient 401 refresh flow', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem('access_token', 'expired-token');
+    localStorage.setItem('refresh_token', 'refresh-token');
+
+    // Delete `window.location` to safely stub `.href` — jsdom's default
+    // location setter for `.href` triggers real navigation.
+    // @ts-expect-error -- intentional override for test isolation.
+    delete window.location;
+    // @ts-expect-error -- minimal stub, only `.href` is read by the interceptor.
+    window.location = { href: '' };
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('refreshes the token and retries the original request once on a 401', async () => {
+    let callCount = 0;
+    apiClient.defaults.adapter = async (config) => {
+      callCount += 1;
+      if (callCount === 1) {
+        const err = new AxiosError('Unauthorized', '401', config, {}, {
+          status: 401,
+          statusText: 'Unauthorized',
+          data: {},
+          headers: {},
+          config,
+        });
+        throw err;
+      }
+      return { data: { ok: true }, status: 200, statusText: 'OK', headers: {}, config };
+    };
+
+    vi.spyOn(axios, 'post').mockResolvedValueOnce({
+      data: { accessToken: 'new-access', refreshToken: 'new-refresh' },
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as never,
+    });
+
+    const response = await apiClient.get('/protected');
+
+    expect(response.data).toEqual({ ok: true });
+    expect(localStorage.getItem('access_token')).toBe('new-access');
+    expect(localStorage.getItem('refresh_token')).toBe('new-refresh');
+    const retriedHeaders = response.config.headers as AxiosHeaders;
+    expect(retriedHeaders.get('Authorization')).toBe('Bearer new-access');
+  });
+
+  it('clears the session and redirects to /login when the refresh call fails', async () => {
+    apiClient.defaults.adapter = async (config) => {
+      const err = new AxiosError('Unauthorized', '401', config, {}, {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: {},
+        headers: {},
+        config,
+      });
+      throw err;
+    };
+
+    vi.spyOn(axios, 'post').mockRejectedValueOnce(new Error('refresh_failed'));
+
+    await expect(apiClient.get('/protected')).rejects.toThrow();
+
+    expect(getStoredUser()).toBeNull();
+    expect(localStorage.getItem('access_token')).toBeNull();
+    expect(window.location.href).toBe('/login');
   });
 });

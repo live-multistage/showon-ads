@@ -23,7 +23,10 @@ export function DestinationStep({ draft, updateDraft, bannerRequiredWarning }: D
 
   // Small local debounce — no new dependency for what a setTimeout covers.
   useEffect(() => {
-    if (draft.destinationType !== 'EVENT' || query.trim().length < MIN_QUERY_LENGTH) {
+    const trimmed = query.trim();
+    // Skip re-searching right after a pick: query was just set to the picked
+    // event's title, so re-firing would only reopen the dropdown on the same term.
+    if (draft.destinationType !== 'EVENT' || trimmed.length < MIN_QUERY_LENGTH || trimmed === draft.event?.title) {
       setResults([]);
       setIsSearching(false);
       return;
@@ -47,7 +50,7 @@ export function DestinationStep({ draft, updateDraft, bannerRequiredWarning }: D
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, draft.destinationType]);
+  }, [query, draft.destinationType, draft.event?.title]);
 
   function selectDestinationType(type: DestinationType) {
     if (type === draft.destinationType) return;

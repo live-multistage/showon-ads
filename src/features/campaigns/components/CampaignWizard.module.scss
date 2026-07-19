@@ -9,6 +9,12 @@
   margin: 0 auto;
 }
 
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .title {
   font-size: 1.5rem;
   font-weight: 600;

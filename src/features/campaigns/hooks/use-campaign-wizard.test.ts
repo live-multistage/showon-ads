@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { draftToDestination, useCampaignWizard, validateExternalUrl } from './use-campaign-wizard';
 
@@ -133,6 +133,20 @@ describe('useCampaignWizard', () => {
     const { result } = renderHook(() => useCampaignWizard());
     act(() => result.current.updateDraft({ destinationType: 'EVENT' }));
     expect(result.current.bannerRequiredWarning).toBeNull();
+  });
+
+  it('revokes the current banner preview URL on unmount, not the mount-time (null) value', () => {
+    const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const { result, unmount } = renderHook(() => useCampaignWizard());
+
+    act(() => result.current.setBanner(new File(['x'], 'banner.png', { type: 'image/png' })));
+    const previewUrl = result.current.draft.bannerPreviewUrl;
+    expect(previewUrl).toBeTruthy();
+
+    unmount();
+
+    expect(revokeSpy).toHaveBeenCalledWith(previewUrl);
+    revokeSpy.mockRestore();
   });
 
   it('back() returns to the previous step and clears the error', () => {

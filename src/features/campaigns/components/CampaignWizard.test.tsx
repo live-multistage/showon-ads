@@ -87,6 +87,12 @@ describe('CampaignWizard', () => {
     await waitFor(() => expect(mockedEventsService.search).toHaveBeenCalledWith('Big'));
     fireEvent.click(await screen.findByRole('button', { name: 'Big Show' }));
 
+    // Picking the event sets the query to its title; the debounced search
+    // must not re-fire (and reopen the dropdown) on that same value.
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    expect(mockedEventsService.search).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'Big Show' })).not.toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
     expect(screen.getByText('Esta etapa será implementada em breve.')).toBeInTheDocument();
   });

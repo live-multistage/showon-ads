@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AdDestination, AdFormat } from '@/features/advertisements/types/advertisement.types';
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
 
@@ -93,12 +93,17 @@ export function useCampaignWizard() {
 
   const step = WIZARD_STEPS[stepIndex];
 
+  // Track the latest preview URL in a ref so the unmount cleanup below (which
+  // only runs once, on an empty-deps effect) doesn't close over the
+  // mount-time (null) value of draft.bannerPreviewUrl.
+  const bannerPreviewUrlRef = useRef(draft.bannerPreviewUrl);
+  bannerPreviewUrlRef.current = draft.bannerPreviewUrl;
+
   // Revoke the last object URL on unmount so an abandoned draft doesn't leak it.
   useEffect(() => {
     return () => {
-      if (draft.bannerPreviewUrl) URL.revokeObjectURL(draft.bannerPreviewUrl);
+      if (bannerPreviewUrlRef.current) URL.revokeObjectURL(bannerPreviewUrlRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function updateDraft(patch: Partial<CampaignWizardDraft>) {

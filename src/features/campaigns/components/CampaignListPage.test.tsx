@@ -172,6 +172,21 @@ describe('CampaignListPage', () => {
     expect(screen.getByLabelText('Carregando campanhas')).toBeInTheDocument();
   });
 
+  it('shows skeletons instead of the empty state while activeAccountId is still resolving', () => {
+    mockAccounts = [accountA];
+    mockActiveAccountId = null;
+
+    mockedUseListAdsQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useListAdsQuery>);
+
+    renderPage();
+
+    expect(screen.getByLabelText('Carregando campanhas')).toBeInTheDocument();
+    expect(screen.queryByText('Nenhuma campanha criada ainda.')).not.toBeInTheDocument();
+  });
+
   it('wires the account switcher to setActiveAccountId and re-filters the list on change', () => {
     mockAccounts = [accountA, accountB];
     mockActiveAccountId = 'acc-a';

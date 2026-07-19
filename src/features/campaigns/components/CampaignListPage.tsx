@@ -55,7 +55,9 @@ export function CampaignListPage() {
   const { accounts, activeAccountId, setActiveAccountId, isLoading: isAccountsLoading } =
     useActiveAdvertiserAccount();
 
-  const isLoading = isAdsLoading || isAccountsLoading;
+  // ponytail: accounts resolve before ActiveAdvertiserAccountProvider's effect sets
+  // activeAccountId, so treat that gap as loading too or the empty state flashes.
+  const isLoading = isAdsLoading || isAccountsLoading || (accounts.length > 0 && activeAccountId === null);
   const campaigns = activeAccountId
     ? ads.filter((ad) => ad.advertiserAccountId === activeAccountId)
     : [];

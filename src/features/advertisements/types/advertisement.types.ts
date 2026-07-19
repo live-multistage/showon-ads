@@ -126,3 +126,19 @@ export interface AdvertiserAccountResponse {
 export interface CreateAdvertiserRequest {
   name: string;
 }
+
+export interface UpdateAdvertiserRequest {
+  name: string;
+}
+
+// Mirrors AdvertiserMember.toJSON() in orchestrator's domain/advertiser-member.ts.
+export type AdvertiserMemberRole = 'OWNER' | 'MANAGER';
+
+// GET /advertisers/:id/members response shape — enriched server-side with
+// user display data (see AdvertisersController.members in the orchestrator).
+export interface AdvertiserMemberResponse {
+  userId: string;
+  displayName: string | null;
+  email: string | null;
+  role: AdvertiserMemberRole;
+}

@@ -1,0 +1,92 @@
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.accountHeader {
+  gap: 0.75rem;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nameForm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.error {
+  font-size: 0.875rem;
+  color: tokens.$error;
+}
+
+.empty {
+  text-align: center;
+  color: tokens.$text-secondary;
+  padding: 2rem 1rem;
+}
+
+.skeletonCard {
+  height: 8rem;
+  border-radius: 8px;
+}
+
+.skeletonRow {
+  height: 3rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid tokens.$border;
+  border-radius: 8px;
+}
+
+.memberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.memberName {
+  font-weight: 600;
+  color: tokens.$text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberEmail {
+  font-size: 0.8125rem;
+  color: tokens.$text-secondary;
+}

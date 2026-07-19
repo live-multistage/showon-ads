@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Toaster } from '@live-show/design-system';
 import { Providers } from '@/shared/providers';
 import { AppShell } from '@/shared/components/AppShell';
 import { AuthGuard } from '@/shared/components/AuthGuard';
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AppShell>
             <AuthGuard>{children}</AuthGuard>
           </AppShell>
+          <Toaster />
         </Providers>
       </body>
     </html>

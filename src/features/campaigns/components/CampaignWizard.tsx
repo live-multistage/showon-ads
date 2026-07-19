@@ -1,9 +1,14 @@
 'use client';
 
 import { Button, Card, CardContent, Chip } from '@live-show/design-system';
+import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 import { useCampaignWizard, type WizardStepId } from '../hooks/use-campaign-wizard';
+import { useSubmitCampaign } from '../hooks/use-submit-campaign';
 import { CreativeStep } from './steps/CreativeStep';
 import { DestinationStep } from './steps/DestinationStep';
+import { TargetingStep } from './steps/TargetingStep';
+import { BudgetStep } from './steps/BudgetStep';
+import { ReviewStep } from './steps/ReviewStep';
 import styles from './CampaignWizard.module.scss';
 
 const STEP_LABELS: Record<WizardStepId, string> = {
@@ -14,15 +19,23 @@ const STEP_LABELS: Record<WizardStepId, string> = {
   review: 'Revisão',
 };
 
-// Shell owns the stepper header, step outlet and back/next navigation.
-// 'targeting' / 'budget' / 'review' are declared in the step list (task 18's
-// scope) but only render a placeholder — task 19 implements them plus the
-// final create→upload→submit orchestration.
+// Shell owns the stepper header, step outlet, back/next navigation and (on
+// the final step) the create→upload→submit orchestration.
 export function CampaignWizard() {
   const { steps, step, stepIndex, draft, error, bannerRequiredWarning, updateDraft, setBanner, next, back, goToStep } =
     useCampaignWizard();
+  const { activeAccountId } = useActiveAdvertiserAccount();
+  const { submit, isSubmitting } = useSubmitCampaign();
 
   const isLastStep = stepIndex === steps.length - 1;
+  // Hard block, mirroring the backend's Ad#submitForReview rule: EXTERNAL_URL
+  // ads without a banner are rejected by the domain at submit time.
+  const submitBlockedByBanner = draft.destinationType === 'EXTERNAL_URL' && !draft.bannerFile;
+
+  function handleSubmit() {
+    if (!activeAccountId || submitBlockedByBanner) return;
+    void submit(draft, activeAccountId);
+  }
 
   return (
     <div className={styles.page}>
@@ -51,8 +64,19 @@ export function CampaignWizard() {
             <DestinationStep draft={draft} updateDraft={updateDraft} bannerRequiredWarning={bannerRequiredWarning} />
           )}
 
-          {step !== 'creative' && step !== 'destination' && (
-            <p className={styles.placeholder}>Esta etapa será implementada em breve.</p>
+          {step === 'targeting' && <TargetingStep draft={draft} updateDraft={updateDraft} />}
+
+          {step === 'budget' && <BudgetStep draft={draft} updateDraft={updateDraft} />}
+
+          {step === 'review' && (
+            <>
+              <ReviewStep draft={draft} />
+              {submitBlockedByBanner && (
+                <p className={styles.error} role="alert">
+                  Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.
+                </p>
+              )}
+            </>
           )}
 
           {error && (
@@ -67,9 +91,13 @@ export function CampaignWizard() {
         <Button variant="outline" onClick={back} disabled={stepIndex === 0}>
           Voltar
         </Button>
-        <Button onClick={next} disabled={isLastStep}>
-          Próximo
-        </Button>
+        {isLastStep ? (
+          <Button onClick={handleSubmit} disabled={isSubmitting || submitBlockedByBanner || !activeAccountId}>
+            {isSubmitting ? 'Enviando...' : 'Enviar para revisão'}
+          </Button>
+        ) : (
+          <Button onClick={next}>Próximo</Button>
+        )}
       </div>
     </div>
   );

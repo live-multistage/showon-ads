@@ -1,16 +1,30 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { AdDestination, AdFormat } from '@/features/advertisements/types/advertisement.types';
+import type {
+  AdBillingModel,
+  AdDestination,
+  AdFormat,
+  AdPlacement,
+  CreateAdRequest,
+  FrequencyCapWindow,
+} from '@/features/advertisements/types/advertisement.types';
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
+import { reaisToCents } from '../utils/format-currency';
 
-// Full step list per task 18 — only 'creative' and 'destination' have real
-// content; 'targeting' / 'budget' / 'review' render placeholders until task 19
-// wires them up (and the create→upload→submit orchestration on the final step).
+// Full step list per task 18 — 'creative' and 'destination' shipped there;
+// 'targeting' / 'budget' / 'review' plus the create→upload→submit
+// orchestration are task 19's scope.
 export const WIZARD_STEPS = ['creative', 'destination', 'targeting', 'budget', 'review'] as const;
 export type WizardStepId = (typeof WIZARD_STEPS)[number];
 
 export type DestinationType = 'EVENT' | 'EXTERNAL_URL';
+
+// No placement-picker step exists in the wizard (out of task 19's scope per
+// the task brief and design spec — neither shipped in live-show-react ever
+// exposed one either). Every campaign serves on every placement; add a step
+// here if per-placement targeting becomes a real product need.
+const ALL_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'];
 
 export interface CampaignWizardDraft {
   title: string;
@@ -20,6 +34,16 @@ export interface CampaignWizardDraft {
   destinationType: DestinationType | null;
   event: EventSearchResult | null;
   externalUrl: string;
+  targetDomains: string[];
+  targetCategories: string[];
+  billingModel: AdBillingModel | null;
+  bidReais: string;
+  dailyBudgetReais: string;
+  totalLimitReais: string;
+  frequencyCapMax: string;
+  frequencyCapWindow: FrequencyCapWindow | null;
+  startsAt: string;
+  endsAt: string;
 }
 
 const INITIAL_DRAFT: CampaignWizardDraft = {
@@ -30,6 +54,16 @@ const INITIAL_DRAFT: CampaignWizardDraft = {
   destinationType: null,
   event: null,
   externalUrl: '',
+  targetDomains: [],
+  targetCategories: [],
+  billingModel: null,
+  bidReais: '',
+  dailyBudgetReais: '',
+  totalLimitReais: '',
+  frequencyCapMax: '',
+  frequencyCapWindow: null,
+  startsAt: '',
+  endsAt: '',
 };
 
 // Mirrors orchestrator's IsHttpsUrl validator (shared/validators/is-https-url.validator.ts):
@@ -66,10 +100,31 @@ function validateDestinationStep(draft: CampaignWizardDraft): string | null {
   return validateExternalUrl(draft.externalUrl);
 }
 
-// Steps beyond destination are task 19's scope — nothing to validate yet.
+// Targeting has no required fields — domains/categories are optional filters,
+// an empty selection just means "no targeting restriction" server-side.
+function validateTargetingStep(): string | null {
+  return null;
+}
+
+// Mirrors orchestrator's Ad.create validation (src/advertisements/domain/ad.ts)
+// so the wizard fails fast instead of round-tripping to the API.
+function validateBudgetStep(draft: CampaignWizardDraft): string | null {
+  if (!draft.billingModel) return 'Selecione um modelo de cobrança.';
+  if (reaisToCents(draft.bidReais) <= 0) return 'O lance deve ser maior que zero.';
+  if (reaisToCents(draft.dailyBudgetReais) <= 0) return 'O orçamento diário deve ser maior que zero.';
+  if (reaisToCents(draft.totalLimitReais) < reaisToCents(draft.dailyBudgetReais)) {
+    return 'O limite total deve ser maior ou igual ao orçamento diário.';
+  }
+  if (!draft.startsAt || !draft.endsAt) return 'Informe o período de veiculação.';
+  if (new Date(draft.startsAt) >= new Date(draft.endsAt)) return 'A data de início deve ser anterior à data de fim.';
+  return null;
+}
+
 function validateStep(id: WizardStepId, draft: CampaignWizardDraft): string | null {
   if (id === 'creative') return validateCreativeStep(draft);
   if (id === 'destination') return validateDestinationStep(draft);
+  if (id === 'targeting') return validateTargetingStep();
+  if (id === 'budget') return validateBudgetStep(draft);
   return null;
 }
 
@@ -84,6 +139,33 @@ export function draftToDestination(draft: CampaignWizardDraft): AdDestination | 
     return { type: 'EXTERNAL_URL', url: draft.externalUrl.trim() };
   }
   return undefined;
+}
+
+// Assembles the full CreateAdRequest from the accumulated draft. Only called
+// from the review step's submit, by which point every earlier step's next()
+// has already validated its slice — format/billingModel/dates are trusted
+// non-null here.
+export function draftToCreateAdRequest(
+  draft: CampaignWizardDraft,
+  advertiserAccountId: string,
+): CreateAdRequest {
+  return {
+    advertiserAccountId,
+    destination: draftToDestination(draft),
+    title: draft.title.trim(),
+    format: draft.format as AdFormat,
+    placements: ALL_PLACEMENTS,
+    targetDomains: draft.targetDomains,
+    targetCategories: draft.targetCategories,
+    frequencyCapMax: draft.frequencyCapMax ? Number(draft.frequencyCapMax) : undefined,
+    frequencyCapWindow: draft.frequencyCapMax ? (draft.frequencyCapWindow ?? undefined) : undefined,
+    billingModel: draft.billingModel as AdBillingModel,
+    bidCents: reaisToCents(draft.bidReais),
+    dailyBudgetCents: reaisToCents(draft.dailyBudgetReais),
+    totalLimitCents: reaisToCents(draft.totalLimitReais),
+    startsAt: new Date(draft.startsAt).toISOString(),
+    endsAt: new Date(draft.endsAt).toISOString(),
+  };
 }
 
 export function useCampaignWizard() {

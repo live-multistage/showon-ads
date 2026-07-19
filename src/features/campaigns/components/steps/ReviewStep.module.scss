@@ -1,0 +1,25 @@
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid tokens.$border;
+}
+
+.label {
+  color: tokens.$text-muted;
+}
+
+.value {
+  color: tokens.$text-primary;
+  font-size: 0.875rem;
+  text-align: right;
+}

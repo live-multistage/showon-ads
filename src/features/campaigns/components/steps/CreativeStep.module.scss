@@ -1,0 +1,32 @@
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fileInput {
+  color: tokens.$text-secondary;
+  font-size: 0.875rem;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: tokens.$text-muted;
+}
+
+.preview {
+  margin-top: 0.5rem;
+  max-width: 100%;
+  max-height: 12rem;
+  border: 1px solid tokens.$border;
+  border-radius: 8px;
+  object-fit: contain;
+}

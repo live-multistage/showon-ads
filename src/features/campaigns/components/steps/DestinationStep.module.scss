@@ -1,0 +1,61 @@
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: tokens.$text-muted;
+}
+
+.results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid tokens.$border;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.resultItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: tokens.$text-primary;
+  cursor: pointer;
+  font-size: 0.875rem;
+
+  &:hover {
+    background-color: tokens.$bg-hover;
+  }
+}
+
+.selected {
+  font-size: 0.8125rem;
+  color: tokens.$success-light;
+}
+
+.warning {
+  font-size: 0.8125rem;
+  color: tokens.$price;
+  background-color: tokens.$action-bg;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}

@@ -1,0 +1,43 @@
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: tokens.$text-primary;
+}
+
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.content {
+  padding-top: 1.5rem;
+}
+
+.placeholder {
+  color: tokens.$text-muted;
+  font-style: italic;
+}
+
+.error {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  color: tokens.$error;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}

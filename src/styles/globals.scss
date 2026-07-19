@@ -1,0 +1,28 @@
+// Single global stylesheet, same rationale as live-show-react's
+// src/styles/globals.scss: sass-compiled, no css @import chains.
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background-color: tokens.$bg;
+}
+
+body {
+  line-height: 1.5;
+  color: tokens.$text-primary;
+  font-family: 'Archivo', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

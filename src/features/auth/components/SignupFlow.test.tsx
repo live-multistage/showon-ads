@@ -7,11 +7,7 @@ import { advertisersService } from '@/features/advertisements/services/advertise
 import type { AuthResponse } from '../types/auth.types';
 import type { AdvertiserAccountResponse } from '@/features/advertisements/types/advertisement.types';
 
-const pushMock = vi.fn();
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock, replace: vi.fn() }),
-}));
+const assignMock = vi.fn();
 
 vi.mock('next/link', () => ({
   default: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
@@ -52,6 +48,10 @@ describe('SignupFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, assign: assignMock },
+    });
   });
 
   it('chains user-create then advertiser-create, in order', async () => {
@@ -84,7 +84,7 @@ describe('SignupFlow', () => {
       expect(mockedAdvertisersService.create).toHaveBeenCalledWith({ name: 'Acme Corp' });
     });
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
 
     // Call order matters: user-create must happen before advertiser-create.
     const registerOrder = mockedAuthService.register.mock.invocationCallOrder[0];

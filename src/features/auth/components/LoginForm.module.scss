@@ -1,23 +1,115 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+.root {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  min-height: 100vh;
 
-.card {
-  max-width: 24rem;
-  margin: 4rem auto;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formPanel {
+  background: #101013;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  min-height: 100vh;
+
+  @media (max-width: 900px) {
+    background: #08080a;
+    padding: 32px 20px;
+  }
+}
+
+.formCard {
+  width: 100%;
+  max-width: 440px;
+}
+
+.formTitle {
+  font-family: 'Archivo', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: #f4f4f5;
+  margin: 0 0 8px;
+}
+
+.formSubtitle {
+  font-size: 14px;
+  color: #9a9aa2;
+  margin: 0 0 32px;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 6px;
 }
 
-.error {
-  font-size: 0.875rem;
-  color: tokens.$error;
+.label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, .75) !important;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6f6f77;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.inputField {
+  padding-left: 42px !important;
+  height: 50px !important;
+  border-radius: 12px !important;
+  font-size: 14.5px !important;
+  background: rgba(255, 255, 255, .04) !important;
+  border-color: rgba(255, 255, 255, .1) !important;
+}
+
+.errorBanner {
+  background: rgba(220, 38, 38, .08);
+  border: 1px solid rgba(220, 38, 38, .28);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #f87171;
+  margin: 0;
+}
+
+.btnSubmit {
+  height: 50px !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  margin-top: 4px;
+}
+
+.footer {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, .6);
+  margin: 24px 0 0;
+}
+
+.link {
+  color: #ff7ec2;
+  text-decoration: none;
+  transition: opacity .15s;
+
+  &:hover { opacity: .8; }
 }

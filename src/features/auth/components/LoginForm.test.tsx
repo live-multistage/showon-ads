@@ -5,11 +5,7 @@ import { LoginForm } from './LoginForm';
 import { authService } from '../services/auth.service';
 import type { AuthResponse } from '../types/auth.types';
 
-const pushMock = vi.fn();
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock, replace: vi.fn() }),
-}));
+const assignMock = vi.fn();
 
 vi.mock('next/link', () => ({
   default: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
@@ -40,6 +36,12 @@ describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // jsdom's window.location.assign is a no-op that warns; stub it so the
+    // component's post-login navigation is observable and side-effect free.
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, assign: assignMock },
+    });
   });
 
   it('submits credentials, stores the session, and navigates home', async () => {
@@ -60,7 +62,10 @@ describe('LoginForm', () => {
       expect(localStorage.getItem('refresh_token')).toBe('refresh-token');
     });
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/'));
+    // A full-document load (not router.push) so the persistent AuthGuard
+    // remounts and picks up the freshly-stored session instead of bouncing
+    // back to /login on its stale unauthenticated state.
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
   });
 
   it('validates fields before submitting', () => {

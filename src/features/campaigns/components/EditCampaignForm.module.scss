@@ -1,0 +1,25 @@
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding-top: 1.5rem;
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: tokens.$error;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}

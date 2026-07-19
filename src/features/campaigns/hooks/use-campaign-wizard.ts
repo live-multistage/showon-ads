@@ -120,7 +120,9 @@ function validateBudgetStep(draft: CampaignWizardDraft): string | null {
   return null;
 }
 
-function validateStep(id: WizardStepId, draft: CampaignWizardDraft): string | null {
+// Exported so the campaign detail page's edit mode (task 20) can reuse the
+// exact same per-step validation instead of re-implementing it.
+export function validateStep(id: WizardStepId, draft: CampaignWizardDraft): string | null {
   if (id === 'creative') return validateCreativeStep(draft);
   if (id === 'destination') return validateDestinationStep(draft);
   if (id === 'targeting') return validateTargetingStep();

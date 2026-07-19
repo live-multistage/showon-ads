@@ -13,3 +13,10 @@ export function reaisToCents(reais: string): number {
   if (!Number.isFinite(parsed)) return 0;
   return Math.round(parsed * 100);
 }
+
+// Inverse direction for the edit form: seeds a plain-number-input value
+// (type="number", e.g. "10.5") from cents stored server-side. Cents are
+// always integers so /100 has at most 2 decimal digits — no rounding needed.
+export function centsToReaisInput(cents: number): string {
+  return (cents / 100).toString();
+}

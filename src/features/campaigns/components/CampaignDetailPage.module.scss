@@ -1,0 +1,151 @@
+@use '@live-show/design-system/src/styles/variables' as tokens;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem 1rem;
+  color: tokens.$text-secondary;
+}
+
+.backLink {
+  color: tokens.$action;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.backLinkRow {
+  font-size: 0.8125rem;
+  color: tokens.$text-secondary;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: tokens.$text-primary;
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: tokens.$text-secondary;
+}
+
+.editRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rejectCard {
+  border-color: tokens.$error;
+  background: tokens.$error-bg;
+}
+
+.rejectBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rejectReason {
+  color: tokens.$text-primary;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 1rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  color: tokens.$text-muted;
+  text-transform: uppercase;
+}
+
+.metricValue {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: tokens.$text-primary;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.timelineEntry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-left: 2px solid tokens.$border;
+  padding-left: 0.75rem;
+}
+
+.timelineHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timelineDate {
+  font-size: 0.75rem;
+  color: tokens.$text-muted;
+}
+
+.timelineReason {
+  font-size: 0.875rem;
+  color: tokens.$text-secondary;
+}
+
+.empty {
+  color: tokens.$text-muted;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.actionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.warning {
+  font-size: 0.8125rem;
+  color: tokens.$error;
+}

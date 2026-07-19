@@ -12,42 +12,15 @@ import {
 } from '@live-show/design-system';
 import { useListAdsQuery } from '@/features/advertisements/queries/use-list-ads';
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
-import type { AdDestination, AdFormat, AdResponse, AdStatus } from '@/features/advertisements/types/advertisement.types';
+import type { AdResponse } from '@/features/advertisements/types/advertisement.types';
 import { formatCentsToBRL } from '../utils/format-currency';
+import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, destinationLabel } from '../utils/ad-display';
 import styles from './CampaignListPage.module.scss';
-
-const STATUS_LABEL: Record<AdStatus, string> = {
-  DRAFT: 'Rascunho',
-  REVIEW: 'Em análise',
-  ACTIVE: 'Ativo',
-  PAUSED: 'Pausado',
-  ENDED: 'Encerrado',
-  REJECTED: 'Rejeitado',
-};
-
-const STATUS_BADGE_VARIANT: Record<AdStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  DRAFT: 'outline',
-  REVIEW: 'secondary',
-  ACTIVE: 'default',
-  PAUSED: 'outline',
-  ENDED: 'secondary',
-  REJECTED: 'destructive',
-};
-
-const FORMAT_LABEL: Record<AdFormat, string> = {
-  HORIZONTAL_728x90: 'Horizontal 728×90',
-  VERTICAL_300x600: 'Vertical 300×600',
-};
 
 function formatPeriod(startsAt: string, endsAt: string): string {
   const fmt = (value: string) =>
     new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
   return `${fmt(startsAt)} – ${fmt(endsAt)}`;
-}
-
-function destinationLabel(destination: AdDestination | null): string {
-  if (!destination) return 'Sem destino';
-  return destination.type === 'EVENT' ? 'Evento' : 'URL externa';
 }
 
 export function CampaignListPage() {

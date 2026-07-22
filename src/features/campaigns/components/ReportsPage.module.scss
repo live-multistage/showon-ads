@@ -1,0 +1,132 @@
+@use '../../../styles/ads-theme' as ads;
+
+.page {
+  padding: 32px 40px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.title {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
+}
+
+.subtitle {
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text-muted;
+  margin-top: 4px;
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonRow {
+  height: 52px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  animation: sk 1.5s infinite;
+}
+
+@keyframes sk {
+  0%,
+  100% {
+    opacity: 0.06;
+  }
+  50% {
+    opacity: 0.12;
+  }
+}
+
+.empty {
+  padding: 80px 40px;
+  text-align: center;
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 12px;
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text-muted;
+}
+
+$grid: 2fr 110px 110px 90px 70px 130px;
+
+.table {
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tableHead {
+  display: grid;
+  grid-template-columns: $grid;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid ads.$border;
+
+  span {
+    @include ads.mono-label(11px);
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: $grid;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid ads.$border-soft;
+  color: ads.$text;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.cellTitle {
+  font-family: ads.$ui;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cellMono {
+  font-family: ads.$mono;
+  font-size: 13px;
+  color: ads.$text-dim;
+}
+
+.cellAccent {
+  font-family: ads.$mono;
+  font-weight: 500;
+  font-size: 13px;
+  color: ads.$accent;
+}
+
+.right {
+  text-align: right;
+  justify-self: end;
+}

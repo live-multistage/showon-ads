@@ -1,0 +1,92 @@
+@use '../../../styles/ads-theme' as ads;
+
+.page {
+  padding: 32px 40px;
+  max-width: 640px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.title {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
+  margin-bottom: 28px;
+}
+
+.card {
+  @include ads.card;
+  padding: 24px;
+}
+
+.badge {
+  display: inline-block;
+  @include ads.mono-label(10px, ads.$accent);
+  background: ads.$accent-soft;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  font-family: ads.$ui;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
+  margin-bottom: 8px;
+}
+
+.text {
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text-muted;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  max-width: 440px;
+}
+
+.placeholderRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: ads.$field;
+  border: 1px solid ads.$border;
+  border-radius: 8px;
+}
+
+.cardChip {
+  width: 40px;
+  height: 28px;
+  background: #1f1f23;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.cardNumber {
+  font-family: ads.$mono;
+  font-size: 14px;
+  color: ads.$text-dim;
+  letter-spacing: 0.1em;
+}
+
+.cardMeta {
+  font-family: ads.$mono;
+  font-size: 11px;
+  color: ads.$text-muted;
+  margin-top: 2px;
+}

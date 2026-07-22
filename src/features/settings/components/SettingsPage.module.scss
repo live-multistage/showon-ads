@@ -1,0 +1,117 @@
+@use '../../../styles/ads-theme' as ads;
+
+.page {
+  padding: 32px 40px;
+  max-width: 640px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.title {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
+  margin-bottom: 28px;
+}
+
+.card {
+  @include ads.card;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.cardTitle {
+  font-family: ads.$ui;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
+  margin-bottom: 16px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  @include ads.mono-label(12px);
+}
+
+.fieldValue {
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text;
+}
+
+.note {
+  @include ads.mono-label(11px);
+  letter-spacing: 0.02em;
+  margin-top: 16px;
+}
+
+.toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggleLabel {
+  font-family: ads.$ui;
+  font-weight: 500;
+  font-size: 14px;
+  color: ads.$text;
+}
+
+.toggleDesc {
+  font-family: ads.$ui;
+  font-size: 12px;
+  color: ads.$text-muted;
+}
+
+.toggleOff {
+  width: 44px;
+  height: 24px;
+  background: #1f1f23;
+  border-radius: 12px;
+  position: relative;
+  flex-shrink: 0;
+  opacity: 0.6;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: ads.$text-muted;
+    border-radius: 50%;
+  }
+}

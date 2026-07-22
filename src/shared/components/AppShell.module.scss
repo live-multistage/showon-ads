@@ -23,10 +23,16 @@
   margin-bottom: 12px;
 }
 
+.logoRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .wordmark {
   font-family: ads.$ui;
   font-weight: 700;
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: 0.07em;
   color: ads.$text;
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Logo } from '@live-show/design-system';
 import { useSession } from '@/features/auth/hooks/use-session';
 import styles from './AppShell.module.scss';
 
@@ -14,7 +15,9 @@ const svg = (size: number, path: React.ReactNode) => (
 const IconGrid = () => svg(18, <><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></>);
 const IconSettings = () => svg(18, <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>);
 const IconLogout = () => svg(16, <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>);
-const IconUser = () => svg(16, <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>);
+const IconUser = (props?: { size?: number }) => svg(props?.size ?? 18, <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>);
+const IconChart = () => svg(18, <><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></>);
+const IconCard = () => svg(18, <><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></>);
 
 // The auth screens render their own full-bleed brand layout (AdsMarketingPanel),
 // so the sidebar chrome is suppressed there — same as the main app's login.
@@ -35,10 +38,28 @@ const NAV: NavItem[] = [
     match: (p) => p === '/' || p.startsWith('/campaigns'),
   },
   {
+    href: '/reports',
+    label: 'Relatórios',
+    icon: <IconChart />,
+    match: (p) => p.startsWith('/reports'),
+  },
+  {
     href: '/account',
+    label: 'Conta',
+    icon: <IconUser />,
+    match: (p) => p.startsWith('/account'),
+  },
+  {
+    href: '/settings',
     label: 'Configurações',
     icon: <IconSettings />,
-    match: (p) => p.startsWith('/account'),
+    match: (p) => p.startsWith('/settings'),
+  },
+  {
+    href: '/billing',
+    label: 'Faturamento',
+    icon: <IconCard />,
+    match: (p) => p.startsWith('/billing'),
   },
 ];
 
@@ -57,7 +78,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <div className={styles.wordmark}>LIVESHOW</div>
+          <div className={styles.logoRow}>
+            <Logo size={22} color="#ec4899" showWordmark wordmarkClassName={styles.wordmark} />
+          </div>
           <div className={styles.sublabel}>Ads Manager</div>
         </div>
 
@@ -77,7 +100,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {isAuthenticated && (
           <button type="button" className={styles.userFooter} onClick={logout}>
             <span className={styles.avatar}>
-              <IconUser />
+              <IconUser size={16} />
             </span>
             <span className={styles.userInfo}>
               <span className={styles.userName}>{user?.displayName ?? 'Conta'}</span>

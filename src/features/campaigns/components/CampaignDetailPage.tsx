@@ -109,7 +109,7 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
     return (
       <div className={styles.centered}>
         <p>Anúncio não encontrado.</p>
-        <Link href="/campaigns" className={styles.backLink}>
+        <Link href="/" className={styles.backLink}>
           Voltar para campanhas
         </Link>
       </div>
@@ -137,7 +137,7 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
   return (
     <div className={styles.page}>
       <div className={styles.backLinkRow}>
-        <Link href="/campaigns">← Campanhas</Link>
+        <Link href="/">← Campanhas</Link>
       </div>
 
       <header className={styles.header}>

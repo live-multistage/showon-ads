@@ -2,7 +2,6 @@
 
 .page {
   padding: 2rem;
-  max-width: 1200px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -440,14 +439,14 @@
   color: ads.$text-muted;
 }
 
-// ── Review timeline ───────────────────────────────────
+// ── Review timeline (inside a DS Card — no own card chrome) ───
 .timeline {
-  @include ads.card;
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .timelineEntry {
@@ -487,10 +486,10 @@
   color: ads.$text-muted;
 }
 
-// ── Status actions ────────────────────────────────────
+// ── Status actions (this IS the DS CardContent — no nested card) ──
 .actions {
-  @include ads.card;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .actionButtons {

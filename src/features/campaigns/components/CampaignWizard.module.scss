@@ -25,10 +25,11 @@
 }
 
 .title {
-  font-family: ads.$mono;
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: 0.03em;
+  font-family: ads.$ui;
+  font-weight: 800;
+  font-size: 36px;
+  line-height: 1;
+  letter-spacing: -0.025em;
   color: ads.$text;
 }
 

@@ -4,10 +4,18 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   Badge,
-  Button,
   SimpleCustomSelect,
   type SelectOption,
 } from '@live-show/design-system';
+
+function PlusIcon() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
 
 function SearchIcon({ className }: { className?: string }) {
   return (
@@ -65,11 +73,10 @@ export function CampaignListPage() {
           <h1 className={styles.title}>Campanhas</h1>
           <p className={styles.subtitle}>Gerencie seus anúncios e acompanhe a performance</p>
         </div>
-        <Button asChild className={styles.newBtn}>
-          <Link href="/campaigns/new">
-            <span aria-hidden>+ </span>Nova campanha
-          </Link>
-        </Button>
+        <Link href="/campaigns/new" className={styles.newBtn}>
+          <PlusIcon />
+          Nova campanha
+        </Link>
       </header>
 
       <section className={styles.stats}>
@@ -116,9 +123,10 @@ export function CampaignListPage() {
           <p className={styles.emptyText}>
             Crie sua primeira campanha para começar a promover seus shows.
           </p>
-          <Button asChild className={styles.newBtn}>
-            <Link href="/campaigns/new">Criar primeira campanha</Link>
-          </Button>
+          <Link href="/campaigns/new" className={styles.newBtn}>
+            <PlusIcon />
+            Criar primeira campanha
+          </Link>
         </div>
       )}
 

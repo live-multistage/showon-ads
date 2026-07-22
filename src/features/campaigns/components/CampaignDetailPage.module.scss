@@ -205,6 +205,241 @@
   color: ads.$accent;
 }
 
+// Colored icon tile (Liveshow Relatorio Anuncio.dc.html KPI squares).
+.metricTile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  margin-bottom: 12px;
+}
+
+.tintImpressions {
+  background: rgba(255, 46, 158, 0.14);
+  color: #ff8ec9;
+}
+.tintClicks {
+  background: rgba(155, 123, 255, 0.14);
+  color: #bba6ff;
+}
+.tintCtr {
+  background: rgba(70, 214, 216, 0.14);
+  color: #46d6d8;
+}
+.tintSpend {
+  background: rgba(255, 209, 102, 0.14);
+  color: #ffd166;
+}
+
+// ── Performance chart ─────────────────────────────────
+.chartCard {
+  background: ads.$surface;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 22px;
+}
+
+.chartHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.chartTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: ads.$text;
+}
+
+.chartLegend {
+  display: flex;
+  gap: 16px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #c7c7cd;
+}
+
+.legendLineImp {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: #ff2e9e;
+}
+
+.legendLineClk {
+  width: 14px;
+  height: 0;
+  border-top: 2px dashed #bba6ff;
+}
+
+.chartBody {
+  position: relative;
+}
+
+.chartSvg {
+  width: 100%;
+  height: 240px;
+  display: block;
+}
+
+.chartAxis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-family: ads.$mono;
+  font-size: 10px;
+  color: #6f6f77;
+}
+
+// ── Split row: creative + budget ──────────────────────
+.splitRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: ads.$surface;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: ads.$text;
+}
+
+.creativePreview {
+  height: 96px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff2e9e, #9b7bff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.creativeImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.creativeName {
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.specList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.specRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  &:first-child {
+    border-top: none;
+  }
+
+  dt {
+    font-family: ads.$mono;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: ads.$text-muted;
+  }
+  dd {
+    margin: 0;
+    font-family: ads.$mono;
+    font-weight: 700;
+    font-size: 13px;
+    color: ads.$text;
+  }
+}
+
+.specPink {
+  color: ads.$accent;
+}
+.specGreen {
+  color: #7fe0a0;
+}
+
+// ── Budget gauge ──────────────────────────────────────
+.gaugeWrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 16px;
+}
+
+.gauge {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.gaugeCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gaugePct {
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 24px;
+  color: ads.$text;
+}
+
+.gaugeLabel {
+  font-family: ads.$mono;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: ads.$text-muted;
+}
+
 // ── Review timeline ───────────────────────────────────
 .timeline {
   @include ads.card;

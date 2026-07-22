@@ -1,7 +1,8 @@
 @use '../../../styles/ads-theme' as ads;
 
 .page {
-  padding: 32px 40px;
+  padding: 2rem;
+  max-width: 1200px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -24,9 +25,9 @@
 }
 
 .title {
-  font-family: ads.$ui;
+  font-family: ads.$mono;
   font-weight: 700;
-  font-size: 28px;
+  font-size: 1.5rem;
   letter-spacing: 0.03em;
   color: ads.$text;
 }
@@ -55,7 +56,7 @@
 .statCard {
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 20px;
 }
 
@@ -65,9 +66,9 @@
 }
 
 .statValue {
-  font-family: ads.$ui;
+  font-family: ads.$mono;
   font-weight: 700;
-  font-size: 28px;
+  font-size: 1.5rem;
   color: ads.$text;
 }
 
@@ -131,7 +132,7 @@
 .skeletonRow {
   height: 52px;
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
+  border-radius: 10px;
   animation: sk 1.5s infinite;
 }
 
@@ -151,7 +152,7 @@
   padding: 80px 40px;
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 16px;
+  border-radius: 10px;
 }
 
 .emptyTitle {
@@ -176,7 +177,7 @@ $grid: 2fr 110px 150px 120px 130px 180px;
 .table {
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 16px;
+  border-radius: 10px;
   overflow: hidden;
 }
 

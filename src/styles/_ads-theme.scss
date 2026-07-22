@@ -1,97 +1,97 @@
-// Liveshow design-system tokens — from DESIGN_SYSTEM.md (the canonical brand).
-// Near-black canvas, electric magenta accent, Archivo display + Space Mono labels.
-// Scoped to the ads app; kept as a partial so every module reads one source.
+// Ads app theme — thin alias over live-show-react's real design tokens
+// (@live-show/design-system _variables.scss). Every value here resolves to the
+// SAME token the main app uses, so the ads app matches it 1:1. Space Mono for
+// titles/labels + magenta accent, exactly like the app's advertisements screens.
+@use '@live-show/design-system/src/styles/variables' as ds;
 
-// ── Color ─────────────────────────────────────────────
-$bg:            #08080a;  // page background (near-black)
-$surface:       #101013;  // cards / panels
-$surface-2:     #0b0b0d;  // sidebar / recessed strips
-$field:         #0b0b0d;  // input background inside surfaces
+// ── Color (aliased to the main app's tokens) ──────────
+$bg:            ds.$bg;            // #08080a
+$surface:       ds.$surface;      // #101013
+$surface-2:     ds.$surface-dark; // #0b0b0d (sidebar / recessed)
+$field:         ds.$surface-dark; // input background inside cards
 
-$border:        rgba(255, 255, 255, 0.07);   // hairline
-$border-soft:   rgba(255, 255, 255, 0.05);
+$border:        ds.$border;                    // #27272A (card hairline)
+$border-soft:   rgba(255, 255, 255, 0.07);     // sidebar / softer hairline
 $border-chip:   rgba(255, 255, 255, 0.1);
 
-$accent:        #ff2e9e;  // primary CTA / active / live / links
-$accent-bright: #ff5fb4;  // hover / live badge text
-$accent-soft:   rgba(255, 46, 158, 0.1);   // active nav fill
-$accent-border: rgba(255, 46, 158, 0.32);  // active nav border
+$accent:        ds.$action;       // #ff2e9e
+$accent-bright: #ff5fb4;
+$accent-soft:   ds.$action-bg;    // rgba(255,46,158,.12)
+$accent-border: rgba(255, 46, 158, 0.32);
 $accent-hover-border: rgba(255, 46, 158, 0.4);
-$accent-ink:    #0a0a0b;  // text/icon ON magenta fills
+$accent-ink:    #0a0a0b;          // text on magenta fills
 
-$text:          #f4f4f5;  // primary
-$text-dim:      #b9b9c0;  // secondary
-$text-muted:    #8f8f97;  // muted / meta
-$text-label:    #7d7d85;  // labels / axis ticks
+$text:          ds.$text-primary;   // #FFFFFF
+$text-dim:      ds.$text-secondary; // #A1A1AA
+$text-muted:    ds.$text-muted;     // #71717A
+$text-label:    ds.$text-muted;
 
-$success:       #7fe0a0;
-$info:          #9b7bff;
+$success:       ds.$success-light;  // #4ADE80
+$info:          ds.$violet;         // #9810fa
 
 $mono: 'Space Mono', monospace;
 $ui:   'Archivo', sans-serif;
 
-// ── Radii ─────────────────────────────────────────────
-$radius-card: 16px;
+// ── Radii (match the main app: 6px buttons, ~10px cards) ─
+$radius-card: 10px;
 $radius-pill: 999px;
-$radius-field: 10px;
-$radius-badge: 7px;
+$radius-field: 8px;
+$radius-btn: 6px;
 
 // ── Mixins ────────────────────────────────────────────
 
-// Uppercase mono metadata label (eyebrows, table headers, stat labels).
-@mixin mono-label($size: 11px, $color: $text-label) {
+// Uppercase mono metadata label (eyebrows, table headers, kpi labels).
+@mixin mono-label($size: 0.625rem, $color: $text-muted) {
   font-family: $mono;
   font-weight: 700;
   font-size: $size;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: $color;
 }
 
-// Surface card. Flat on dark — depth from the hairline border, not shadows.
+// Surface card — $surface + hairline border, flat (depth from border only).
 @mixin card {
   background: $surface;
   border: 1px solid $border;
   border-radius: $radius-card;
 }
 
-// Card that lifts + accents its border on hover.
-@mixin card-hover {
-  @include card;
-  transition: border-color 0.15s, transform 0.15s;
-
-  &:hover {
-    border-color: $accent-hover-border;
-    transform: translateY(-3px);
-  }
+// Page title (Space Mono, matching the app's advertisements screens).
+@mixin page-title {
+  font-family: $mono;
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  color: $text;
 }
 
-// Section title inside a card.
+// Card / section heading.
 @mixin section-title {
-  font-family: $ui;
+  font-family: $mono;
   font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.02em;
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
   color: $text;
 }
 
 // Uppercase mono field label above an input.
 @mixin field-label {
   display: block;
-  @include mono-label(12px);
+  @include mono-label(0.6875rem);
   margin-bottom: 6px;
 }
 
 // Dark input inside a surface card.
 @mixin field-input {
   width: 100%;
-  padding: 11px 14px;
+  padding: 0.625rem 0.875rem;
   background: $field;
-  border: 1px solid $border-chip;
+  border: 1px solid $border;
   border-radius: $radius-field;
   color: $text;
   font-family: $ui;
-  font-size: 14px;
+  font-size: 0.875rem;
 
   &::placeholder {
     color: $text-muted;

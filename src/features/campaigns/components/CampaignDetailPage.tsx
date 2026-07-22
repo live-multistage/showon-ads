@@ -136,9 +136,16 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
 
   return (
     <div className={styles.page}>
-      <div className={styles.backLinkRow}>
-        <Link href="/">← Campanhas</Link>
-      </div>
+      <nav className={styles.breadcrumb} aria-label="breadcrumb">
+        <Link href="/" className={styles.breadcrumbLink}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M19 12H5M11 18l-6-6 6-6" />
+          </svg>
+          CAMPANHAS
+        </Link>
+        <span className={styles.breadcrumbSep}>/</span>
+        <span className={styles.breadcrumbActive}>{ad.title.toUpperCase()}</span>
+      </nav>
 
       <header className={styles.header}>
         <div className={styles.titleRow}>

@@ -24,8 +24,39 @@
   font-family: ads.$ui;
 }
 
-.backLinkRow {
-  margin-bottom: 16px;
+// Breadcrumb — mirrors the main app's analytics breadcrumb
+// (AnalyticsDashboard .breadcrumb): "← CAMPANHAS / <TÍTULO>".
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: ads.$mono;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #9a9aa2;
+  margin-bottom: 20px;
+}
+
+.breadcrumbLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #9a9aa2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+
+  &:hover {
+    color: ads.$text;
+  }
+}
+
+.breadcrumbSep {
+  color: #3f3f47;
+}
+
+.breadcrumbActive {
+  color: #ff7ec2;
 }
 
 .backLink {

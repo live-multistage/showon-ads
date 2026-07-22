@@ -164,54 +164,49 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
             </Button>
           </div>
         )}
-      </header>
 
-      {ad.status === 'REJECTED' && (
-        <Card className={styles.rejectCard}>
-          <CardContent className={styles.rejectBody} role="alert">
-            <strong>Anúncio rejeitado na análise.</strong>
-            <p className={styles.rejectReason}>{rejectionReason ?? 'Sem motivo detalhado.'}</p>
-            <div>
-              <Button onClick={() => setEditing(true)}>Editar e reenviar</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        {ad.status === 'REJECTED' && (
+          <Card className={styles.rejectCard}>
+            <CardContent className={styles.rejectBody} role="alert">
+              <strong>Anúncio rejeitado na análise.</strong>
+              <p className={styles.rejectReason}>{rejectionReason ?? 'Sem motivo detalhado.'}</p>
+              <div>
+                <Button onClick={() => setEditing(true)}>Editar e reenviar</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {actions.length > 0 && (
-        <Card className={styles.actionsCard}>
-          <CardHeader>
-            <CardTitle>Ações</CardTitle>
-          </CardHeader>
-          <CardContent className={styles.actions}>
-            <div className={styles.actionButtons}>
-              {actions.map((cfg) =>
-                cfg.action === 'end' ? (
+        {actions.length > 0 && (
+          <div className={styles.actionButtons}>
+            {actions.map((cfg) => {
+              if (cfg.action === 'end') {
+                return (
                   <EndActionButton
                     key={cfg.action}
                     disabled={changeStatus.isPending}
                     onConfirm={() => changeStatus.mutate({ adId: ad.id, action: 'end' })}
                   />
-                ) : (
+                );
+              }
+              const blocked = cfg.action === 'submit' && !!blockReason;
+              return (
+                <span key={cfg.action} className={styles.actionItem}>
                   <Button
-                    key={cfg.action}
                     variant={cfg.variant}
-                    disabled={changeStatus.isPending || (cfg.action === 'submit' && !!blockReason)}
+                    disabled={changeStatus.isPending || blocked}
                     onClick={() => changeStatus.mutate({ adId: ad.id, action: cfg.action })}
                   >
                     {cfg.label}
                   </Button>
-                ),
-              )}
-            </div>
-            {blockReason && actions.some((a) => a.action === 'submit') && (
-              <p className={styles.warning} role="alert">
-                {blockReason}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                  {blocked && <InfoTooltip text={blockReason!} />}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </header>
+
 
       <section className={styles.metricsSection}>
         <h2 className={styles.sectionTitle}>Métricas</h2>
@@ -466,6 +461,25 @@ function BudgetCard({ ad, report }: { ad: AdResponse; report?: AdReportResponse 
         </div>
       </dl>
     </section>
+  );
+}
+
+// Blocked-submit reason surfaced as a hover/focus tooltip on a "?" icon,
+// instead of a persistent warning card. CSS-only (no tooltip primitive in the
+// design system yet); the button icon carries the reason as its accessible name.
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <span className={styles.tooltip}>
+      <button type="button" className={styles.tooltipTrigger} aria-label={text}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7M12 17h.01" />
+        </svg>
+      </button>
+      <span role="tooltip" className={styles.tooltipBubble}>
+        {text}
+      </span>
+    </span>
   );
 }
 

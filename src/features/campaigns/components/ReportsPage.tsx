@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { useListAdsQuery } from '@/features/advertisements/queries/use-list-ads';
 import { useAdReportQuery } from '@/features/advertisements/queries/use-ad-report';
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
@@ -97,7 +98,7 @@ function ReportCard({ ad }: { ad: AdResponse }) {
     ad.totalLimitCents > 0 ? Math.min(100, (ad.totalSpendCents / ad.totalLimitCents) * 100) : 0;
 
   return (
-    <div className={styles.card}>
+    <Link href={`/campaigns/${ad.id}`} className={styles.card}>
       <div className={styles.preview} style={{ background: gradientFor(ad.id) }}>
         <span className={styles.previewScrim} />
         <span className={styles.previewFmt}>{FORMAT_SHORT[ad.format] ?? ad.format}</span>
@@ -137,7 +138,7 @@ function ReportCard({ ad }: { ad: AdResponse }) {
           <span className={styles.budgetFill} style={{ width: `${spentPct}%` }} />
         </span>
       </div>
-    </div>
+    </Link>
   );
 }
 

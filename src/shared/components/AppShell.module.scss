@@ -28,11 +28,7 @@
   align-items: center;
   gap: 11px;
   padding: 0 8px;
-}
-
-.waveform {
   color: ads.$text;
-  display: inline-flex;
 }
 
 .wordmark {
@@ -43,16 +39,19 @@
   color: ads.$text;
 }
 
+// Panel badge next to the wordmark — same tint/outline treatment as the main
+// app's STUDIO / ADMIN badge (DashboardSidebar .logoBadge), not a solid fill.
 .adsBadge {
-  background: ads.$accent;
-  color: ads.$accent-ink;
+  margin-left: auto;
   font-family: ads.$mono;
   font-weight: 700;
-  font-size: 9px;
-  letter-spacing: 0.12em;
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: #ff8ec9;
+  background: rgba(255, 46, 158, 0.12);
+  border: 1px solid rgba(255, 46, 158, 0.34);
   padding: 3px 7px;
-  border-radius: 5px;
-  margin-left: -4px;
+  border-radius: 6px;
 }
 
 // ── Nav ───────────────────────────────────────────────
@@ -76,19 +75,32 @@
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.04);
     color: ads.$text;
   }
 }
 
+.navIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: inherit;
+  transition: color 0.15s;
+}
+
+// Active item: magenta-tint fill + magenta hairline, white label, magenta icon
+// — exactly the main app's DashboardSidebar .active treatment.
 .navItemActive {
-  background: ads.$accent-soft;
-  border-color: ads.$accent-border;
+  background: rgba(255, 46, 158, 0.1);
+  border-color: rgba(255, 46, 158, 0.32);
   color: ads.$text;
   font-weight: 600;
 
+  .navIcon {
+    color: ads.$accent;
+  }
+
   &:hover {
-    background: ads.$accent-soft;
+    background: rgba(255, 46, 158, 0.1);
     color: ads.$text;
   }
 }

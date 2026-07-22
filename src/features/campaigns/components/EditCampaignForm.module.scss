@@ -1,25 +1,31 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+@use '../../../styles/ads-theme' as ads;
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 18px;
 }
 
 .content {
+  @include ads.card;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding-top: 1.5rem;
+  gap: 18px;
 }
 
 .error {
-  font-size: 0.8125rem;
-  color: tokens.$error;
+  padding: 10px 14px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.28);
+  border-radius: 8px;
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: #f87171;
 }
 
 .footer {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 1rem;
 }

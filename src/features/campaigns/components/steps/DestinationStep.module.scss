@@ -1,61 +1,68 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+@use '../../../../styles/ads-theme' as ads;
 
 .step {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 18px;
 }
 
 .toggle {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
+  position: relative;
 }
 
 .hint {
-  font-size: 0.75rem;
-  color: tokens.$text-muted;
+  @include ads.mono-label(11px);
+  letter-spacing: 0.02em;
 }
 
 .results {
   list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid tokens.$border;
+  margin: 4px 0 0;
+  padding: 4px;
+  background: ads.$field;
+  border: 1px solid ads.$border;
   border-radius: 8px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .resultItem {
-  display: block;
   width: 100%;
   text-align: left;
-  padding: 0.5rem 0.75rem;
+  padding: 10px 12px;
   background: transparent;
   border: none;
-  color: tokens.$text-primary;
+  border-radius: 6px;
+  color: ads.$text;
+  font-family: ads.$ui;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 0.875rem;
+  transition: background 0.15s;
 
   &:hover {
-    background-color: tokens.$bg-hover;
+    background: rgba(255, 255, 255, 0.04);
   }
 }
 
 .selected {
-  font-size: 0.8125rem;
-  color: tokens.$success-light;
+  @include ads.mono-label(12px, ads.$accent);
 }
 
 .warning {
-  font-size: 0.8125rem;
-  color: tokens.$price;
-  background-color: tokens.$action-bg;
+  padding: 12px 14px;
+  background: rgba(255, 209, 102, 0.06);
+  border: 1px solid rgba(255, 209, 102, 0.28);
   border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: #ffd166;
 }

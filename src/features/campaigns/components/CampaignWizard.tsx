@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Card, CardContent, Chip } from '@live-show/design-system';
+import { Button } from '@live-show/design-system';
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 import { useCampaignWizard, type WizardStepId } from '../hooks/use-campaign-wizard';
 import { useSubmitCampaign } from '../hooks/use-submit-campaign';
@@ -17,6 +17,14 @@ const STEP_LABELS: Record<WizardStepId, string> = {
   targeting: 'Segmentação',
   budget: 'Orçamento',
   review: 'Revisão',
+};
+
+const STEP_DESC: Record<WizardStepId, string> = {
+  creative: 'Banner e título',
+  destination: 'Evento ou URL',
+  targeting: 'Público-alvo',
+  budget: 'Investimento',
+  review: 'Confira e envie',
 };
 
 // Shell owns the stepper header, step outlet, back/next navigation and (on
@@ -44,48 +52,55 @@ export function CampaignWizard() {
       </header>
 
       <nav className={styles.stepper} aria-label="Etapas da campanha">
-        {steps.map((id, index) => (
-          <Chip
-            key={id}
-            variant={id === step ? 'active' : 'default'}
-            disabled={index > stepIndex}
-            onClick={() => goToStep(id)}
-          >
-            {index + 1}. {STEP_LABELS[id]}
-          </Chip>
-        ))}
+        {steps.map((id, index) => {
+          const state = id === step ? 'active' : index < stepIndex ? 'done' : 'todo';
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`${styles.step} ${styles[`step_${state}`]}`}
+              disabled={index > stepIndex}
+              onClick={() => goToStep(id)}
+            >
+              <span className={styles.stepNum}>{index + 1}</span>
+              <span className={styles.stepText}>
+                <span className={styles.stepLabel}>{STEP_LABELS[id]}</span>
+                <span className={styles.stepDesc}>{STEP_DESC[id]}</span>
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
-      <Card>
-        <CardContent className={styles.content}>
-          {step === 'creative' && <CreativeStep draft={draft} updateDraft={updateDraft} setBanner={setBanner} />}
+      <div className={styles.content}>
+        {step !== 'review' && (
+          <div className={styles.stepCard}>
+            {step === 'creative' && <CreativeStep draft={draft} updateDraft={updateDraft} setBanner={setBanner} />}
+            {step === 'destination' && (
+              <DestinationStep draft={draft} updateDraft={updateDraft} bannerRequiredWarning={bannerRequiredWarning} />
+            )}
+            {step === 'targeting' && <TargetingStep draft={draft} updateDraft={updateDraft} />}
+            {step === 'budget' && <BudgetStep draft={draft} updateDraft={updateDraft} />}
+          </div>
+        )}
 
-          {step === 'destination' && (
-            <DestinationStep draft={draft} updateDraft={updateDraft} bannerRequiredWarning={bannerRequiredWarning} />
-          )}
+        {step === 'review' && (
+          <>
+            <ReviewStep draft={draft} />
+            {submitBlockedByBanner && (
+              <p className={styles.error} role="alert">
+                Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.
+              </p>
+            )}
+          </>
+        )}
 
-          {step === 'targeting' && <TargetingStep draft={draft} updateDraft={updateDraft} />}
-
-          {step === 'budget' && <BudgetStep draft={draft} updateDraft={updateDraft} />}
-
-          {step === 'review' && (
-            <>
-              <ReviewStep draft={draft} />
-              {submitBlockedByBanner && (
-                <p className={styles.error} role="alert">
-                  Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.
-                </p>
-              )}
-            </>
-          )}
-
-          {error && (
-            <p className={styles.error} role="alert">
-              {error}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+        {error && (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        )}
+      </div>
 
       <div className={styles.footer}>
         <Button variant="outline" onClick={back} disabled={stepIndex === 0}>

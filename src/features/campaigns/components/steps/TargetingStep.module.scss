@@ -1,25 +1,24 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+@use '../../../../styles/ads-theme' as ads;
 
 .step {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 20px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 10px;
 }
 
 .hint {
-  font-size: 0.75rem;
-  color: tokens.$text-muted;
-  margin: 0;
+  @include ads.mono-label(11px);
+  letter-spacing: 0.02em;
 }
 
 .chipList {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 8px;
 }

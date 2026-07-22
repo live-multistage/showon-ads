@@ -1,32 +1,42 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+@use '../../../../styles/ads-theme' as ads;
 
 .step {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 18px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .fileInput {
-  color: tokens.$text-secondary;
-  font-size: 0.875rem;
+  width: 100%;
+  padding: 20px;
+  background: ads.$field;
+  border: 2px dashed ads.$border;
+  border-radius: 8px;
+  color: ads.$text-dim;
+  font-family: ads.$ui;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: ads.$accent;
+  }
 }
 
 .hint {
-  font-size: 0.75rem;
-  color: tokens.$text-muted;
+  @include ads.mono-label(11px);
+  letter-spacing: 0.02em;
 }
 
 .preview {
-  margin-top: 0.5rem;
+  margin-top: 12px;
   max-width: 100%;
-  max-height: 12rem;
-  border: 1px solid tokens.$border;
   border-radius: 8px;
-  object-fit: contain;
+  border: 1px solid ads.$border;
 }

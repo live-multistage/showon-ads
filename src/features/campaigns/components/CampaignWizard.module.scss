@@ -1,49 +1,139 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+@use '../../../styles/ads-theme' as ads;
 
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  max-width: 40rem;
-  margin: 0 auto;
+  padding: 32px 40px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .header {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: tokens.$text-primary;
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
 }
 
+// ── Stepper ───────────────────────────────────────────
 .stepper {
   display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
   flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid ads.$border;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.stepNum {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ads.$mono;
+  font-weight: 600;
+  font-size: 12px;
+  background: #1f1f23;
+  color: ads.$text-dim;
+  flex-shrink: 0;
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepLabel {
+  font-family: ads.$ui;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: ads.$text;
+}
+
+.stepDesc {
+  font-family: ads.$ui;
+  font-size: 11px;
+  color: ads.$text-muted;
+  margin-top: 1px;
+}
+
+.step_active {
+  border-color: ads.$accent;
+  background: ads.$accent-soft;
+
+  .stepNum {
+    background: ads.$accent;
+    color: #fff;
+  }
+}
+
+.step_done {
+  .stepNum {
+    background: rgba(236, 72, 153, 0.2);
+    color: ads.$accent;
+  }
+}
+
+// ── Content ───────────────────────────────────────────
 .content {
-  padding-top: 1.5rem;
+  max-width: 720px;
 }
 
-.placeholder {
-  color: tokens.$text-muted;
-  font-style: italic;
+.stepCard {
+  @include ads.card;
+  padding: 28px;
 }
 
 .error {
-  margin-top: 1rem;
-  font-size: 0.8125rem;
-  color: tokens.$error;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.28);
+  border-radius: 8px;
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: #f87171;
 }
 
+// ── Footer ────────────────────────────────────────────
 .footer {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  margin-top: 28px;
+  max-width: 720px;
 }

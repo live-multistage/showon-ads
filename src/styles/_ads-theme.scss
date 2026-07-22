@@ -30,3 +30,46 @@ $ui:   'Oswald', sans-serif;
   letter-spacing: 0.1em;
   color: $color;
 }
+
+// Surface card (panel) used across every screen.
+@mixin card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 8px;
+}
+
+// Section title inside a card.
+@mixin section-title {
+  font-family: $ui;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  color: $text;
+}
+
+// Uppercase mono field label above an input.
+@mixin field-label {
+  display: block;
+  @include mono-label(12px);
+  margin-bottom: 6px;
+}
+
+// Dark input inside a surface card (design's #09090b field).
+@mixin field-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: $field;
+  border: 1px solid $border;
+  border-radius: 6px;
+  color: $text;
+  font-family: $ui;
+  font-size: 14px;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+  &:focus {
+    outline: none;
+    border-color: $accent;
+  }
+}

@@ -73,10 +73,10 @@ export function CampaignListPage() {
       </header>
 
       <section className={styles.stats}>
-        <StatCard label="CAMPANHAS" value={isLoading ? NO_DATA : String(campaigns.length)} />
-        <StatCard label="IMPRESSÕES" value={NO_DATA} />
-        <StatCard label="CLIQUES" value={NO_DATA} />
-        <StatCard label="CTR MÉDIO" value={NO_DATA} accent />
+        <StatCard icon="campaigns" label="CAMPANHAS" value={isLoading ? NO_DATA : String(campaigns.length)} />
+        <StatCard icon="impressions" label="IMPRESSÕES" value={NO_DATA} />
+        <StatCard icon="clicks" label="CLIQUES" value={NO_DATA} />
+        <StatCard icon="ctr" label="CTR MÉDIO" value={NO_DATA} accent />
       </section>
 
       <div className={styles.toolbar}>
@@ -144,10 +144,26 @@ export function CampaignListPage() {
   );
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+const statSvg = (path: React.ReactNode) => (
+  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    {path}
+  </svg>
+);
+const STAT_ICON: Record<string, React.ReactNode> = {
+  campaigns: statSvg(<><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></>),
+  impressions: statSvg(<><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>),
+  clicks: statSvg(<><path d="M9 9l5 12 1.8-5.2L21 14 9 9z" /><path d="M7.2 2.2 8 5M5.9 4.6 4 6.5M2.2 7.2 5 8" /></>),
+  ctr: statSvg(<><path d="M3 17l5-5 4 4 8-9" /><path d="M14 7h6v6" /></>),
+};
+
+function StatCard({ icon, label, value, accent }: { icon: string; label: string; value: string; accent?: boolean }) {
   return (
-    <div className={styles.statCard}>
-      <div className={styles.statLabel}>{label}</div>
+    <div className={`${styles.statCard} ${accent ? styles.statCardAccent : ''}`}>
+      {accent && <div className={styles.statGlow} />}
+      <div className={styles.statLabel}>
+        <span className={styles.statIcon}>{STAT_ICON[icon]}</span>
+        {label}
+      </div>
       <div className={`${styles.statValue} ${accent ? styles.statValueAccent : ''}`}>{value}</div>
     </div>
   );

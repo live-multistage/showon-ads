@@ -169,17 +169,15 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Métricas</CardTitle>
-        </CardHeader>
-        <CardContent className={styles.metricsGrid}>
-          <Metric label="Impressões" value={report ? report.impressions.toLocaleString('pt-BR') : '—'} />
-          <Metric label="Cliques" value={report ? report.clicks.toLocaleString('pt-BR') : '—'} />
-          <Metric label="CTR" value={report?.ctr != null ? `${(report.ctr * 100).toFixed(2)}%` : '—'} />
-          <Metric label="Gasto" value={report ? formatCentsToBRL(report.spendCents) : '—'} />
-        </CardContent>
-      </Card>
+      <section className={styles.metricsSection}>
+        <h2 className={styles.sectionTitle}>Métricas</h2>
+        <div className={styles.metricsGrid}>
+          <Metric icon="impressions" label="IMPRESSÕES" value={report ? report.impressions.toLocaleString('pt-BR') : '—'} />
+          <Metric icon="clicks" label="CLIQUES" value={report ? report.clicks.toLocaleString('pt-BR') : '—'} />
+          <Metric icon="ctr" label="CTR" value={report?.ctr != null ? `${(report.ctr * 100).toFixed(2)}%` : '—'} accent />
+          <Metric icon="spend" label="GASTO" value={report ? formatCentsToBRL(report.spendCents) : '—'} />
+        </div>
+      </section>
 
       <Card>
         <CardHeader>
@@ -244,11 +242,29 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+const metricSvg = (path: React.ReactNode) => (
+  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    {path}
+  </svg>
+);
+const METRIC_ICON: Record<string, React.ReactNode> = {
+  impressions: metricSvg(<><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>),
+  clicks: metricSvg(<><path d="M9 9l5 12 1.8-5.2L21 14 9 9z" /><path d="M7.2 2.2 8 5M5.9 4.6 4 6.5M2.2 7.2 5 8" /></>),
+  ctr: metricSvg(<><path d="M3 17l5-5 4 4 8-9" /><path d="M14 7h6v6" /></>),
+  spend: metricSvg(<><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></>),
+};
+
+// KpiCard-style metric (mirrors live-show-react's KpiCard): mono icon+label,
+// big Space Mono number, magenta glow + pink number on the accent (CTR).
+function Metric({ icon, label, value, accent }: { icon: string; label: string; value: string; accent?: boolean }) {
   return (
-    <div className={styles.metric}>
-      <span className={styles.metricLabel}>{label}</span>
-      <span className={styles.metricValue}>{value}</span>
+    <div className={`${styles.metricCard} ${accent ? styles.metricCardAccent : ''}`}>
+      {accent && <div className={styles.metricGlow} />}
+      <div className={styles.metricLabel}>
+        <span className={styles.metricIcon}>{METRIC_ICON[icon]}</span>
+        {label}
+      </div>
+      <div className={`${styles.metricNum} ${accent ? styles.metricNumPink : ''}`}>{value}</div>
     </div>
   );
 }

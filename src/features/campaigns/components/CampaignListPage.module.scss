@@ -54,26 +54,58 @@
 }
 
 .statCard {
+  position: relative;
+  overflow: hidden;
   background: ads.$surface;
-  border: 1px solid ads.$border;
-  border-radius: 10px;
-  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.statCardAccent {
+  border-color: rgba(255, 46, 158, 0.28);
+}
+
+.statGlow {
+  position: absolute;
+  top: -40px;
+  right: -30px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 46, 158, 0.18), transparent 70%);
+  pointer-events: none;
 }
 
 .statLabel {
-  @include ads.mono-label(11px);
-  margin-bottom: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: ads.$text-muted;
+  margin-bottom: 10px;
+}
+
+.statIcon {
+  display: inline-flex;
+  color: ads.$accent;
 }
 
 .statValue {
+  position: relative;
   font-family: ads.$mono;
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  line-height: 1;
   color: ads.$text;
 }
 
 .statValueAccent {
-  font-family: ads.$mono;
   color: ads.$accent;
 }
 

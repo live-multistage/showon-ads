@@ -94,28 +94,84 @@
 }
 
 // ── KPI metrics ───────────────────────────────────────
-.metricsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+.metricsSection {
   margin-bottom: 28px;
 }
 
-.metric {
-  @include ads.card;
-  padding: 20px;
+.sectionTitle {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
+  color: ads.$text;
+  margin-bottom: 14px;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// KpiCard replica (live-show-react OrganizationDashboardPage .kpiCard).
+.metricCard {
+  position: relative;
+  overflow: hidden;
+  background: ads.$surface;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.metricCardAccent {
+  border-color: rgba(255, 46, 158, 0.28);
+}
+
+.metricGlow {
+  position: absolute;
+  top: -40px;
+  right: -30px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 46, 158, 0.18), transparent 70%);
+  pointer-events: none;
 }
 
 .metricLabel {
-  @include ads.mono-label(11px);
-  margin-bottom: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: ads.$text-muted;
+  margin-bottom: 10px;
 }
 
-.metricValue {
-  font-family: ads.$ui;
+.metricIcon {
+  display: inline-flex;
+  color: ads.$accent;
+}
+
+.metricNum {
+  position: relative;
+  font-family: ads.$mono;
   font-weight: 700;
-  font-size: 24px;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  line-height: 1;
   color: ads.$text;
+}
+
+.metricNumPink {
+  color: ads.$accent;
 }
 
 // ── Review timeline ───────────────────────────────────

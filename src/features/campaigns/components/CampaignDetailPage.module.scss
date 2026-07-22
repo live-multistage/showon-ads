@@ -1,8 +1,12 @@
 @use '../../../styles/ads-theme' as ads;
 
 .page {
-  padding: 2rem;
+  padding: 2rem 2.5rem 3rem;
   animation: fadeIn 0.3s ease;
+}
+
+.actionsCard {
+  margin-bottom: 28px;
 }
 
 @keyframes fadeIn {

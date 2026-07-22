@@ -178,6 +178,41 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
         </Card>
       )}
 
+      {actions.length > 0 && (
+        <Card className={styles.actionsCard}>
+          <CardHeader>
+            <CardTitle>Ações</CardTitle>
+          </CardHeader>
+          <CardContent className={styles.actions}>
+            <div className={styles.actionButtons}>
+              {actions.map((cfg) =>
+                cfg.action === 'end' ? (
+                  <EndActionButton
+                    key={cfg.action}
+                    disabled={changeStatus.isPending}
+                    onConfirm={() => changeStatus.mutate({ adId: ad.id, action: 'end' })}
+                  />
+                ) : (
+                  <Button
+                    key={cfg.action}
+                    variant={cfg.variant}
+                    disabled={changeStatus.isPending || (cfg.action === 'submit' && !!blockReason)}
+                    onClick={() => changeStatus.mutate({ adId: ad.id, action: cfg.action })}
+                  >
+                    {cfg.label}
+                  </Button>
+                ),
+              )}
+            </div>
+            {blockReason && actions.some((a) => a.action === 'submit') && (
+              <p className={styles.warning} role="alert">
+                {blockReason}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <section className={styles.metricsSection}>
         <h2 className={styles.sectionTitle}>Métricas</h2>
         <div className={styles.metricsGrid}>
@@ -239,41 +274,6 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
           )}
         </CardContent>
       </Card>
-
-      {actions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Ações</CardTitle>
-          </CardHeader>
-          <CardContent className={styles.actions}>
-            <div className={styles.actionButtons}>
-              {actions.map((cfg) =>
-                cfg.action === 'end' ? (
-                  <EndActionButton
-                    key={cfg.action}
-                    disabled={changeStatus.isPending}
-                    onConfirm={() => changeStatus.mutate({ adId: ad.id, action: 'end' })}
-                  />
-                ) : (
-                  <Button
-                    key={cfg.action}
-                    variant={cfg.variant}
-                    disabled={changeStatus.isPending || (cfg.action === 'submit' && !!blockReason)}
-                    onClick={() => changeStatus.mutate({ adId: ad.id, action: cfg.action })}
-                  >
-                    {cfg.label}
-                  </Button>
-                ),
-              )}
-            </div>
-            {blockReason && actions.some((a) => a.action === 'submit') && (
-              <p className={styles.warning} role="alert">
-                {blockReason}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

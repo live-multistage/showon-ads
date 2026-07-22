@@ -55,7 +55,7 @@
 .statCard {
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 20px;
 }
 
@@ -107,7 +107,7 @@
   padding: 10px 14px 10px 40px;
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 6px;
+  border-radius: 10px;
   color: ads.$text;
   font-family: ads.$ui;
   font-size: 14px;
@@ -131,7 +131,7 @@
 .skeletonRow {
   height: 52px;
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border-radius: 16px;
   animation: sk 1.5s infinite;
 }
 
@@ -151,7 +151,7 @@
   padding: 80px 40px;
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .emptyTitle {
@@ -176,7 +176,7 @@ $grid: 2fr 110px 150px 120px 130px 180px;
 .table {
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
 }
 

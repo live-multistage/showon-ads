@@ -2,9 +2,9 @@
 // src/styles/globals.scss: sass-compiled, no css @import chains.
 @use '@live-show/design-system/src/styles/variables' as tokens;
 
-// Ads Manager identity fonts (Oswald for UI, JetBrains Mono for labels/metrics),
-// per the Ads Manager design. Sass passes a CSS url() @import straight through.
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+// Liveshow brand fonts (Archivo display/UI + Space Mono labels), per
+// DESIGN_SYSTEM.md. Sass passes a CSS url() @import straight through.
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 *,
 *::before,
@@ -16,19 +16,23 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  background-color: #09090b;
+  background-color: #08080a;
 }
 
 body {
   line-height: 1.5;
-  color: #ffffff;
-  font-family: 'Oswald', sans-serif;
+  color: #f4f4f5;
+  font-family: 'Archivo', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: inherit;
+  color: #ff7ec2;
   text-decoration: none;
+
+  &:hover {
+    color: #ff2e9e;
+  }
 }
 
 ::-webkit-scrollbar {
@@ -38,6 +42,6 @@ a {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }

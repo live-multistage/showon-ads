@@ -2,9 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Logo } from '@live-show/design-system';
 import { useSession } from '@/features/auth/hooks/use-session';
 import styles from './AppShell.module.scss';
+
+// Liveshow 5-bar waveform logomark (DESIGN_SYSTEM.md §1).
+const Waveform = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
+    <g fill="currentColor">
+      <rect x="2" y="9" width="2.4" height="6" rx="1.2" />
+      <rect x="6" y="5" width="2.4" height="14" rx="1.2" />
+      <rect x="10" y="2" width="2.4" height="20" rx="1.2" />
+      <rect x="14" y="6" width="2.4" height="12" rx="1.2" />
+      <rect x="18" y="9" width="2.4" height="6" rx="1.2" />
+    </g>
+  </svg>
+);
 
 // Inline icons — a handful of glyphs doesn't justify an icon dependency.
 const svg = (size: number, path: React.ReactNode) => (
@@ -78,10 +90,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <div className={styles.logoRow}>
-            <Logo size={22} color="#ec4899" showWordmark wordmarkClassName={styles.wordmark} />
-          </div>
-          <div className={styles.sublabel}>Ads Manager</div>
+          <span className={styles.waveform}>
+            <Waveform />
+          </span>
+          <span className={styles.wordmark}>LIVESHOW</span>
+          <span className={styles.adsBadge}>ADS</span>
         </div>
 
         <nav className={styles.nav}>

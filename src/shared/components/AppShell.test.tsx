@@ -13,7 +13,7 @@ describe('AppShell', () => {
       </AppShell>,
     );
 
-    expect(screen.getByText('Ads Manager')).toBeInTheDocument();
+    expect(screen.getByText('LIVESHOW')).toBeInTheDocument();
     expect(screen.getByText('page content')).toBeInTheDocument();
   });
 });

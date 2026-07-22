@@ -1,49 +1,77 @@
-// Ads Manager palette — from the Ads Manager design (dc.html).
+// Liveshow design-system tokens — from DESIGN_SYSTEM.md (the canonical brand).
+// Near-black canvas, electric magenta accent, Archivo display + Space Mono labels.
 // Scoped to the ads app; kept as a partial so every module reads one source.
 
-$bg:            #09090b;  // app background
-$surface:       #18181b;  // cards / panels
-$surface-2:     #0f0f0f;  // sidebar
-$field:         #09090b;  // input background inside surfaces
-$border:        #27272a;
-$border-soft:   rgba(39, 39, 42, 0.5);
+// ── Color ─────────────────────────────────────────────
+$bg:            #08080a;  // page background (near-black)
+$surface:       #101013;  // cards / panels
+$surface-2:     #0b0b0d;  // sidebar / recessed strips
+$field:         #0b0b0d;  // input background inside surfaces
 
-$accent:        #ec4899;  // pink primary
-$accent-hover:  #ff2e9e;
-$accent-soft:   rgba(236, 72, 153, 0.08);
+$border:        rgba(255, 255, 255, 0.07);   // hairline
+$border-soft:   rgba(255, 255, 255, 0.05);
+$border-chip:   rgba(255, 255, 255, 0.1);
 
-$text:          #ffffff;
-$text-dim:      #a1a1aa;
-$text-muted:    #71717a;
+$accent:        #ff2e9e;  // primary CTA / active / live / links
+$accent-bright: #ff5fb4;  // hover / live badge text
+$accent-soft:   rgba(255, 46, 158, 0.1);   // active nav fill
+$accent-border: rgba(255, 46, 158, 0.32);  // active nav border
+$accent-hover-border: rgba(255, 46, 158, 0.4);
+$accent-ink:    #0a0a0b;  // text/icon ON magenta fills
 
-$success:       #4ade80;
-$info:          #60a5fa;
+$text:          #f4f4f5;  // primary
+$text-dim:      #b9b9c0;  // secondary
+$text-muted:    #8f8f97;  // muted / meta
+$text-label:    #7d7d85;  // labels / axis ticks
 
-$mono: 'JetBrains Mono', monospace;
-$ui:   'Oswald', sans-serif;
+$success:       #7fe0a0;
+$info:          #9b7bff;
 
-// Mono label preset (uppercase metadata labels used throughout the design).
-@mixin mono-label($size: 11px, $color: $text-muted) {
+$mono: 'Space Mono', monospace;
+$ui:   'Archivo', sans-serif;
+
+// ── Radii ─────────────────────────────────────────────
+$radius-card: 16px;
+$radius-pill: 999px;
+$radius-field: 10px;
+$radius-badge: 7px;
+
+// ── Mixins ────────────────────────────────────────────
+
+// Uppercase mono metadata label (eyebrows, table headers, stat labels).
+@mixin mono-label($size: 11px, $color: $text-label) {
   font-family: $mono;
-  font-weight: 500;
+  font-weight: 700;
   font-size: $size;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: $color;
 }
 
-// Surface card (panel) used across every screen.
+// Surface card. Flat on dark — depth from the hairline border, not shadows.
 @mixin card {
   background: $surface;
   border: 1px solid $border;
-  border-radius: 8px;
+  border-radius: $radius-card;
+}
+
+// Card that lifts + accents its border on hover.
+@mixin card-hover {
+  @include card;
+  transition: border-color 0.15s, transform 0.15s;
+
+  &:hover {
+    border-color: $accent-hover-border;
+    transform: translateY(-3px);
+  }
 }
 
 // Section title inside a card.
 @mixin section-title {
   font-family: $ui;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 18px;
-  letter-spacing: 0.03em;
+  letter-spacing: -0.02em;
   color: $text;
 }
 
@@ -54,13 +82,13 @@ $ui:   'Oswald', sans-serif;
   margin-bottom: 6px;
 }
 
-// Dark input inside a surface card (design's #09090b field).
+// Dark input inside a surface card.
 @mixin field-input {
   width: 100%;
-  padding: 10px 14px;
+  padding: 11px 14px;
   background: $field;
-  border: 1px solid $border;
-  border-radius: 6px;
+  border: 1px solid $border-chip;
+  border-radius: $radius-field;
   color: $text;
   font-family: $ui;
   font-size: 14px;

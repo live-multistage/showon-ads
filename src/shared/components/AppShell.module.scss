@@ -8,64 +8,72 @@
 }
 
 .sidebar {
-  width: 240px;
-  min-width: 240px;
+  width: 256px;
+  min-width: 256px;
   background: ads.$surface-2;
   border-right: 1px solid ads.$border;
   display: flex;
   flex-direction: column;
-  padding: 20px 12px;
+  gap: 34px;
+  padding: 26px 18px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
 }
 
+// ── Brand ─────────────────────────────────────────────
 .brand {
-  padding: 0 12px 20px;
-  border-bottom: 1px solid ads.$border;
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px;
 }
 
-.logoRow {
+.waveform {
+  color: ads.$text;
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .wordmark {
-  font-family: ads.$ui;
+  font-family: ads.$mono;
   font-weight: 700;
-  font-size: 20px;
-  letter-spacing: 0.07em;
+  font-size: 16px;
+  letter-spacing: 0.18em;
   color: ads.$text;
 }
 
-.sublabel {
+.adsBadge {
+  background: ads.$accent;
+  color: ads.$accent-ink;
   font-family: ads.$mono;
-  font-weight: 500;
-  font-size: 10px;
-  color: ads.$accent;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-top: 2px;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  padding: 3px 7px;
+  border-radius: 5px;
+  margin-left: -4px;
 }
 
+// ── Nav ───────────────────────────────────────────────
 .nav {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
 }
 
 .navItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  gap: 13px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
   font-family: ads.$ui;
-  font-weight: 500;
   font-size: 14px;
   color: ads.$text-dim;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 
   &:hover {
     background: rgba(255, 255, 255, 0.03);
@@ -75,15 +83,19 @@
 
 .navItemActive {
   background: ads.$accent-soft;
-  color: ads.$accent;
+  border-color: ads.$accent-border;
+  color: ads.$text;
+  font-weight: 600;
 
   &:hover {
     background: ads.$accent-soft;
-    color: ads.$accent;
+    color: ads.$text;
   }
 }
 
+// ── User footer (pinned bottom) ───────────────────────
 .userFooter {
+  margin-top: auto;
   border: none;
   background: transparent;
   border-top: 1px solid ads.$border;
@@ -102,14 +114,14 @@
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: #1f1f23;
+  background: ads.$accent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ads.$text-dim;
+  color: ads.$accent-ink;
   flex-shrink: 0;
 }
 
@@ -122,14 +134,13 @@
 
 .userName {
   font-family: ads.$ui;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 13px;
   color: ads.$text;
 }
 
 .userEmail {
   font-family: ads.$mono;
-  font-weight: 400;
   font-size: 11px;
   color: ads.$text-muted;
   overflow: hidden;

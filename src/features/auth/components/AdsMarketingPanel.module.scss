@@ -17,7 +17,7 @@
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(236, 72, 153, .18), transparent 65%);
+  background: radial-gradient(circle, rgba(255, 46, 158, .18), transparent 65%);
   pointer-events: none;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .logoWordmark {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Space Mono', monospace;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: .18em;
@@ -56,13 +56,13 @@
 }
 
 .badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Space Mono', monospace;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .16em;
-  color: #ec4899;
-  background: rgba(236, 72, 153, .12);
-  border: 1px solid rgba(236, 72, 153, .35);
+  color: #ff2e9e;
+  background: rgba(255, 46, 158, .12);
+  border: 1px solid rgba(255, 46, 158, .35);
   border-radius: 6px;
   padding: 3px 8px;
   line-height: 1;
@@ -77,15 +77,15 @@
 }
 
 .eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Space Mono', monospace;
   font-size: 11px;
   letter-spacing: .16em;
-  color: #ec4899;
+  color: #ff2e9e;
   margin: 0 0 20px;
 }
 
 .title {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Archivo', sans-serif;
   font-size: 54px;
   font-weight: 800;
   letter-spacing: -.04em;
@@ -127,6 +127,6 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ec4899;
+  background: #ff2e9e;
   flex-shrink: 0;
 }

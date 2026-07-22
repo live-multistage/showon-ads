@@ -44,7 +44,7 @@
 .skeletonRow {
   height: 52px;
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border-radius: 16px;
   animation: sk 1.5s infinite;
 }
 
@@ -63,7 +63,7 @@
   text-align: center;
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 12px;
+  border-radius: 16px;
   font-family: ads.$ui;
   font-size: 14px;
   color: ads.$text-muted;
@@ -74,7 +74,7 @@ $grid: 2fr 110px 110px 90px 70px 130px;
 .table {
   background: ads.$surface;
   border: 1px solid ads.$border;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
 }
 

@@ -1,30 +1,156 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+@use '../../styles/ads-theme' as ads;
 
 .shell {
+  display: flex;
   min-height: 100vh;
+  background: ads.$bg;
+  color: ads.$text;
+}
+
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: ads.$surface-2;
+  border-right: 1px solid ads.$border;
   display: flex;
   flex-direction: column;
-  background-color: tokens.$bg;
-  color: tokens.$text-primary;
+  padding: 20px 12px;
+}
+
+.brand {
+  padding: 0 12px 20px;
+  border-bottom: 1px solid ads.$border;
+  margin-bottom: 12px;
+}
+
+.wordmark {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.07em;
+  color: ads.$text;
+}
+
+.sublabel {
+  font-family: ads.$mono;
+  font-weight: 500;
+  font-size: 10px;
+  color: ads.$accent;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .nav {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.navItem {
+  display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid tokens.$border;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: ads.$ui;
+  font-weight: 500;
+  font-size: 14px;
+  color: ads.$text-dim;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: ads.$text;
+  }
 }
 
-.brand {
-  font-size: 1rem;
-  font-weight: 600;
+.navItemActive {
+  background: ads.$accent-soft;
+  color: ads.$accent;
+
+  &:hover {
+    background: ads.$accent-soft;
+    color: ads.$accent;
+  }
 }
 
-.logoutBtn {
-  margin-left: auto;
+.userFooter {
+  border: none;
+  background: transparent;
+  border-top: 1px solid ads.$border;
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  color: ads.$text-dim;
+  width: 100%;
+
+  &:hover .logoutIcon {
+    color: ads.$accent;
+  }
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1f1f23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ads.$text-dim;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-family: ads.$ui;
+  font-weight: 500;
+  font-size: 13px;
+  color: ads.$text;
+}
+
+.userEmail {
+  font-family: ads.$mono;
+  font-weight: 400;
+  font-size: 11px;
+  color: ads.$text-muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logoutIcon {
+  color: ads.$text-muted;
+  transition: color 0.15s;
+  flex-shrink: 0;
 }
 
 .content {
   flex: 1;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

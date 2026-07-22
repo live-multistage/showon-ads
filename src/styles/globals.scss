@@ -2,6 +2,10 @@
 // src/styles/globals.scss: sass-compiled, no css @import chains.
 @use '@live-show/design-system/src/styles/variables' as tokens;
 
+// Ads Manager identity fonts (Oswald for UI, JetBrains Mono for labels/metrics),
+// per the Ads Manager design. Sass passes a CSS url() @import straight through.
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 *,
 *::before,
 *::after {
@@ -12,17 +16,28 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  background-color: tokens.$bg;
+  background-color: #09090b;
 }
 
 body {
   line-height: 1.5;
-  color: tokens.$text-primary;
-  font-family: 'Archivo', sans-serif;
+  color: #ffffff;
+  font-family: 'Oswald', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
 }

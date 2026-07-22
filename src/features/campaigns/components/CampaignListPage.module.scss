@@ -1,113 +1,247 @@
-@use '@live-show/design-system/src/styles/variables' as tokens;
+@use '../../../styles/ads-theme' as ads;
 
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  max-width: 64rem;
-  margin: 0 auto;
+  padding: 32px 40px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  margin-bottom: 28px;
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: tokens.$text-primary;
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
 }
 
 .subtitle {
-  font-size: 0.875rem;
-  color: tokens.$text-secondary;
+  font-family: ads.$ui;
+  font-weight: 400;
+  font-size: 14px;
+  color: ads.$text-muted;
+  margin-top: 4px;
+}
+
+.newBtn {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+// ── Stats ─────────────────────────────────────────────
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.statCard {
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.statLabel {
+  @include ads.mono-label(11px);
+  margin-bottom: 8px;
+}
+
+.statValue {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 28px;
+  color: ads.$text;
+}
+
+.statValueAccent {
+  font-family: ads.$mono;
+  color: ads.$accent;
+}
+
+// ── Toolbar (search + account switcher) ───────────────
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
 }
 
 .accountSwitcher {
-  max-width: 16rem;
+  min-width: 220px;
 }
 
-.list {
+.searchWrap {
+  flex: 1;
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
 }
 
-.skeletonRow {
-  height: 4.5rem;
-  border-radius: 8px;
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: ads.$text-muted;
+  pointer-events: none;
 }
 
-.empty {
-  text-align: center;
-  color: tokens.$text-secondary;
-  padding: 2rem 1rem;
-}
+.search {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 6px;
+  color: ads.$text;
+  font-family: ads.$ui;
+  font-size: 14px;
 
-.row {
-  text-decoration: none;
-  color: inherit;
-}
-
-.rowCard {
-  transition: border-color 0.15s, background-color 0.15s;
-
-  &:hover {
-    border-color: tokens.$action;
-    background-color: tokens.$bg-hover;
+  &::placeholder {
+    color: ads.$text-muted;
+  }
+  &:focus {
+    outline: none;
+    border-color: ads.$accent;
   }
 }
 
-.rowContent {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.rowMain {
+// ── Skeleton ──────────────────────────────────────────
+.skeletonList {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-  min-width: 0;
+  gap: 12px;
 }
 
-.rowTitle {
+.skeletonRow {
+  height: 52px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  animation: sk 1.5s infinite;
+}
+
+@keyframes sk {
+  0%,
+  100% {
+    opacity: 0.06;
+  }
+  50% {
+    opacity: 0.12;
+  }
+}
+
+// ── Empty ─────────────────────────────────────────────
+.empty {
+  text-align: center;
+  padding: 80px 40px;
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 12px;
+}
+
+.emptyTitle {
+  font-family: ads.$ui;
   font-weight: 600;
-  color: tokens.$text-primary;
+  font-size: 20px;
+  letter-spacing: 0.03em;
+  color: ads.$text;
+  margin-bottom: 8px;
+}
+
+.emptyText {
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text-muted;
+  margin-bottom: 24px;
+}
+
+// ── Table ─────────────────────────────────────────────
+$grid: 2fr 110px 150px 120px 130px 180px;
+
+.table {
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tableHead {
+  display: grid;
+  grid-template-columns: $grid;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid ads.$border;
+
+  span {
+    @include ads.mono-label(11px);
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: $grid;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid ads.$border-soft;
+  cursor: pointer;
+  transition: background 0.15s;
+  color: ads.$text;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.cellTitle {
+  font-family: ads.$ui;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.rowMeta {
-  font-size: 0.8125rem;
-  color: tokens.$text-secondary;
+.cellMono {
+  font-family: ads.$mono;
+  font-size: 13px;
+  color: ads.$text-dim;
 }
 
-.rowDestinationHint {
-  color: tokens.$text-muted;
+.cellHint {
+  font-family: ads.$mono;
+  font-size: 13px;
+  color: ads.$text-muted;
   font-style: italic;
 }
 
-.rowSpend {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.125rem;
-  min-width: 8rem;
+.right {
+  text-align: right;
+  justify-self: end;
 }
 
-.rowSpendValue {
-  font-weight: 600;
-  color: tokens.$text-primary;
-}
-
-.rowSpendLimit {
-  font-size: 0.75rem;
-  color: tokens.$text-muted;
+.noMatch {
+  padding: 24px 20px;
+  text-align: center;
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text-muted;
 }

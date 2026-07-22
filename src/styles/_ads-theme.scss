@@ -1,0 +1,32 @@
+// Ads Manager palette — from the Ads Manager design (dc.html).
+// Scoped to the ads app; kept as a partial so every module reads one source.
+
+$bg:            #09090b;  // app background
+$surface:       #18181b;  // cards / panels
+$surface-2:     #0f0f0f;  // sidebar
+$field:         #09090b;  // input background inside surfaces
+$border:        #27272a;
+$border-soft:   rgba(39, 39, 42, 0.5);
+
+$accent:        #ec4899;  // pink primary
+$accent-hover:  #ff2e9e;
+$accent-soft:   rgba(236, 72, 153, 0.08);
+
+$text:          #ffffff;
+$text-dim:      #a1a1aa;
+$text-muted:    #71717a;
+
+$success:       #4ade80;
+$info:          #60a5fa;
+
+$mono: 'JetBrains Mono', monospace;
+$ui:   'Oswald', sans-serif;
+
+// Mono label preset (uppercase metadata labels used throughout the design).
+@mixin mono-label($size: 11px, $color: $text-muted) {
+  font-family: $mono;
+  font-weight: 500;
+  font-size: $size;
+  letter-spacing: 0.1em;
+  color: $color;
+}

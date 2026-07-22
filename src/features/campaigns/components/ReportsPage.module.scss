@@ -34,19 +34,30 @@
   font-family: ads.$ui;
   font-size: 14px;
   color: ads.$text-muted;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
-.skeletonList {
+.list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.skeletonRow {
-  height: 52px;
+.empty {
+  padding: 80px 40px;
+  text-align: center;
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 16px;
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text-muted;
+}
+
+.skeletonCard {
+  height: 118px;
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  border-radius: 16px;
   animation: sk 1.5s infinite;
 }
 
@@ -60,75 +71,216 @@
   }
 }
 
-.empty {
-  padding: 80px 40px;
-  text-align: center;
+// ── Campaign report card (Liveshow Ads Manager.dc.html) ─
+.card {
+  display: grid;
+  grid-template-columns: 140px minmax(200px, 1.5fr) minmax(280px, 1.2fr) 120px;
+  gap: 18px;
+  align-items: center;
   background: ads.$surface;
-  border: 1px solid ads.$border;
-  border-radius: 10px;
-  font-family: ads.$ui;
-  font-size: 14px;
-  color: ads.$text-muted;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px 20px;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: rgba(255, 46, 158, 0.3);
+  }
+
+  @media (max-width: 1000px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-$grid: 2fr 110px 110px 90px 70px 130px;
-
-.table {
-  background: ads.$surface;
-  border: 1px solid ads.$border;
+// preview
+.preview {
+  position: relative;
+  width: 140px;
+  height: 80px;
   border-radius: 10px;
   overflow: hidden;
 }
 
-.tableHead {
-  display: grid;
-  grid-template-columns: $grid;
-  gap: 12px;
-  padding: 12px 20px;
-  border-bottom: 1px solid ads.$border;
-
-  span {
-    @include ads.mono-label(11px);
-  }
+.previewScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.45));
 }
 
-.row {
-  display: grid;
-  grid-template-columns: $grid;
-  gap: 12px;
+.previewFmt {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+// info
+.info {
+  min-width: 0;
+}
+
+.infoTop {
+  display: flex;
   align-items: center;
-  padding: 14px 20px;
-  border-bottom: 1px solid ads.$border-soft;
-  color: ads.$text;
+  gap: 9px;
+  margin-bottom: 7px;
+}
 
-  &:last-child {
-    border-bottom: none;
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.pillDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: lsPulse 1.4s infinite;
+}
+
+@keyframes lsPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
   }
 }
 
-.cellTitle {
+.pillLive {
+  background: rgba(255, 46, 158, 0.14);
+  border-color: rgba(255, 46, 158, 0.4);
+  color: #ff7ec2;
+}
+
+.pillReview {
+  background: rgba(155, 123, 255, 0.14);
+  border-color: rgba(155, 123, 255, 0.4);
+  color: #bba6ff;
+}
+
+.pillNeutral {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: ads.$text-dim;
+}
+
+.pillRejected {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.32);
+  color: #f87171;
+}
+
+.dest {
+  font-family: ads.$mono;
+  font-size: 10px;
+  color: #5f5f67;
+}
+
+.cardTitle {
   font-family: ads.$ui;
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 15.5px;
+  color: ads.$text;
+  margin-bottom: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.cellMono {
+.meta {
+  display: flex;
+  gap: 14px;
   font-family: ads.$mono;
-  font-size: 13px;
-  color: ads.$text-dim;
+  font-size: 11px;
+  color: ads.$text-muted;
+  letter-spacing: 0.04em;
 }
 
-.cellAccent {
+.metaKey {
+  color: #5f5f67;
+}
+
+// metrics
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.stat {
+  min-width: 0;
+}
+
+.statLabel {
   font-family: ads.$mono;
-  font-weight: 500;
-  font-size: 13px;
+  font-weight: 400;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: #6f6f77;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 14px;
+  color: ads.$text;
+}
+
+.statAccent {
   color: ads.$accent;
 }
 
-.right {
-  text-align: right;
-  justify-self: end;
+.statPink {
+  color: ads.$accent;
+}
+
+// budget bar
+.budget {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.budgetText {
+  font-family: ads.$mono;
+  font-size: 10px;
+  color: ads.$text-muted;
+  letter-spacing: 0.06em;
+}
+
+.budgetBar {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.budgetFill {
+  display: block;
+  height: 100%;
+  background: ads.$accent;
+  border-radius: 999px;
 }

@@ -17,6 +17,9 @@ import {
   DialogTitle,
   DialogTrigger,
   Skeleton,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from '@live-show/design-system';
 import { useGetAdQuery } from '@/features/advertisements/queries/use-get-ad';
 import { useAdReportQuery } from '@/features/advertisements/queries/use-ad-report';
@@ -464,22 +467,22 @@ function BudgetCard({ ad, report }: { ad: AdResponse; report?: AdReportResponse 
   );
 }
 
-// Blocked-submit reason surfaced as a hover/focus tooltip on a "?" icon,
-// instead of a persistent warning card. CSS-only (no tooltip primitive in the
-// design system yet); the button icon carries the reason as its accessible name.
+// Blocked-submit reason surfaced as a "?" info tooltip (design-system Tooltip,
+// which keeps the bubble on-screen via collision detection). The reason is also
+// the trigger's accessible name so it's reachable without hover.
 function InfoTooltip({ text }: { text: string }) {
   return (
-    <span className={styles.tooltip}>
-      <button type="button" className={styles.tooltipTrigger} aria-label={text}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7M12 17h.01" />
-        </svg>
-      </button>
-      <span role="tooltip" className={styles.tooltipBubble}>
-        {text}
-      </span>
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className={styles.tooltipTrigger} aria-label={text}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7M12 17h.01" />
+          </svg>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{text}</TooltipContent>
+    </Tooltip>
   );
 }
 

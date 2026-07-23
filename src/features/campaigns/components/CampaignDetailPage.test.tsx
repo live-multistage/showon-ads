@@ -245,7 +245,8 @@ describe('CampaignDetailPage', () => {
 
     const submitButton = screen.getByRole('button', { name: 'Enviar para revisão' });
     expect(submitButton).toBeDisabled();
-    expect(screen.getByText(/destino obrigatório/i)).toBeInTheDocument();
+    // The reason is exposed as the "?" tooltip trigger's accessible name.
+    expect(screen.getByRole('button', { name: /destino obrigatório/i })).toBeInTheDocument();
 
     fireEvent.click(submitButton);
     expect(mutateSpy).not.toHaveBeenCalled();
@@ -258,7 +259,9 @@ describe('CampaignDetailPage', () => {
     const submitButton = screen.getByRole('button', { name: 'Enviar para revisão' });
     expect(submitButton).toBeDisabled();
     expect(
-      screen.getByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
+      screen.getByRole('button', {
+        name: 'Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.',
+      }),
     ).toBeInTheDocument();
   });
 

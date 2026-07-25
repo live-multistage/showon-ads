@@ -1,18 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-  SimpleCustomSelect,
-  Skeleton,
-  type SelectOption,
-} from '@live-show/design-system';
+import { Input, SimpleCustomSelect, Skeleton, type SelectOption } from '@live-show/design-system';
 import { useActiveAdvertiserAccount } from '../providers/ActiveAdvertiserAccountProvider';
 import { useAdvertiserMembersQuery } from '@/features/advertisements/queries/use-advertiser-members';
 import { useRenameAdvertiserMutation } from '@/features/advertisements/mutations/use-rename-advertiser.mutation';
@@ -22,9 +11,30 @@ import type { AdvertiserMemberRole } from '@/features/advertisements/types/adver
 import styles from './AccountPage.module.scss';
 
 const ROLE_LABEL: Record<AdvertiserMemberRole, string> = {
-  OWNER: 'Proprietário',
-  MANAGER: 'Gerente',
+  OWNER: 'PROPRIETÁRIO',
+  MANAGER: 'GERENTE',
 };
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '—';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function formatCreated(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d
+    .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .replace(/\./g, '')
+    .toUpperCase();
+}
+
+// Short account id for the eyebrow: first block of the UUID, uppercased.
+function shortId(id: string): string {
+  return `ACC-${id.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+}
 
 // V1 members list is read-only (invites out of scope) — only the account
 // name can be edited here, and only by an OWNER of the active account.
@@ -63,7 +73,9 @@ export function AccountPage() {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <Skeleton className={styles.skeletonCard} aria-label="Carregando conta" />
+        <Skeleton className={styles.skeletonHeader} aria-label="Carregando conta" />
+        <Skeleton className={styles.skeletonCard} />
+        <Skeleton className={styles.skeletonCard} />
       </div>
     );
   }
@@ -71,105 +83,206 @@ export function AccountPage() {
   if (!account) {
     return (
       <div className={styles.page}>
-        <Card>
-          <CardContent className={styles.empty}>
-            <p>Nenhuma conta de anunciante encontrada.</p>
-          </CardContent>
-        </Card>
+        <div className={styles.breadcrumb}>
+          <span>ADS MANAGER</span>
+          <span className={styles.crumbSep}>/</span>
+          <span className={styles.crumbActive}>CONTA</span>
+        </div>
+        <div className={styles.emptyCard}>Nenhuma conta de anunciante encontrada.</div>
       </div>
     );
   }
 
+  const isActive = account.status === 'ACTIVE';
+  const created = formatCreated(account.createdAt);
+
   return (
     <div className={styles.page}>
+      {/* breadcrumb */}
+      <div className={styles.breadcrumb}>
+        <span>ADS MANAGER</span>
+        <span className={styles.crumbSep}>/</span>
+        <span className={styles.crumbActive}>CONTA</span>
+      </div>
+
+      {/* header */}
+      <header className={styles.header}>
+        <div className={styles.headerMeta}>
+          <span className={`${styles.statusPill} ${isActive ? styles.statusOk : styles.statusOff}`}>
+            <span className={styles.statusDot} />
+            {isActive ? 'CONTA ATIVA' : 'CONTA SUSPENSA'}
+          </span>
+          <span className={styles.headerId}>
+            ID: {shortId(account.id)}
+            {created && ` · CRIADA ${created}`}
+          </span>
+        </div>
+        <h1 className={styles.title}>Conta &amp; Organização</h1>
+        <p className={styles.subtitle}>
+          Gerencie sua conta anunciante, membros e permissões na plataforma LIVESHOW.
+        </p>
+      </header>
+
+      {/* account switcher */}
       {accounts.length > 1 && (
-        <SimpleCustomSelect
-          value={activeAccountId ?? undefined}
-          onValueChange={setActiveAccountId}
-          options={accountOptions}
-          placeholder="Selecione uma conta"
-        />
+        <div className={styles.switcher}>
+          <div className={styles.switcherLeft}>
+            <span className={styles.switcherLabel}>CONTA ATIVA</span>
+            <span className={styles.switcherDivider} />
+            <span className={styles.switcherAvatar}>{initials(account.name)}</span>
+            <span className={styles.switcherName}>{account.name}</span>
+            <span className={styles.switcherDot}>·</span>
+            <span className={styles.switcherCount}>
+              {accounts.length} {accounts.length === 1 ? 'CONTA' : 'CONTAS'}
+            </span>
+          </div>
+          <div className={styles.switcherSelect}>
+            <SimpleCustomSelect
+              value={activeAccountId ?? undefined}
+              onValueChange={setActiveAccountId}
+              options={accountOptions}
+              placeholder="Trocar"
+            />
+          </div>
+        </div>
       )}
 
-      <Card>
-        <CardHeader className={styles.accountHeader}>
-          {isEditingName ? (
-            <form onSubmit={handleSubmit} className={styles.nameForm} noValidate>
-              <Input
-                autoFocus
-                value={nameDraft}
-                onChange={(event) => setNameDraft(event.target.value)}
-                disabled={rename.isPending}
-                aria-label="Nome da conta"
-              />
-              <Button type="submit" size="sm" disabled={rename.isPending}>
-                Salvar
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditingName(false)}
-                disabled={rename.isPending}
-              >
-                Cancelar
-              </Button>
-            </form>
-          ) : (
-            <div className={styles.nameRow}>
-              <CardTitle>{account.name}</CardTitle>
-              {isOwner && (
-                <Button variant="ghost" size="sm" onClick={startEditing}>
-                  Editar nome
-                </Button>
+      {/* big account card */}
+      <section className={styles.orgCard}>
+        <div className={styles.orgGlow} />
+        <div className={styles.orgTop}>
+          <div className={styles.orgIdentity}>
+            <span className={styles.orgAvatar}>{initials(account.name)}</span>
+            <div className={styles.orgIdentityText}>
+              {isEditingName ? (
+                <form onSubmit={handleSubmit} className={styles.nameForm} noValidate>
+                  <Input
+                    autoFocus
+                    value={nameDraft}
+                    onChange={(event) => setNameDraft(event.target.value)}
+                    disabled={rename.isPending}
+                    aria-label="Nome da conta"
+                    className={styles.nameInput}
+                  />
+                  <button type="submit" className={styles.btnPrimary} disabled={rename.isPending}>
+                    Salvar
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.btnGhost}
+                    onClick={() => setIsEditingName(false)}
+                    disabled={rename.isPending}
+                  >
+                    Cancelar
+                  </button>
+                </form>
+              ) : (
+                <>
+                  <div className={styles.orgNameRow}>
+                    <h2 className={styles.orgName}>{account.name}</h2>
+                    {account.organizationId && (
+                      <span className={styles.badgeLinked}>VINCULADA</span>
+                    )}
+                  </div>
+                  <div className={styles.orgSubline}>
+                    <span className={styles.orgSubItem}>ID {shortId(account.id)}</span>
+                    {created && (
+                      <>
+                        <span className={styles.orgSubDot}>·</span>
+                        <span>CRIADA {created}</span>
+                      </>
+                    )}
+                  </div>
+                </>
               )}
             </div>
-          )}
-
-          {rename.error && (
-            <p className={styles.error} role="alert">
-              {normalizeError(rename.error).message}
-            </p>
-          )}
-
-          <div className={styles.badges}>
-            <Badge variant={account.status === 'ACTIVE' ? 'default' : 'destructive'}>
-              {account.status === 'ACTIVE' ? 'Ativa' : 'Suspensa'}
-            </Badge>
-            {account.organizationId && <Badge variant="secondary">Vinculada a uma organização</Badge>}
           </div>
-        </CardHeader>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Membros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isMembersLoading && (
-            <div aria-label="Carregando membros">
-              <Skeleton className={styles.skeletonRow} />
-              <Skeleton className={styles.skeletonRow} />
-            </div>
+          {isOwner && !isEditingName && (
+            <button type="button" className={styles.btnSecondary} onClick={startEditing}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+              EDITAR NOME
+            </button>
           )}
+        </div>
 
-          {!isMembersLoading && members.length === 0 && <p>Nenhum membro encontrado.</p>}
+        {rename.error && (
+          <p className={styles.error} role="alert">
+            {normalizeError(rename.error).message}
+          </p>
+        )}
 
-          {!isMembersLoading && members.length > 0 && (
-            <ul className={styles.memberList}>
-              {members.map((member) => (
+        {/* stats — real data only */}
+        <div className={styles.stats}>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>MEMBROS</div>
+            <div className={styles.statValue}>{isMembersLoading ? '—' : members.length}</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>CONTAS ANUNCIANTES</div>
+            <div className={styles.statValue}>{accounts.length}</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>STATUS</div>
+            <div className={`${styles.statValue} ${isActive ? styles.statOk : styles.statOff}`}>
+              {isActive ? 'ATIVA' : 'SUSPENSA'}
+            </div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>VÍNCULO</div>
+            <div className={styles.statValue}>{account.organizationId ? 'ORG' : 'AVULSA'}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* members */}
+      <section className={styles.membersCard}>
+        <div className={styles.membersHead}>
+          <div className={styles.membersHeadLeft}>
+            <span className={styles.sectionTitle}>MEMBROS</span>
+            {!isMembersLoading && <span className={styles.countChip}>{members.length}</span>}
+          </div>
+        </div>
+
+        {isMembersLoading && (
+          <div aria-label="Carregando membros" className={styles.memberList}>
+            <Skeleton className={styles.skeletonRow} />
+            <Skeleton className={styles.skeletonRow} />
+          </div>
+        )}
+
+        {!isMembersLoading && members.length === 0 && (
+          <p className={styles.membersEmpty}>Nenhum membro encontrado.</p>
+        )}
+
+        {!isMembersLoading && members.length > 0 && (
+          <ul className={styles.memberList}>
+            {members.map((member) => {
+              const name = member.displayName ?? member.userId;
+              return (
                 <li key={member.userId} className={styles.memberRow}>
                   <div className={styles.memberInfo}>
-                    <span className={styles.memberName}>{member.displayName ?? member.userId}</span>
-                    {member.email && <span className={styles.memberEmail}>{member.email}</span>}
+                    <span className={styles.memberAvatar}>{initials(name)}</span>
+                    <div className={styles.memberText}>
+                      <span className={styles.memberName}>{name}</span>
+                      {member.email && <span className={styles.memberEmail}>{member.email}</span>}
+                    </div>
                   </div>
-                  <Badge variant="outline">{ROLE_LABEL[member.role]}</Badge>
+                  <span
+                    className={`${styles.roleBadge} ${
+                      member.role === 'OWNER' ? styles.roleOwner : styles.roleManager
+                    }`}
+                  >
+                    {ROLE_LABEL[member.role]}
+                  </span>
                 </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

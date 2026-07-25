@@ -113,7 +113,7 @@ describe('AccountPage', () => {
     renderPage();
 
     expect(screen.getByText('Acme Ads')).toBeInTheDocument();
-    expect(screen.getByText('Ativa')).toBeInTheDocument();
+    expect(screen.getByText('CONTA ATIVA')).toBeInTheDocument();
   });
 
   it('shows a linked-organization badge when organizationId is set', () => {
@@ -121,13 +121,13 @@ describe('AccountPage', () => {
 
     renderPage();
 
-    expect(screen.getByText('Vinculada a uma organização')).toBeInTheDocument();
+    expect(screen.getByText('VINCULADA')).toBeInTheDocument();
   });
 
   it('does not show the organization badge when organizationId is null', () => {
     renderPage();
 
-    expect(screen.queryByText('Vinculada a uma organização')).not.toBeInTheDocument();
+    expect(screen.queryByText('VINCULADA')).not.toBeInTheDocument();
   });
 
   it('renders the members list with names, emails, and roles', () => {
@@ -144,8 +144,8 @@ describe('AccountPage', () => {
     expect(screen.getByText('Alice')).toBeInTheDocument();
     expect(screen.getByText('alice@example.com')).toBeInTheDocument();
     expect(screen.getByText('Bob')).toBeInTheDocument();
-    expect(screen.getByText('Proprietário')).toBeInTheDocument();
-    expect(screen.getByText('Gerente')).toBeInTheDocument();
+    expect(screen.getByText('PROPRIETÁRIO')).toBeInTheDocument();
+    expect(screen.getByText('GERENTE')).toBeInTheDocument();
   });
 
   it('shows the "Editar nome" control only when the caller is OWNER', () => {
@@ -156,7 +156,7 @@ describe('AccountPage', () => {
 
     renderPage();
 
-    expect(screen.getByRole('button', { name: 'Editar nome' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'EDITAR NOME' })).toBeInTheDocument();
   });
 
   it('hides the "Editar nome" control for a MANAGER caller', () => {
@@ -167,7 +167,7 @@ describe('AccountPage', () => {
 
     renderPage();
 
-    expect(screen.queryByRole('button', { name: 'Editar nome' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'EDITAR NOME' })).not.toBeInTheDocument();
   });
 
   it('submits the renamed value through the rename mutation', () => {
@@ -178,7 +178,7 @@ describe('AccountPage', () => {
 
     renderPage();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar nome' }));
+    fireEvent.click(screen.getByRole('button', { name: 'EDITAR NOME' }));
     fireEvent.change(screen.getByLabelText('Nome da conta'), { target: { value: 'New Name' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 

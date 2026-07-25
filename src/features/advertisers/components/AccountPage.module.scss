@@ -1,8 +1,10 @@
 @use '../../../styles/ads-theme' as ads;
 
+$gradient: linear-gradient(135deg, #ff2e9e, #9b7bff);
+
 .page {
-  padding: 2rem;
-  max-width: 720px;
+  padding: 30px 40px 56px;
+  max-width: 1040px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -17,53 +19,434 @@
   }
 }
 
-.accountHeader {
-  @include ads.card;
-  padding: 24px;
+// ── Breadcrumb ────────────────────────────────────────
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 20px;
+  @include ads.mono-label(0.6875rem, #9a9aa2);
+  letter-spacing: 0.14em;
 }
 
-.nameRow {
+.crumbSep {
+  color: #3f3f47;
+}
+
+.crumbActive {
+  color: #ff7ec2;
+}
+
+// ── Header ────────────────────────────────────────────
+.header {
+  margin-bottom: 26px;
+}
+
+.headerMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  @include ads.mono-label(0.656rem);
+  letter-spacing: 0.1em;
+  padding: 5px 11px;
+  border-radius: ads.$radius-pill;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.statusOk {
+  background: rgba(127, 224, 160, 0.14);
+  border: 1px solid rgba(127, 224, 160, 0.4);
+  color: #7fe0a0;
+}
+
+.statusOff {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  color: #f87171;
+}
+
+.headerId {
+  @include ads.mono-label(0.656rem, #6f6f77);
+  letter-spacing: 0.08em;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-family: ads.$ui;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: ads.$text;
+}
+
+.subtitle {
+  margin: 0;
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: #9a9aa2;
+}
+
+// ── Account switcher ──────────────────────────────────
+.switcher {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
+  @include ads.card;
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
 }
 
+.switcherLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.switcherLabel {
+  @include ads.mono-label(0.594rem);
+  letter-spacing: 0.14em;
+}
+
+.switcherDivider {
+  width: 1px;
+  height: 22px;
+  background: ads.$border-soft;
+}
+
+.switcherAvatar {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 9px;
+  background: $gradient;
+  color: ads.$accent-ink;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ads.$mono;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.switcherName {
+  font-family: ads.$ui;
+  font-size: 15px;
+  font-weight: 700;
+  color: ads.$text;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.switcherDot {
+  font-family: ads.$mono;
+  color: #6f6f77;
+}
+
+.switcherCount {
+  @include ads.mono-label(0.656rem, #8f8f97);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.switcherSelect {
+  flex: none;
+  min-width: 180px;
+}
+
+// ── Big account card ──────────────────────────────────
+.orgCard {
+  position: relative;
+  @include ads.card;
+  border-radius: 18px;
+  padding: 26px 28px;
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+
+.orgGlow {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 46, 158, 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+.orgTop {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.orgIdentity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.orgAvatar {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: $gradient;
+  color: ads.$accent-ink;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ads.$mono;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.orgIdentityText {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.orgNameRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.orgName {
+  margin: 0;
+  font-family: ads.$ui;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: ads.$text;
+}
+
+.badgeLinked {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: ads.$accent-soft;
+  border: 1px solid rgba(255, 46, 158, 0.35);
+  color: #ff8ec9;
+  @include ads.mono-label(0.594rem);
+  letter-spacing: 0.1em;
+  padding: 3px 9px;
+  border-radius: ads.$radius-pill;
+  white-space: nowrap;
+}
+
+.orgSubline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  @include ads.mono-label(0.688rem, #8f8f97);
+  letter-spacing: 0.04em;
+}
+
+.orgSubDot {
+  color: #3f3f47;
+}
+
+// ── Buttons ───────────────────────────────────────────
+.btnPrimary,
+.btnSecondary,
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  height: 38px;
+  border-radius: 10px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.btnPrimary {
+  background: ads.$accent;
+  border: none;
+  color: ads.$accent-ink;
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0 18px;
+
+  &:hover:not(:disabled) {
+    background: ads.$accent-bright;
+  }
+}
+
+.btnSecondary {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid ads.$border-chip;
+  color: #e7e7ea;
+  @include ads.mono-label(0.656rem, #e7e7ea);
+  letter-spacing: 0.08em;
+  padding: 0 14px;
+
+  &:hover:not(:disabled) {
+    border-color: ads.$accent-hover-border;
+    color: ads.$text;
+  }
+}
+
+.btnGhost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #9a9aa2;
+  font-family: ads.$ui;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0 14px;
+
+  &:hover:not(:disabled) {
+    color: ads.$text;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+// ── Inline rename ─────────────────────────────────────
 .nameForm {
   display: flex;
-  gap: 8px;
   align-items: center;
-}
-
-.badges {
-  display: flex;
   gap: 8px;
-  margin-top: 12px;
   flex-wrap: wrap;
 }
 
+.nameInput {
+  min-width: 220px;
+}
+
 .error {
-  margin-top: 12px;
+  position: relative;
+  margin: 16px 0 0;
   padding: 10px 14px;
-  background: rgba(220, 38, 38, 0.08);
-  border: 1px solid rgba(220, 38, 38, 0.28);
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.28);
   border-radius: 8px;
   font-family: ads.$ui;
   font-size: 13px;
   color: #f87171;
 }
 
-.empty {
-  font-family: ads.$ui;
-  font-size: 14px;
-  color: ads.$text-muted;
+// ── Stats row ─────────────────────────────────────────
+.stats {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-// ── Members ───────────────────────────────────────────
-.memberList {
+.stat {
+  min-width: 0;
+  padding: 0 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+
+  &:first-child {
+    padding-left: 0;
+    border-left: none;
+  }
+  &:last-child {
+    padding-right: 0;
+  }
+}
+
+.statLabel {
+  @include ads.mono-label(0.594rem, #7d7d85);
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+
+.statValue {
+  font-family: ads.$mono;
+  font-size: 18px;
+  font-weight: 700;
+  color: ads.$text;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.statOk {
+  color: #7fe0a0;
+}
+
+.statOff {
+  color: #f87171;
+}
+
+// ── Members card ──────────────────────────────────────
+.membersCard {
   @include ads.card;
-  padding: 8px;
+  border-radius: 18px;
+  padding: 22px 24px;
+}
+
+.membersHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.membersHeadLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionTitle {
+  @include ads.section-title;
+  font-size: 0.688rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.countChip {
+  @include ads.mono-label(0.625rem, #8f8f97);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: ads.$radius-pill;
+}
+
+.memberList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
 }
@@ -72,16 +455,41 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 16px;
-  border-bottom: 1px solid ads.$border-soft;
+  gap: 12px;
+  padding: 14px 12px;
+  margin: 0 -12px;
+  border-radius: 12px;
+  transition: background 0.15s ease;
 
-  &:last-child {
-    border-bottom: none;
+  &:hover {
+    background: rgba(255, 255, 255, 0.02);
   }
 }
 
 .memberInfo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.memberAvatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid ads.$border-soft;
+  color: ads.$text;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.memberText {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -90,41 +498,80 @@
 
 .memberName {
   font-family: ads.$ui;
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 14.5px;
   color: ads.$text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .memberEmail {
   font-family: ads.$mono;
-  font-size: 12px;
+  font-size: 11px;
+  color: #8f8f97;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roleBadge {
+  display: inline-flex;
+  flex-shrink: 0;
+  @include ads.mono-label(0.594rem);
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: ads.$radius-pill;
+  white-space: nowrap;
+}
+
+.roleOwner {
+  background: ads.$accent-soft;
+  border: 1px solid rgba(255, 46, 158, 0.35);
+  color: #ff8ec9;
+}
+
+.roleManager {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid ads.$border-chip;
+  color: #b9b9c0;
+}
+
+.membersEmpty {
+  margin: 4px 0 0;
+  font-family: ads.$ui;
+  font-size: 14px;
   color: ads.$text-muted;
 }
 
-// ── Skeletons ─────────────────────────────────────────
+// ── Empty / loading ───────────────────────────────────
+.emptyCard {
+  @include ads.card;
+  border-radius: 18px;
+  padding: 28px;
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text-muted;
+}
+
+.skeletonHeader {
+  height: 96px;
+  border-radius: 12px;
+  margin-bottom: 22px;
+}
+
 .skeletonCard {
   @include ads.card;
-  padding: 24px;
-  margin-bottom: 20px;
+  height: 160px;
+  border-radius: 18px;
+  margin-bottom: 22px;
 }
 
 .skeletonRow {
-  height: 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
-  animation: sk 1.5s infinite;
+  height: 40px;
+  border-radius: 10px;
 
   & + & {
-    margin-top: 12px;
-  }
-}
-
-@keyframes sk {
-  0%,
-  100% {
-    opacity: 0.06;
-  }
-  50% {
-    opacity: 0.12;
+    margin-top: 10px;
   }
 }

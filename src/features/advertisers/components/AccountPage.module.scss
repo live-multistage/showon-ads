@@ -414,6 +414,10 @@ $gradient: linear-gradient(135deg, #ff2e9e, #9b7bff);
   @include ads.card;
   border-radius: 18px;
   padding: 22px 24px;
+
+  & + & {
+    margin-top: 22px;
+  }
 }
 
 .membersHead {
@@ -535,6 +539,13 @@ $gradient: linear-gradient(135deg, #ff2e9e, #9b7bff);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid ads.$border-chip;
   color: #b9b9c0;
+}
+
+.inviteRowRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .membersEmpty {

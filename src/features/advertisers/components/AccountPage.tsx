@@ -3,8 +3,11 @@
 import { useState, type FormEvent } from 'react';
 import { Input, SimpleCustomSelect, Skeleton, type SelectOption } from '@live-show/design-system';
 import { useActiveAdvertiserAccount } from '../providers/ActiveAdvertiserAccountProvider';
+import { InviteMemberModal } from './InviteMemberModal';
 import { useAdvertiserMembersQuery } from '@/features/advertisements/queries/use-advertiser-members';
 import { useRenameAdvertiserMutation } from '@/features/advertisements/mutations/use-rename-advertiser.mutation';
+import { useAdvertiserInvitesQuery } from '@/features/advertisements/queries/use-advertiser-invites';
+import { useRevokeInviteMutation } from '@/features/advertisements/mutations/use-revoke-invite.mutation';
 import { useSession } from '@/features/auth/hooks/use-session';
 import { normalizeError } from '@/shared/api/client';
 import type { AdvertiserMemberRole } from '@/features/advertisements/types/advertisement.types';
@@ -14,6 +17,13 @@ const ROLE_LABEL: Record<AdvertiserMemberRole, string> = {
   OWNER: 'PROPRIETÁRIO',
   MANAGER: 'GERENTE',
 };
+
+// Days remaining until expiresAt, floored at 0 (never shows negative days
+// for an already-expired invite — the row just won't be in the PENDING list).
+function daysUntil(iso: string): number {
+  const ms = new Date(iso).getTime() - Date.now();
+  return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
+}
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -36,8 +46,8 @@ function shortId(id: string): string {
   return `ACC-${id.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
 }
 
-// V1 members list is read-only (invites out of scope) — only the account
-// name can be edited here, and only by an OWNER of the active account.
+// Account name edit and member invites are OWNER-only actions, gated by
+// isOwner (derived from the current user's role in the members list).
 export function AccountPage() {
   const { accounts, activeAccountId, setActiveAccountId, isLoading: isAccountsLoading } =
     useActiveAdvertiserAccount();
@@ -50,9 +60,12 @@ export function AccountPage() {
 
   const { data: members = [], isLoading: isMembersLoading } = useAdvertiserMembersQuery(activeAccountId);
   const rename = useRenameAdvertiserMutation(activeAccountId ?? '');
+  const { data: invites = [], isLoading: isInvitesLoading } = useAdvertiserInvitesQuery(activeAccountId);
+  const revokeInvite = useRevokeInviteMutation(activeAccountId ?? '');
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const currentMember = members.find((m) => m.userId === user?.id);
   const isOwner = currentMember?.role === 'OWNER';
@@ -244,6 +257,16 @@ export function AccountPage() {
             <span className={styles.sectionTitle}>MEMBROS</span>
             {!isMembersLoading && <span className={styles.countChip}>{members.length}</span>}
           </div>
+          {isOwner && (
+            <button type="button" className={styles.btnSecondary} onClick={() => setIsInviteModalOpen(true)}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M19 8v6M22 11h-6" />
+              </svg>
+              CONVIDAR
+            </button>
+          )}
         </div>
 
         {isMembersLoading && (
@@ -283,6 +306,71 @@ export function AccountPage() {
           </ul>
         )}
       </section>
+
+      {/* pending invites — hidden entirely when there's nothing to show */}
+      {isInvitesLoading && (
+        <section className={styles.membersCard} aria-label="Carregando convites">
+          <Skeleton className={styles.skeletonRow} />
+        </section>
+      )}
+
+      {!isInvitesLoading && invites.length > 0 && (
+        <section className={styles.membersCard}>
+          <div className={styles.membersHead}>
+            <div className={styles.membersHeadLeft}>
+              <span className={styles.sectionTitle}>CONVITES PENDENTES</span>
+              <span className={styles.countChip}>{invites.length}</span>
+            </div>
+          </div>
+
+          <ul className={styles.memberList}>
+            {invites.map((invite) => (
+              <li key={invite.id} className={styles.memberRow}>
+                <div className={styles.memberInfo}>
+                  <span className={styles.memberAvatar}>{initials(invite.email)}</span>
+                  <div className={styles.memberText}>
+                    <span className={styles.memberName}>{invite.email}</span>
+                    <span className={styles.memberEmail}>EXPIRA EM {daysUntil(invite.expiresAt)}D</span>
+                  </div>
+                </div>
+                <div className={styles.inviteRowRight}>
+                  <span
+                    className={`${styles.roleBadge} ${
+                      invite.role === 'OWNER' ? styles.roleOwner : styles.roleManager
+                    }`}
+                  >
+                    {ROLE_LABEL[invite.role]}
+                  </span>
+                  {isOwner && (
+                    <button
+                      type="button"
+                      className={styles.btnGhost}
+                      disabled={revokeInvite.isPending && revokeInvite.variables === invite.id}
+                      onClick={() => revokeInvite.mutate(invite.id)}
+                    >
+                      Revogar
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {revokeInvite.error && (
+            <p className={styles.error} role="alert">
+              {normalizeError(revokeInvite.error).message}
+            </p>
+          )}
+        </section>
+      )}
+
+      {activeAccountId && (
+        <InviteMemberModal
+          accountId={activeAccountId}
+          open={isInviteModalOpen}
+          onOpenChange={setIsInviteModalOpen}
+        />
+      )}
     </div>
   );
 }

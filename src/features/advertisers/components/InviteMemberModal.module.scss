@@ -1,0 +1,107 @@
+@use '../../../styles/ads-theme' as ads;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  @include ads.mono-label(0.656rem);
+  letter-spacing: 0.1em;
+}
+
+.error {
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 8px;
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: #f87171;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btnPrimary,
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  height: 38px;
+  border-radius: 10px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.btnPrimary {
+  background: ads.$accent;
+  border: none;
+  color: ads.$accent-ink;
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0 18px;
+
+  &:hover:not(:disabled) {
+    background: ads.$accent-bright;
+  }
+}
+
+.btnGhost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #9a9aa2;
+  font-family: ads.$ui;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0 14px;
+
+  &:hover:not(:disabled) {
+    color: ads.$text;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+// ── Success state (accept link) ───────────────────────
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resultLabel {
+  @include ads.mono-label(0.656rem);
+  letter-spacing: 0.1em;
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.linkInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ads.$mono;
+  font-size: 12px;
+}

@@ -4,10 +4,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AccountPage } from './AccountPage';
 import { useAdvertiserMembersQuery } from '@/features/advertisements/queries/use-advertiser-members';
 import { useRenameAdvertiserMutation } from '@/features/advertisements/mutations/use-rename-advertiser.mutation';
+import { useAdvertiserInvitesQuery } from '@/features/advertisements/queries/use-advertiser-invites';
+import { useCreateInviteMutation } from '@/features/advertisements/mutations/use-create-invite.mutation';
+import { useRevokeInviteMutation } from '@/features/advertisements/mutations/use-revoke-invite.mutation';
 import { useSession } from '@/features/auth/hooks/use-session';
 import type {
   AdvertiserAccountResponse,
   AdvertiserMemberResponse,
+  AdvertiserInviteView,
 } from '@/features/advertisements/types/advertisement.types';
 
 // jsdom doesn't implement pointer capture / scrollIntoView, which Radix
@@ -28,12 +32,24 @@ vi.mock('@/features/advertisements/queries/use-advertiser-members', () => ({
 vi.mock('@/features/advertisements/mutations/use-rename-advertiser.mutation', () => ({
   useRenameAdvertiserMutation: vi.fn(),
 }));
+vi.mock('@/features/advertisements/queries/use-advertiser-invites', () => ({
+  useAdvertiserInvitesQuery: vi.fn(),
+}));
+vi.mock('@/features/advertisements/mutations/use-create-invite.mutation', () => ({
+  useCreateInviteMutation: vi.fn(),
+}));
+vi.mock('@/features/advertisements/mutations/use-revoke-invite.mutation', () => ({
+  useRevokeInviteMutation: vi.fn(),
+}));
 vi.mock('@/features/auth/hooks/use-session', () => ({
   useSession: vi.fn(),
 }));
 
 const mockedUseAdvertiserMembersQuery = vi.mocked(useAdvertiserMembersQuery);
 const mockedUseRenameAdvertiserMutation = vi.mocked(useRenameAdvertiserMutation);
+const mockedUseAdvertiserInvitesQuery = vi.mocked(useAdvertiserInvitesQuery);
+const mockedUseCreateInviteMutation = vi.mocked(useCreateInviteMutation);
+const mockedUseRevokeInviteMutation = vi.mocked(useRevokeInviteMutation);
 const mockedUseSession = vi.mocked(useSession);
 
 let mockAccounts: AdvertiserAccountResponse[] = [];
@@ -83,6 +99,25 @@ function makeMember(overrides: Partial<AdvertiserMemberResponse>): AdvertiserMem
   };
 }
 
+function makeInvite(overrides: Partial<AdvertiserInviteView>): AdvertiserInviteView {
+  return {
+    id: 'invite-1',
+    advertiserAccountId: 'acc-a',
+    email: 'invitee@example.com',
+    role: 'MANAGER',
+    status: 'PENDING',
+    invitedByUserId: 'user-1',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    expiresAt: '2099-01-01T00:00:00.000Z',
+    acceptedByUserId: null,
+    acceptedAt: null,
+    ...overrides,
+  };
+}
+
+const mockCreateInviteMutate = vi.fn();
+const mockRevokeInviteMutate = vi.fn();
+
 describe('AccountPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -100,6 +135,25 @@ describe('AccountPage', () => {
       isPending: false,
       error: null,
     } as unknown as ReturnType<typeof useRenameAdvertiserMutation>);
+
+    mockedUseAdvertiserInvitesQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserInvitesQuery>);
+
+    mockedUseCreateInviteMutation.mockReturnValue({
+      mutate: mockCreateInviteMutate,
+      isPending: false,
+      error: null,
+      reset: vi.fn(),
+    } as unknown as ReturnType<typeof useCreateInviteMutation>);
+
+    mockedUseRevokeInviteMutation.mockReturnValue({
+      mutate: mockRevokeInviteMutate,
+      isPending: false,
+      error: null,
+      variables: undefined,
+    } as unknown as ReturnType<typeof useRevokeInviteMutation>);
 
     mockedUseSession.mockReturnValue({
       user: { id: 'user-1', email: 'alice@example.com', displayName: 'Alice', role: 'ADVERTISER' },
@@ -203,5 +257,81 @@ describe('AccountPage', () => {
     renderPage();
 
     expect(screen.getByText('Nenhuma conta de anunciante encontrada.')).toBeInTheDocument();
+  });
+
+  it('opens the invite modal and submits email + role through the create mutation', () => {
+    mockedUseAdvertiserMembersQuery.mockReturnValue({
+      data: [makeMember({ userId: 'user-1', role: 'OWNER' })],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserMembersQuery>);
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /CONVIDAR/ }));
+    fireEvent.change(screen.getByLabelText('E-MAIL'), { target: { value: 'invitee@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar convite' }));
+
+    expect(mockCreateInviteMutate).toHaveBeenCalledWith(
+      { email: 'invitee@example.com', role: 'MANAGER' },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it('does not show the invite trigger for a MANAGER caller', () => {
+    mockedUseAdvertiserMembersQuery.mockReturnValue({
+      data: [makeMember({ userId: 'user-1', role: 'MANAGER' })],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserMembersQuery>);
+
+    renderPage();
+
+    expect(screen.queryByRole('button', { name: /CONVIDAR/ })).not.toBeInTheDocument();
+  });
+
+  it('renders the pending invites list and revokes through the revoke mutation', () => {
+    mockedUseAdvertiserMembersQuery.mockReturnValue({
+      data: [makeMember({ userId: 'user-1', role: 'OWNER' })],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserMembersQuery>);
+    mockedUseAdvertiserInvitesQuery.mockReturnValue({
+      data: [makeInvite({ id: 'invite-1', email: 'invitee@example.com', role: 'MANAGER' })],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserInvitesQuery>);
+
+    renderPage();
+
+    expect(screen.getByText('invitee@example.com')).toBeInTheDocument();
+    expect(screen.getByText('CONVITES PENDENTES')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Revogar' }));
+
+    expect(mockRevokeInviteMutate).toHaveBeenCalledWith('invite-1');
+  });
+
+  it('hides the revoke control for a MANAGER caller', () => {
+    mockedUseAdvertiserMembersQuery.mockReturnValue({
+      data: [makeMember({ userId: 'user-1', role: 'MANAGER' })],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserMembersQuery>);
+    mockedUseAdvertiserInvitesQuery.mockReturnValue({
+      data: [makeInvite({ id: 'invite-1' })],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserInvitesQuery>);
+
+    renderPage();
+
+    expect(screen.getByText('invitee@example.com')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Revogar' })).not.toBeInTheDocument();
+  });
+
+  it('renders nothing for the invites section when there are no pending invites', () => {
+    mockedUseAdvertiserMembersQuery.mockReturnValue({
+      data: [makeMember({ userId: 'user-1', role: 'OWNER' })],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAdvertiserMembersQuery>);
+
+    renderPage();
+
+    expect(screen.queryByText('CONVITES PENDENTES')).not.toBeInTheDocument();
   });
 });

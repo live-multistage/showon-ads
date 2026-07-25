@@ -142,3 +142,48 @@ export interface AdvertiserMemberResponse {
   email: string | null;
   role: AdvertiserMemberRole;
 }
+
+// Mirrors AdvertiserInvite.toJSON() in the orchestrator — returned by
+// POST /advertisers/:id/invites (creation, includes token) and by
+// POST /advertiser-invites/:token/accept (accept, includes token).
+export type AdvertiserInviteStatus = 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+
+export interface AdvertiserInvite {
+  id: string;
+  advertiserAccountId: string;
+  email: string;
+  role: AdvertiserMemberRole;
+  token: string;
+  status: AdvertiserInviteStatus;
+  invitedByUserId: string;
+  createdAt: string;
+  expiresAt: string;
+  acceptedByUserId: string | null;
+  acceptedAt: string | null;
+}
+
+// GET /advertisers/:id/invites response shape — same fields minus `token`,
+// PENDING invites only.
+export type AdvertiserInviteView = Omit<AdvertiserInvite, 'token'>;
+
+export interface CreateInviteRequest {
+  email: string;
+  role: AdvertiserMemberRole;
+}
+
+export interface CreateInviteResult {
+  invite: AdvertiserInvite;
+  acceptUrl: string;
+}
+
+// GET /advertiser-invites/:token preview shape (token-authenticated, no auth
+// header) — shown on the accept page before the user commits.
+export interface AdvertiserInvitePreview {
+  accountId: string;
+  accountName: string;
+  role: AdvertiserMemberRole;
+  inviterName: string;
+  email: string;
+  status: AdvertiserInviteStatus;
+  expiresAt: string;
+}

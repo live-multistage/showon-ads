@@ -1,13 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from '@/shared/api/client';
 import { advertisersService } from './advertisers.service';
-import type { AdvertiserAccountResponse, AdvertiserMemberResponse } from '../types/advertisement.types';
+import type {
+  AdvertiserAccountResponse,
+  AdvertiserInvite,
+  AdvertiserInvitePreview,
+  AdvertiserInviteView,
+  AdvertiserMemberResponse,
+  CreateInviteResult,
+} from '../types/advertisement.types';
 
 vi.mock('@/shared/api/client', () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -48,5 +56,48 @@ describe('advertisersService', () => {
     await advertisersService.rename('acct-1', { name: 'New Name' });
 
     expect(mockedApiClient.patch).toHaveBeenCalledWith('/advertisers/acct-1', { name: 'New Name' });
+  });
+
+  it('creates an invite', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({ data: {} as CreateInviteResult });
+
+    await advertisersService.createInvite('acct-1', { email: 'a@b.com', role: 'MANAGER' });
+
+    expect(mockedApiClient.post).toHaveBeenCalledWith('/advertisers/acct-1/invites', {
+      email: 'a@b.com',
+      role: 'MANAGER',
+    });
+  });
+
+  it('lists pending invites of an advertiser account', async () => {
+    mockedApiClient.get.mockResolvedValueOnce({ data: [] as AdvertiserInviteView[] });
+
+    await advertisersService.listInvites('acct-1');
+
+    expect(mockedApiClient.get).toHaveBeenCalledWith('/advertisers/acct-1/invites');
+  });
+
+  it('revokes an invite', async () => {
+    mockedApiClient.delete.mockResolvedValueOnce({ data: undefined });
+
+    await advertisersService.revokeInvite('acct-1', 'inv-1');
+
+    expect(mockedApiClient.delete).toHaveBeenCalledWith('/advertisers/acct-1/invites/inv-1');
+  });
+
+  it('gets an invite preview by token', async () => {
+    mockedApiClient.get.mockResolvedValueOnce({ data: {} as AdvertiserInvitePreview });
+
+    await advertisersService.getInvitePreview('tok-1');
+
+    expect(mockedApiClient.get).toHaveBeenCalledWith('/advertiser-invites/tok-1');
+  });
+
+  it('accepts an invite by token', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({ data: {} as AdvertiserInvite });
+
+    await advertisersService.acceptInvite('tok-1');
+
+    expect(mockedApiClient.post).toHaveBeenCalledWith('/advertiser-invites/tok-1/accept');
   });
 });

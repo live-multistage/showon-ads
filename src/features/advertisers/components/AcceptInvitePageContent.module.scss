@@ -1,0 +1,228 @@
+@use '../../../styles/ads-theme' as ads;
+
+$gradient: linear-gradient(135deg, #ff2e9e, #9b7bff);
+
+.page {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  @include ads.card;
+  border-radius: 18px;
+  padding: 32px;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 46, 158, 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  position: relative;
+  @include ads.mono-label(0.656rem, #9a9aa2);
+  letter-spacing: 0.14em;
+  margin-bottom: 18px;
+}
+
+.identity {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: $gradient;
+  color: ads.$accent-ink;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ads.$mono;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.identityText {
+  min-width: 0;
+}
+
+.accountName {
+  margin: 0 0 6px;
+  font-family: ads.$ui;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: ads.$text;
+}
+
+.roleBadge {
+  display: inline-flex;
+  @include ads.mono-label(0.594rem);
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: ads.$radius-pill;
+  background: ads.$accent-soft;
+  border: 1px solid rgba(255, 46, 158, 0.35);
+  color: #ff8ec9;
+}
+
+.inviter {
+  position: relative;
+  font-family: ads.$ui;
+  font-size: 13.5px;
+  color: #9a9aa2;
+  margin: 0 0 24px;
+
+  strong {
+    color: ads.$text;
+    font-weight: 600;
+  }
+}
+
+.title {
+  position: relative;
+  margin: 0 0 8px;
+  font-family: ads.$ui;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: ads.$text;
+}
+
+.subtitle {
+  position: relative;
+  margin: 0 0 24px;
+  font-family: ads.$ui;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #9a9aa2;
+}
+
+.actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btnPrimary,
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  height: 42px;
+  border-radius: 10px;
+  width: 100%;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.btnPrimary {
+  background: ads.$accent;
+  border: none;
+  color: ads.$accent-ink;
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 14px;
+
+  &:hover:not(:disabled) {
+    background: ads.$accent-bright;
+  }
+}
+
+.btnSecondary {
+  background: transparent;
+  border: 1px solid ads.$border-chip;
+  color: #e7e7ea;
+  font-family: ads.$ui;
+  font-weight: 600;
+  font-size: 14px;
+
+  &:hover:not(:disabled) {
+    border-color: ads.$accent-hover-border;
+    color: ads.$text;
+  }
+}
+
+.hint {
+  position: relative;
+  margin: 14px 0 0;
+  font-family: ads.$ui;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #6f6f77;
+}
+
+.error {
+  position: relative;
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 8px;
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: #f87171;
+}
+
+.mismatch {
+  position: relative;
+  padding: 10px 14px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 8px;
+  font-family: ads.$ui;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f0a3a3;
+  margin-bottom: 20px;
+
+  strong {
+    color: #f87171;
+  }
+}
+
+.skeletonCard {
+  width: 100%;
+  max-width: 440px;
+  height: 300px;
+  border-radius: 18px;
+}

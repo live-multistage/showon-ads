@@ -13,24 +13,34 @@ import { AdvertiserOnboardingForm } from '@/features/auth/components/AdvertiserO
 // orchestrator API is the actual authorization boundary.
 const PUBLIC_PATHS = new Set(['/login', '/signup']);
 
+// Invite accept pages must render for logged-out visitors (they preview the
+// invite before choosing signup/login) AND for freshly-signed-up members who
+// have zero advertiser accounts yet — the invite IS how they get their first
+// one, so the "create your advertiser account" onboarding gate below must not
+// intercept them.
+function isPublicPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return PUBLIC_PATHS.has(pathname) || pathname.startsWith('/invite/');
+}
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isLoading: isSessionLoading } = useSession();
-  const isPublicPath = PUBLIC_PATHS.has(pathname ?? '');
+  const isPublic = isPublicPath(pathname);
 
   useEffect(() => {
-    if (!isSessionLoading && !isAuthenticated && !isPublicPath) {
+    if (!isSessionLoading && !isAuthenticated && !isPublic) {
       router.replace('/login');
     }
-  }, [isSessionLoading, isAuthenticated, isPublicPath, router]);
+  }, [isSessionLoading, isAuthenticated, isPublic, router]);
 
-  const shouldCheckAdvertiserAccounts = isAuthenticated && !isPublicPath;
+  const shouldCheckAdvertiserAccounts = isAuthenticated && !isPublic;
   const { data: advertiserAccounts, isLoading: isAccountsLoading } = useMyAdvertiserAccountsQuery({
     enabled: shouldCheckAdvertiserAccounts,
   });
 
-  if (isPublicPath) return <>{children}</>;
+  if (isPublic) return <>{children}</>;
   if (isSessionLoading || !isAuthenticated) return null;
   if (isAccountsLoading) return null;
 

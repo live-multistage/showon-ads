@@ -6,9 +6,14 @@ import { authService } from '../services/auth.service';
 import type { AuthResponse } from '../types/auth.types';
 
 const assignMock = vi.fn();
+let searchParams = new URLSearchParams();
 
 vi.mock('next/link', () => ({
   default: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+}));
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => searchParams,
 }));
 
 vi.mock('../services/auth.service', () => ({
@@ -36,6 +41,7 @@ describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    searchParams = new URLSearchParams();
     // jsdom's window.location.assign is a no-op that warns; stub it so the
     // component's post-login navigation is observable and side-effect free.
     Object.defineProperty(window, 'location', {
@@ -75,5 +81,31 @@ describe('LoginForm', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent(/valid email/i);
     expect(mockedAuthService.login).not.toHaveBeenCalled();
+  });
+
+  it('navigates to the redirect target when ?redirect= is a safe internal path', async () => {
+    searchParams = new URLSearchParams({ redirect: '/invite/abc' });
+    mockedAuthService.login.mockResolvedValueOnce(authResponse);
+
+    renderWithProviders(<LoginForm />);
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/invite/abc'));
+  });
+
+  it('falls back to / when ?redirect= is an open-redirect vector', async () => {
+    searchParams = new URLSearchParams({ redirect: '//evil.com' });
+    mockedAuthService.login.mockResolvedValueOnce(authResponse);
+
+    renderWithProviders(<LoginForm />);
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
   });
 });

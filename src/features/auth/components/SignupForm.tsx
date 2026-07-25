@@ -11,13 +11,17 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface SignupFormProps {
   onRegistered: () => void;
+  // Prefilled from the `?email=` query param (e.g. an invite link) so the
+  // invitee doesn't retype it — and doesn't accidentally sign up under a
+  // different address than the one that was invited. Stays editable.
+  initialEmail?: string | null;
 }
 
 // Step 1 of signup: user account fields. On success the caller (SignupFlow)
 // advances to the company step, which reuses AdvertiserOnboardingForm.
-export function SignupForm({ onRegistered }: SignupFormProps) {
+export function SignupForm({ onRegistered, initialEmail }: SignupFormProps) {
   const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail ?? '');
   const [password, setPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const { mutate, isPending, error } = useRegisterMutation();

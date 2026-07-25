@@ -8,9 +8,14 @@ import type { AuthResponse } from '../types/auth.types';
 import type { AdvertiserAccountResponse } from '@/features/advertisements/types/advertisement.types';
 
 const assignMock = vi.fn();
+let searchParams = new URLSearchParams();
 
 vi.mock('next/link', () => ({
   default: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+}));
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => searchParams,
 }));
 
 vi.mock('../services/auth.service', () => ({
@@ -48,6 +53,7 @@ describe('SignupFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    searchParams = new URLSearchParams();
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { ...window.location, assign: assignMock },
@@ -90,5 +96,49 @@ describe('SignupFlow', () => {
     const registerOrder = mockedAuthService.register.mock.invocationCallOrder[0];
     const createOrder = mockedAdvertisersService.create.mock.invocationCallOrder[0];
     expect(registerOrder).toBeLessThan(createOrder);
+  });
+
+  it('prefills the email field from ?email= (invite round-trip)', () => {
+    searchParams = new URLSearchParams({ email: 'invitee@example.com' });
+
+    renderWithProviders(<SignupFlow />);
+
+    expect(screen.getByLabelText('Email')).toHaveValue('invitee@example.com');
+  });
+
+  it('navigates to the redirect target when ?redirect= is a safe internal path', async () => {
+    searchParams = new URLSearchParams({ redirect: '/invite/abc' });
+    mockedAuthService.register.mockResolvedValueOnce(authResponse);
+    mockedAdvertisersService.create.mockResolvedValueOnce(advertiserAccount);
+
+    renderWithProviders(<SignupFlow />);
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    fireEvent.change(await screen.findByLabelText('Company name'), { target: { value: 'Acme Corp' } });
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/invite/abc'));
+  });
+
+  it('falls back to / when ?redirect= is an open-redirect vector', async () => {
+    searchParams = new URLSearchParams({ redirect: '//evil.com' });
+    mockedAuthService.register.mockResolvedValueOnce(authResponse);
+    mockedAdvertisersService.create.mockResolvedValueOnce(advertiserAccount);
+
+    renderWithProviders(<SignupFlow />);
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    fireEvent.change(await screen.findByLabelText('Company name'), { target: { value: 'Acme Corp' } });
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
   });
 });

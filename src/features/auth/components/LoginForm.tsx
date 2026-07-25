@@ -2,9 +2,11 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Button, Input, Label } from '@live-show/design-system';
 import { normalizeError } from '@/shared/api/client';
 import { useLoginMutation } from '../mutations/use-login.mutation';
+import { safeRedirectTarget } from '../utils/safe-redirect';
 import { AdsMarketingPanel } from './AdsMarketingPanel';
 import styles from './LoginForm.module.scss';
 
@@ -15,6 +17,7 @@ export function LoginForm() {
   const [password, setPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const { mutate, isPending, error } = useLoginMutation();
+  const redirectTarget = safeRedirectTarget(useSearchParams().get('redirect'));
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -34,7 +37,7 @@ export function LoginForm() {
     // once on mount, so a client-side push would leave it seeing the pre-login
     // (unauthenticated) state and bounce back to /login. A full load remounts
     // the tree so it reads the freshly-stored session — same pattern logout uses.
-    mutate({ email: email.trim(), password }, { onSuccess: () => window.location.assign('/') });
+    mutate({ email: email.trim(), password }, { onSuccess: () => window.location.assign(redirectTarget) });
   }
 
   const errorMessage = validationError ?? (error ? normalizeError(error).message : null);

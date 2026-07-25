@@ -1,7 +1,8 @@
 @use '../../../styles/ads-theme' as ads;
 
 .page {
-  padding: 2rem;
+  padding: 36px 48px 56px;
+  max-width: 1200px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -16,125 +17,327 @@
   }
 }
 
-.header {
+// ── Breadcrumb ────────────────────────────────────────
+.breadcrumb {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 18px;
+  @include ads.mono-label(0.688rem, #9a9aa2);
+  letter-spacing: 0.14em;
+}
+
+.crumbSep {
+  color: #3f3f47;
+}
+
+.crumbActive {
+  color: #ff7ec2;
+}
+
+// ── Header ────────────────────────────────────────────
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
   margin-bottom: 28px;
 }
 
+.headerMeta {
+  margin-bottom: 10px;
+}
+
+.draftPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: ads.$accent-soft;
+  border: 1px solid rgba(255, 46, 158, 0.4);
+  color: #ff8ec9;
+  @include ads.mono-label(0.656rem);
+  letter-spacing: 0.1em;
+  padding: 5px 11px;
+  border-radius: ads.$radius-pill;
+}
+
+.draftDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ads.$accent;
+  animation: pulse 1.4s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
 .title {
+  margin: 0 0 6px;
   font-family: ads.$ui;
+  font-size: 34px;
   font-weight: 800;
-  font-size: 36px;
-  line-height: 1;
   letter-spacing: -0.025em;
+  line-height: 1.05;
   color: ads.$text;
+}
+
+.subtitle {
+  margin: 0;
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: #9a9aa2;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid ads.$border-chip;
+  border-radius: 11px;
+  cursor: pointer;
+  @include ads.mono-label(0.688rem, #9a9aa2);
+  letter-spacing: 0.08em;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: ads.$text;
+    border-color: ads.$accent-hover-border;
+  }
 }
 
 // ── Stepper ───────────────────────────────────────────
 .stepper {
   display: flex;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
+  @include ads.card;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 22px;
+  overflow-x: auto;
+}
+
+.stepGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .step {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-width: 0;
   padding: 10px 14px;
   background: transparent;
-  border: 1px solid ads.$border;
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition: background 0.15s ease, border-color 0.15s ease;
 
   &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
+    cursor: default;
   }
 }
 
 .stepNum {
-  width: 24px;
-  height: 24px;
+  flex: none;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: ads.$mono;
-  font-weight: 600;
-  font-size: 12px;
-  background: #1f1f23;
-  color: ads.$text-dim;
-  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #8f8f97;
 }
 
 .stepText {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .stepLabel {
   font-family: ads.$ui;
-  font-weight: 500;
   font-size: 13px;
-  letter-spacing: 0.02em;
-  color: ads.$text;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: #8f8f97;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stepDesc {
-  font-family: ads.$ui;
-  font-size: 11px;
-  color: ads.$text-muted;
-  margin-top: 1px;
+  @include ads.mono-label(0.594rem, #6f6f77);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stepChevron {
+  flex: none;
+  color: #3f3f47;
 }
 
 .step_active {
-  border-color: ads.$accent;
-  background: ads.$accent-soft;
+  background: rgba(255, 46, 158, 0.1);
+  border-color: rgba(255, 46, 158, 0.35);
 
   .stepNum {
     background: ads.$accent;
-    color: #fff;
+    color: ads.$accent-ink;
+  }
+  .stepLabel {
+    color: ads.$text;
+  }
+  .stepDesc {
+    color: #ff7ec2;
   }
 }
 
 .step_done {
   .stepNum {
-    background: rgba(236, 72, 153, 0.2);
-    color: ads.$accent;
+    background: ads.$accent;
+    color: ads.$accent-ink;
+  }
+  .stepLabel {
+    color: #e7e7ea;
   }
 }
 
 // ── Content ───────────────────────────────────────────
-.content {
-  max-width: 720px;
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.reviewWrap {
+  max-width: 820px;
 }
 
 .stepCard {
   @include ads.card;
-  padding: 28px;
+  border-radius: 18px;
+  padding: 28px 30px;
 }
 
 .error {
-  margin-top: 16px;
+  margin: 16px 0 0;
   padding: 10px 14px;
-  background: rgba(220, 38, 38, 0.08);
-  border: 1px solid rgba(220, 38, 38, 0.28);
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.28);
   border-radius: 8px;
   font-family: ads.$ui;
   font-size: 13px;
   color: #f87171;
 }
 
-// ── Footer ────────────────────────────────────────────
-.footer {
+// ── Footer nav ────────────────────────────────────────
+.footer,
+.reviewFooter {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-top: 28px;
-  max-width: 720px;
+  margin-top: 32px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.reviewFooter {
+  max-width: 820px;
+  border-top: none;
+  padding-top: 0;
+  margin-top: 20px;
+}
+
+.btnBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  background: transparent;
+  border: 1px solid ads.$border-chip;
+  border-radius: 11px;
+  cursor: pointer;
+  @include ads.mono-label(0.688rem, #e7e7ea);
+  letter-spacing: 0.08em;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    color: ads.$text;
+    border-color: ads.$accent-hover-border;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.backChevron {
+  transform: rotate(180deg);
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 22px;
+  background: ads.$accent;
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: ads.$accent-ink;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: ads.$accent-bright;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

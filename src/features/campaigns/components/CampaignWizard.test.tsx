@@ -70,8 +70,7 @@ describe('CampaignWizard', () => {
     render(<CampaignWizard />);
 
     fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
-    fireEvent.click(screen.getByRole('combobox'));
-    fireEvent.click(screen.getByRole('option', { name: 'Horizontal (728×90)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
 
     expect(screen.getByRole('group', { name: 'Tipo de destino' })).toBeInTheDocument();
@@ -79,8 +78,7 @@ describe('CampaignWizard', () => {
 
   function fillCreativeStep() {
     fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
-    fireEvent.click(screen.getByRole('combobox'));
-    fireEvent.click(screen.getByRole('option', { name: 'Horizontal (728×90)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
   }
 
@@ -272,8 +270,7 @@ describe('CampaignWizard', () => {
     // Stage a banner while still on the creative step (each step only
     // renders its own fields, so this must happen before advancing).
     fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
-    fireEvent.click(screen.getByRole('combobox'));
-    fireEvent.click(screen.getByRole('option', { name: 'Horizontal (728×90)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
     const file = new File(['x'], 'banner.png', { type: 'image/png' });
     fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));

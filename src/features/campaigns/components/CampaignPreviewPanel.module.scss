@@ -1,0 +1,141 @@
+@use '../../../styles/ads-theme' as ads;
+
+.rail {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  @include ads.card;
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  @include ads.mono-label(0.656rem, ads.$text);
+  letter-spacing: 0.14em;
+}
+
+.cardMeta {
+  @include ads.mono-label(0.594rem, #7d7d85);
+}
+
+.preview {
+  position: relative;
+  width: 100%;
+  max-height: 260px;
+  background: #08080a;
+  border: 1px solid ads.$border;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.previewHatch {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+.previewPlaceholder {
+  position: relative;
+  @include ads.mono-label(0.625rem, #6f6f77);
+  letter-spacing: 0.1em;
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metaLabel {
+  @include ads.mono-label(0.563rem, #7d7d85);
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.metaValue {
+  font-family: ads.$ui;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: ads.$text;
+}
+
+// ── Tips ──────────────────────────────────────────────
+.tips {
+  background: rgba(155, 123, 255, 0.06);
+  border: 1px solid rgba(155, 123, 255, 0.22);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.tipsHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tipsTitle {
+  @include ads.mono-label(0.656rem, #bba6ff);
+  letter-spacing: 0.12em;
+}
+
+.tipsList {
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-family: ads.$ui;
+  font-size: 12.5px;
+  color: #c8c8cc;
+  line-height: 1.65;
+}
+
+// ── Estimate ──────────────────────────────────────────
+.estLabel {
+  @include ads.mono-label(0.625rem, #7d7d85);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.estValue {
+  font-family: ads.$mono;
+  font-size: 15px;
+  font-weight: 700;
+  color: #e7e7ea;
+  letter-spacing: -0.005em;
+}
+
+.estHint {
+  margin-top: 4px;
+  font-family: ads.$ui;
+  font-size: 11.5px;
+  color: #6f6f77;
+}

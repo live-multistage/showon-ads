@@ -1,42 +1,335 @@
 @use '../../../../styles/ads-theme' as ads;
 
+$field-bg: #08080a;
+
 .step {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  animation: fade 0.25s ease;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.fileInput {
-  width: 100%;
-  padding: 20px;
-  background: ads.$field;
-  border: 2px dashed ads.$border;
+// ── Eyebrow / heading ─────────────────────────────────
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.eyebrowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
-  color: ads.$text-dim;
-  font-family: ads.$ui;
-  font-size: 13px;
-  cursor: pointer;
-  transition: border-color 0.15s;
+  background: ads.$accent-soft;
+  color: ads.$accent-bright;
+}
 
-  &:hover {
+.eyebrowText {
+  @include ads.mono-label(0.656rem, #ff7ec2);
+  letter-spacing: 0.14em;
+}
+
+.heading {
+  margin: 4px 0 4px;
+  font-family: ads.$ui;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: ads.$text;
+}
+
+.lead {
+  margin: 0 0 26px;
+  font-family: ads.$ui;
+  font-size: 13.5px;
+  color: #8f8f97;
+}
+
+// ── Field ─────────────────────────────────────────────
+.field {
+  margin-bottom: 22px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.label {
+  @include ads.mono-label(0.656rem, #c8c8cc);
+  letter-spacing: 0.14em;
+}
+
+.labelMeta,
+.counter {
+  @include ads.mono-label(0.625rem, #6f6f77);
+  letter-spacing: 0.04em;
+}
+
+.labelOk {
+  @include ads.mono-label(0.625rem, #7fe0a0);
+  letter-spacing: 0.04em;
+}
+
+.input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px;
+  background: $field-bg;
+  border: 1px solid ads.$border-chip;
+  border-radius: 12px;
+  color: ads.$text;
+  font-family: ads.$ui;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: #6f6f77;
+  }
+  &:focus {
     border-color: ads.$accent;
+    box-shadow: 0 0 0 3px rgba(255, 46, 158, 0.15);
   }
 }
 
 .hint {
-  @include ads.mono-label(11px);
-  letter-spacing: 0.02em;
+  margin: 8px 0 0;
+  font-family: ads.$ui;
+  font-size: 11.5px;
+  color: #7d7d85;
 }
 
-.preview {
-  margin-top: 12px;
+// ── Format cards ──────────────────────────────────────
+.formatGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.formatCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: $field-bg;
+  border: 1.5px solid ads.$border;
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: ads.$accent-hover-border;
+  }
+}
+
+.formatCardSelected {
+  background: rgba(255, 46, 158, 0.08);
+  border-color: rgba(255, 46, 158, 0.5);
+}
+
+.formatCheck {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: ads.$accent;
+  color: ads.$accent-ink;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formatSwatchWrap {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.formatSwatch {
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  .formatCardSelected & {
+    background: linear-gradient(135deg, #ff2e9e, #9b7bff);
+    border-color: rgba(255, 46, 158, 0.5);
+  }
+}
+
+.swatch_horizontal {
+  width: 60px;
+  height: 10px;
+}
+
+.swatch_vertical {
+  width: 26px;
+  height: 52px;
+}
+
+.formatTitle {
+  font-family: ads.$ui;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: ads.$text;
+  margin-bottom: 3px;
+}
+
+.formatDims {
+  @include ads.mono-label(0.656rem, #ff7ec2);
+  letter-spacing: 0;
+  margin-bottom: 2px;
+}
+
+.formatPlacement {
+  @include ads.mono-label(0.594rem, #7d7d85);
+  letter-spacing: 0.04em;
+}
+
+// ── Dropzone ──────────────────────────────────────────
+.dropzone {
+  position: relative;
+  display: block;
+  background: $field-bg;
+  border: 1.5px dashed rgba(255, 46, 158, 0.35);
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 46, 158, 0.04);
+    border-color: rgba(255, 46, 158, 0.55);
+  }
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.dropzoneEmpty {
+  display: block;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.dropzoneIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 14px;
+  background: ads.$accent-soft;
+  border: 1px solid rgba(255, 46, 158, 0.28);
+  color: ads.$accent-bright;
+}
+
+.dropzoneTitle {
+  display: block;
+  font-family: ads.$ui;
+  font-size: 15px;
+  font-weight: 600;
+  color: ads.$text;
+  margin-bottom: 5px;
+}
+
+.dropzoneLink {
+  color: ads.$accent-bright;
+  text-decoration: underline;
+}
+
+.dropzoneMeta {
+  @include ads.mono-label(0.656rem, #7d7d85);
+  letter-spacing: 0.06em;
+}
+
+.dropzoneFilled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropzonePreview {
   max-width: 100%;
+  max-height: 180px;
   border-radius: 8px;
   border: 1px solid ads.$border;
+}
+
+.dropzoneReplace {
+  @include ads.mono-label(0.656rem, #ff7ec2);
+  letter-spacing: 0.06em;
+}
+
+// ── Spec pills ────────────────────────────────────────
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  @include ads.mono-label(0.656rem);
+  letter-spacing: 0.04em;
+  padding: 6px 11px;
+  border-radius: ads.$radius-pill;
+}
+
+.pillViolet {
+  background: rgba(155, 123, 255, 0.1);
+  border: 1px solid rgba(155, 123, 255, 0.28);
+  color: #bba6ff;
+}
+
+.pillCyan {
+  background: rgba(70, 214, 216, 0.1);
+  border: 1px solid rgba(70, 214, 216, 0.28);
+  color: #46d6d8;
+}
+
+.pillAmber {
+  background: rgba(255, 209, 102, 0.1);
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  color: #ffd166;
 }

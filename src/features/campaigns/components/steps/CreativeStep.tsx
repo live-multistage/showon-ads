@@ -1,17 +1,30 @@
 'use client';
 
 import type { ChangeEvent } from 'react';
-import { Input, Label, SimpleCustomSelect, type SelectOption } from '@live-show/design-system';
 import type { AdFormat } from '@/features/advertisements/types/advertisement.types';
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 import styles from './CreativeStep.module.scss';
 
-// Dimension hints so an advertiser knows what banner asset to prepare before
-// the upload step even asks for a file.
-const FORMAT_OPTIONS: (SelectOption & { value: AdFormat })[] = [
-  { value: 'HORIZONTAL_728x90', label: 'Horizontal (728×90)' },
-  { value: 'VERTICAL_300x600', label: 'Vertical (300×600)' },
+const TITLE_MAX = 80;
+
+// The backend AdFormat enum only defines these two — the mock's third
+// "Quadrado 300×300" card has no server-side format, so it's intentionally
+// omitted rather than shown as an unsubmittable option.
+const FORMATS: {
+  value: AdFormat;
+  label: string;
+  dims: string;
+  placement: string;
+  variant: 'horizontal' | 'vertical';
+}[] = [
+  { value: 'HORIZONTAL_728x90', label: 'Horizontal', dims: '728 × 90', placement: 'FEED · TOPO', variant: 'horizontal' },
+  { value: 'VERTICAL_300x600', label: 'Vertical', dims: '300 × 600', placement: 'SIDEBAR', variant: 'vertical' },
 ];
+
+const IDEAL_DIM: Record<AdFormat, string> = {
+  HORIZONTAL_728x90: '728×90',
+  VERTICAL_300x600: '300×600',
+};
 
 interface CreativeStepProps {
   draft: CampaignWizardDraft;
@@ -24,46 +37,127 @@ export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProp
     setBanner(event.target.files?.[0] ?? null);
   }
 
+  const idealDim = draft.format ? IDEAL_DIM[draft.format] : '728×90';
+
   return (
     <div className={styles.step}>
-      <div className={styles.field}>
-        <Label htmlFor="campaign-title">Título</Label>
-        <Input
-          id="campaign-title"
-          value={draft.title}
-          onChange={(event) => updateDraft({ title: event.target.value })}
-          placeholder="Nome da campanha"
-        />
+      {/* eyebrow */}
+      <div className={styles.eyebrow}>
+        <span className={styles.eyebrowIcon} aria-hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="6" width="18" height="12" rx="2" />
+            <path d="M3 10h18" />
+          </svg>
+        </span>
+        <span className={styles.eyebrowText}>PASSO 1 DE 5</span>
       </div>
+      <h2 className={styles.heading}>Criativo</h2>
+      <p className={styles.lead}>Defina o título da campanha, escolha um formato e faça o upload do banner.</p>
 
+      {/* title */}
       <div className={styles.field}>
-        <Label htmlFor="campaign-format">Formato</Label>
-        <SimpleCustomSelect
-          value={draft.format ?? undefined}
-          onValueChange={(value) => updateDraft({ format: value as AdFormat })}
-          options={FORMAT_OPTIONS}
-          placeholder="Selecione um formato"
-        />
-      </div>
-
-      <div className={styles.field}>
-        <Label htmlFor="campaign-banner">Banner</Label>
+        <div className={styles.labelRow}>
+          <span className={styles.label} id="campaign-title-label">
+            TÍTULO DA CAMPANHA
+          </span>
+          <span className={styles.counter}>
+            {draft.title.length} / {TITLE_MAX}
+          </span>
+        </div>
         <input
-          id="campaign-banner"
-          type="file"
-          accept="image/*"
-          onChange={handleBannerChange}
-          className={styles.fileInput}
+          type="text"
+          aria-label="Título"
+          aria-labelledby="campaign-title-label"
+          className={styles.input}
+          value={draft.title}
+          maxLength={TITLE_MAX}
+          onChange={(event) => updateDraft({ title: event.target.value })}
+          placeholder="Ex: Festival Jazz na Praça — Banner Topo"
         />
         <p className={styles.hint}>
-          {draft.format === 'VERTICAL_300x600'
-            ? 'Dimensão recomendada: 300×600px.'
-            : 'Dimensão recomendada: 728×90px.'}
+          Aparece no seu Ads Manager e nos relatórios — não é exibido para o público.
         </p>
-        {draft.bannerPreviewUrl && (
-          // eslint-disable-next-line @next/next/no-img-element -- object URL preview, not a static asset
-          <img src={draft.bannerPreviewUrl} alt="Pré-visualização do banner" className={styles.preview} />
-        )}
+      </div>
+
+      {/* format */}
+      <div className={styles.field}>
+        <div className={styles.labelRow}>
+          <span className={styles.label}>FORMATO DO BANNER</span>
+          <span className={styles.labelMeta}>SELECIONE UM</span>
+        </div>
+        <div className={styles.formatGrid}>
+          {FORMATS.map((format) => {
+            const selected = draft.format === format.value;
+            return (
+              <button
+                key={format.value}
+                type="button"
+                aria-label={`${format.label} (${format.dims.replace(/\s/g, '')})`}
+                aria-pressed={selected}
+                className={`${styles.formatCard} ${selected ? styles.formatCardSelected : ''}`}
+                onClick={() => updateDraft({ format: format.value })}
+              >
+                {selected && (
+                  <span className={styles.formatCheck} aria-hidden>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M5 12l5 5L20 7" />
+                    </svg>
+                  </span>
+                )}
+                <span className={styles.formatSwatchWrap}>
+                  <span className={`${styles.formatSwatch} ${styles[`swatch_${format.variant}`]}`} />
+                </span>
+                <span className={styles.formatTitle}>{format.label}</span>
+                <span className={styles.formatDims}>{format.dims}</span>
+                <span className={styles.formatPlacement}>{format.placement}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* banner */}
+      <div className={styles.field}>
+        <div className={styles.labelRow}>
+          <span className={styles.label}>UPLOAD DO BANNER</span>
+          <span className={styles.labelOk}>DIMENSÃO IDEAL: {idealDim}</span>
+        </div>
+
+        <label className={styles.dropzone}>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            aria-label="Banner"
+            className={styles.fileInput}
+            onChange={handleBannerChange}
+          />
+          {draft.bannerPreviewUrl ? (
+            <span className={styles.dropzoneFilled}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- object URL preview, not a static asset */}
+              <img src={draft.bannerPreviewUrl} alt="Pré-visualização do banner" className={styles.dropzonePreview} />
+              <span className={styles.dropzoneReplace}>Trocar imagem</span>
+            </span>
+          ) : (
+            <span className={styles.dropzoneEmpty}>
+              <span className={styles.dropzoneIcon} aria-hidden>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 16V4M6 10l6-6 6 6" />
+                  <path d="M4 20h16" />
+                </svg>
+              </span>
+              <span className={styles.dropzoneTitle}>
+                Arraste sua imagem ou <span className={styles.dropzoneLink}>clique para selecionar</span>
+              </span>
+              <span className={styles.dropzoneMeta}>PNG · JPG · WEBP · MÁX 2MB · MÍNIMO {idealDim}</span>
+            </span>
+          )}
+        </label>
+
+        <div className={styles.pills}>
+          <span className={`${styles.pill} ${styles.pillViolet}`}>Áreas de segurança 20px</span>
+          <span className={`${styles.pill} ${styles.pillCyan}`}>Exporte em 2× para retina</span>
+          <span className={`${styles.pill} ${styles.pillAmber}`}>Evite texto pequeno</span>
+        </div>
       </div>
     </div>
   );

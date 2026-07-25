@@ -26,4 +26,15 @@ describe('safeRedirectTarget', () => {
   it('falls back to / for javascript: URLs', () => {
     expect(safeRedirectTarget('javascript:alert(1)')).toBe('/');
   });
+
+  it('rejects control-character open-redirect bypasses', () => {
+    expect(safeRedirectTarget('/\t/evil.com')).toBe('/');
+    expect(safeRedirectTarget('/\n/evil.com')).toBe('/');
+    expect(safeRedirectTarget('/\r/evil.com')).toBe('/');
+  });
+
+  it('still preserves safe internal paths after control-char stripping', () => {
+    expect(safeRedirectTarget('/invite/abc')).toBe('/invite/abc');
+    expect(safeRedirectTarget('/account')).toBe('/account');
+  });
 });

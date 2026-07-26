@@ -72,6 +72,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     placements: [],
     targetDomains: [],
     targetCategories: [],
+    targetAgeBrackets: [],
     bannerUrl: null,
     frequencyCapMax: null,
     frequencyCapWindow: null,

@@ -39,6 +39,7 @@ export interface AdResponse {
   placements: AdPlacement[];
   targetDomains: string[];
   targetCategories: string[];
+  targetAgeBrackets: AgeBracket[];
   bannerUrl: string | null;
   frequencyCapMax: number | null;
   frequencyCapWindow: FrequencyCapWindow | null;
@@ -83,6 +84,7 @@ export interface UpdateAdRequest {
   placements?: AdPlacement[];
   targetDomains?: string[];
   targetCategories?: string[];
+  targetAgeBrackets?: AgeBracket[];
   frequencyCapMax?: number;
   frequencyCapWindow?: FrequencyCapWindow;
   billingModel?: AdBillingModel;

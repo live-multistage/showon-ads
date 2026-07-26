@@ -35,9 +35,7 @@ export function adToDraft(ad: AdResponse): CampaignWizardDraft {
     externalUrl: ad.destination?.type === 'EXTERNAL_URL' ? ad.destination.url : '',
     targetDomains: [...ad.targetDomains],
     targetCategories: [...ad.targetCategories],
-    // AdResponse doesn't carry targetAgeBrackets yet (task 5 only wired it
-    // into CreateAdRequest) — edit mode always starts from "all ages".
-    targetAgeBrackets: [],
+    targetAgeBrackets: [...(ad.targetAgeBrackets ?? [])],
     billingModel: ad.billingModel,
     bidReais: centsToReaisInput(ad.bidCents),
     dailyBudgetReais: centsToReaisInput(ad.dailyBudgetCents),
@@ -63,6 +61,7 @@ export function draftToUpdateAdRequest(draft: CampaignWizardDraft): UpdateAdRequ
     format: draft.format ?? undefined,
     targetDomains: draft.targetDomains,
     targetCategories: draft.targetCategories,
+    targetAgeBrackets: draft.targetAgeBrackets,
     frequencyCapMax: draft.frequencyCapMax ? Number(draft.frequencyCapMax) : undefined,
     frequencyCapWindow: draft.frequencyCapMax ? (draft.frequencyCapWindow ?? undefined) : undefined,
     billingModel: draft.billingModel ?? undefined,

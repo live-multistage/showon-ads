@@ -13,6 +13,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     placements: ['FEED'],
     targetDomains: ['ENTERTAINMENT'],
     targetCategories: ['festival'],
+    targetAgeBrackets: ['AGE_18_24', 'AGE_25_34'],
     bannerUrl: 'https://cdn.example.com/banner.png',
     frequencyCapMax: 3,
     frequencyCapWindow: 'day',
@@ -51,6 +52,7 @@ describe('adToDraft', () => {
     expect(draft.bannerFile).toBeNull();
     expect(draft.targetDomains).toEqual(['ENTERTAINMENT']);
     expect(draft.targetCategories).toEqual(['festival']);
+    expect(draft.targetAgeBrackets).toEqual(['AGE_18_24', 'AGE_25_34']);
     expect(draft.billingModel).toBe('CPM');
     expect(draft.bidReais).toBe('10.5');
     expect(draft.dailyBudgetReais).toBe('50');
@@ -73,6 +75,19 @@ describe('adToDraft', () => {
     expect(draft.event).toBeNull();
     expect(draft.externalUrl).toBe('');
   });
+
+  it('preserves a non-empty targetAgeBrackets instead of wiping it', () => {
+    const draft = adToDraft(makeAd({ targetAgeBrackets: ['AGE_35_44'] }));
+
+    expect(draft.targetAgeBrackets).toEqual(['AGE_35_44']);
+  });
+
+  it('defaults to [] for an older payload missing targetAgeBrackets', () => {
+    const ad = makeAd({});
+    delete (ad as { targetAgeBrackets?: unknown }).targetAgeBrackets;
+
+    expect(adToDraft(ad).targetAgeBrackets).toEqual([]);
+  });
 });
 
 describe('draftToUpdateAdRequest', () => {
@@ -86,6 +101,7 @@ describe('draftToUpdateAdRequest', () => {
       format: 'HORIZONTAL_728x90',
       targetDomains: ['ENTERTAINMENT'],
       targetCategories: ['festival'],
+      targetAgeBrackets: ['AGE_18_24', 'AGE_25_34'],
       frequencyCapMax: 3,
       frequencyCapWindow: 'day',
       billingModel: 'CPM',

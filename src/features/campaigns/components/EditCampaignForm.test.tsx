@@ -50,6 +50,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     placements: ['FEED'],
     targetDomains: [],
     targetCategories: [],
+    targetAgeBrackets: [],
     bannerUrl: 'https://cdn.example.com/banner.png',
     frequencyCapMax: null,
     frequencyCapWindow: null,

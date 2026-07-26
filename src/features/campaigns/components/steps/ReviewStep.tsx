@@ -10,6 +10,14 @@ const FORMAT_LABELS: Record<string, string> = {
   VERTICAL_300x600: 'Vertical (300×600)',
 };
 
+const AGE_BRACKET_LABELS: Record<string, string> = {
+  AGE_18_24: '18–24',
+  AGE_25_34: '25–34',
+  AGE_35_44: '35–44',
+  AGE_45_54: '45–54',
+  AGE_55_PLUS: '55+',
+};
+
 function formatDateTime(value: string): string {
   if (!value) return '—';
   return new Date(value).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
@@ -35,6 +43,14 @@ export function ReviewStep({ draft }: ReviewStepProps) {
       <Row label="Destino" value={draft.destinationType === 'EVENT' ? `Evento: ${destinationLabel}` : destinationLabel} />
       <Row label="Interesses" value={draft.targetDomains.length > 0 ? draft.targetDomains.join(', ') : '—'} />
       <Row label="Categorias" value={draft.targetCategories.length > 0 ? draft.targetCategories.join(', ') : '—'} />
+      <Row
+        label="Faixa etária"
+        value={
+          draft.targetAgeBrackets.length > 0
+            ? draft.targetAgeBrackets.map((b) => AGE_BRACKET_LABELS[b] ?? b).join(', ')
+            : 'Todas as idades'
+        }
+      />
       <Row label="Modelo de cobrança" value={draft.billingModel ?? '—'} />
       <Row
         label="Lance"

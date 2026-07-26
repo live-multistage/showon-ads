@@ -2,6 +2,7 @@
 
 import { useState, type KeyboardEvent } from 'react';
 import { Chip, Input, Label } from '@live-show/design-system';
+import type { AgeBracket } from '@/features/advertisements/types/advertisement.types';
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 import styles from './TargetingStep.module.scss';
 
@@ -16,6 +17,16 @@ const DOMAIN_OPTIONS = [
   { value: 'CORPORATE', label: 'Corporativo' },
   { value: 'EDUCATION', label: 'Educação' },
   { value: 'RELIGIOUS', label: 'Religioso' },
+];
+
+// The 5 adult brackets only — AGE_13_17 is not an advertiser-selectable
+// option (backend rejects it in targetAgeBrackets).
+const AGE_BRACKET_OPTIONS: { value: AgeBracket; label: string }[] = [
+  { value: 'AGE_18_24', label: '18–24' },
+  { value: 'AGE_25_34', label: '25–34' },
+  { value: 'AGE_35_44', label: '35–44' },
+  { value: 'AGE_45_54', label: '45–54' },
+  { value: 'AGE_55_PLUS', label: '55+' },
 ];
 
 interface TargetingStepProps {
@@ -55,8 +66,37 @@ export function TargetingStep({ draft, updateDraft }: TargetingStepProps) {
     updateDraft({ targetCategories: draft.targetCategories.filter((c) => c !== category) });
   }
 
+  function toggleAgeBracket(bracket: AgeBracket) {
+    const isSelected = draft.targetAgeBrackets.includes(bracket);
+    updateDraft({
+      targetAgeBrackets: isSelected
+        ? draft.targetAgeBrackets.filter((b) => b !== bracket)
+        : [...draft.targetAgeBrackets, bracket],
+    });
+  }
+
   return (
     <div className={styles.step}>
+      <div className={styles.field}>
+        <Label>Faixa etária do público</Label>
+        <p className={styles.hint}>
+          {draft.targetAgeBrackets.length > 0
+            ? 'Seu anúncio será exibido apenas para as faixas etárias selecionadas.'
+            : 'Todas as idades — nenhuma faixa etária selecionada restringe a exibição.'}
+        </p>
+        <div className={styles.chipList}>
+          {AGE_BRACKET_OPTIONS.map((option) => (
+            <Chip
+              key={option.value}
+              variant={draft.targetAgeBrackets.includes(option.value) ? 'active' : 'default'}
+              onClick={() => toggleAgeBracket(option.value)}
+            >
+              {option.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
       <div className={styles.field}>
         <Label>Interesses do público</Label>
         <p className={styles.hint}>Seu anúncio será exibido para usuários com preferências correspondentes.</p>

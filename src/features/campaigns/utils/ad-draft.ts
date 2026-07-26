@@ -35,6 +35,9 @@ export function adToDraft(ad: AdResponse): CampaignWizardDraft {
     externalUrl: ad.destination?.type === 'EXTERNAL_URL' ? ad.destination.url : '',
     targetDomains: [...ad.targetDomains],
     targetCategories: [...ad.targetCategories],
+    // AdResponse doesn't carry targetAgeBrackets yet (task 5 only wired it
+    // into CreateAdRequest) — edit mode always starts from "all ages".
+    targetAgeBrackets: [],
     billingModel: ad.billingModel,
     bidReais: centsToReaisInput(ad.bidCents),
     dailyBudgetReais: centsToReaisInput(ad.dailyBudgetCents),

@@ -6,6 +6,7 @@ import type {
   AdDestination,
   AdFormat,
   AdPlacement,
+  AgeBracket,
   CreateAdRequest,
   FrequencyCapWindow,
 } from '@/features/advertisements/types/advertisement.types';
@@ -36,6 +37,7 @@ export interface CampaignWizardDraft {
   externalUrl: string;
   targetDomains: string[];
   targetCategories: string[];
+  targetAgeBrackets: AgeBracket[];
   billingModel: AdBillingModel | null;
   bidReais: string;
   dailyBudgetReais: string;
@@ -56,6 +58,7 @@ const INITIAL_DRAFT: CampaignWizardDraft = {
   externalUrl: '',
   targetDomains: [],
   targetCategories: [],
+  targetAgeBrackets: [],
   billingModel: null,
   bidReais: '',
   dailyBudgetReais: '',
@@ -159,6 +162,7 @@ export function draftToCreateAdRequest(
     placements: ALL_PLACEMENTS,
     targetDomains: draft.targetDomains,
     targetCategories: draft.targetCategories,
+    targetAgeBrackets: draft.targetAgeBrackets,
     frequencyCapMax: draft.frequencyCapMax ? Number(draft.frequencyCapMax) : undefined,
     frequencyCapWindow: draft.frequencyCapMax ? (draft.frequencyCapWindow ?? undefined) : undefined,
     billingModel: draft.billingModel as AdBillingModel,

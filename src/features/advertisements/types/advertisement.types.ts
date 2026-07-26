@@ -8,6 +8,9 @@ export type AdPlacement = 'FEED' | 'EVENT_DETAIL' | 'CHECKOUT' | 'POST_PURCHASE'
 export type AdBillingModel = 'CPM' | 'CPC';
 export type AdStatusAction = 'submit' | 'activate' | 'pause' | 'end';
 export type FrequencyCapWindow = 'day' | 'total';
+// Advertisers may only target the 5 adult brackets — AGE_13_17 is excluded
+// from targeting eligibility server-side (backend W1).
+export type AgeBracket = 'AGE_13_17' | 'AGE_18_24' | 'AGE_25_34' | 'AGE_35_44' | 'AGE_45_54' | 'AGE_55_PLUS';
 
 // Mirrors AdDestination in orchestrator's domain/ad-destination.ts.
 // null = legacy ad predating destinations (ineligible to serve until edited).
@@ -61,6 +64,8 @@ export interface CreateAdRequest {
   placements: AdPlacement[];
   targetDomains: string[];
   targetCategories: string[];
+  // Empty/omitted = all ages.
+  targetAgeBrackets?: AgeBracket[];
   frequencyCapMax?: number;
   frequencyCapWindow?: FrequencyCapWindow;
   billingModel: AdBillingModel;

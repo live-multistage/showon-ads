@@ -55,7 +55,7 @@ export interface AdResponse {
   dailyBudgetCents: number;
   totalLimitCents: number;
   totalSpendCents: number;
-  metrics: AdMetricsSummary;
+  metrics?: AdMetricsSummary;
   startsAt: string;
   endsAt: string;
   createdBy: string;

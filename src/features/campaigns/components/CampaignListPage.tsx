@@ -27,10 +27,32 @@ function SearchIcon({ className }: { className?: string }) {
 }
 import { useListAdsQuery } from '@/features/advertisements/queries/use-list-ads';
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
-import type { AdResponse } from '@/features/advertisements/types/advertisement.types';
+import type { AdResponse, AdStatus } from '@/features/advertisements/types/advertisement.types';
 import { formatCentsToBRL } from '../utils/format-currency';
-import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, destinationLabel } from '../utils/ad-display';
+import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, FORMAT_SHORT, destinationLabel, gradientFor } from '../utils/ad-display';
 import styles from './CampaignListPage.module.scss';
+
+const NO_DATA = '—';
+const PAGE_SIZE = 5;
+
+type TabKey = 'ALL' | 'ACTIVE' | 'REVIEW' | 'PAUSED' | 'ENDED' | 'DRAFTS';
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'ALL', label: 'Todas' },
+  { key: 'ACTIVE', label: 'Ativas' },
+  { key: 'REVIEW', label: 'Em análise' },
+  { key: 'PAUSED', label: 'Pausadas' },
+  { key: 'ENDED', label: 'Encerradas' },
+  { key: 'DRAFTS', label: 'Rascunhos' },
+];
+
+// DRAFT and REJECTED are both "not yet running, advertiser can still edit"
+// states — grouped under one Rascunhos tab rather than a near-empty tab each.
+function matchesTab(tab: TabKey, status: AdStatus): boolean {
+  if (tab === 'ALL') return true;
+  if (tab === 'DRAFTS') return status === 'DRAFT' || status === 'REJECTED';
+  return status === tab;
+}
 
 function formatPeriod(startsAt: string, endsAt: string): string {
   const fmt = (value: string) =>
@@ -38,16 +60,13 @@ function formatPeriod(startsAt: string, endsAt: string): string {
   return `${fmt(startsAt)} – ${fmt(endsAt)}`;
 }
 
-// The list endpoint carries no impression/click/CTR data — those live behind
-// the per-ad report endpoint — so aggregate metric cards show a placeholder
-// rather than a fabricated number. Wire them once a list-metrics endpoint exists.
-const NO_DATA = '—';
-
 export function CampaignListPage() {
   const { data: ads = [], isLoading: isAdsLoading } = useListAdsQuery();
   const { accounts, activeAccountId, setActiveAccountId, isLoading: isAccountsLoading } =
     useActiveAdvertiserAccount();
   const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<TabKey>('ALL');
+  const [page, setPage] = useState(1);
 
   const isLoading = isAdsLoading || isAccountsLoading || (accounts.length > 0 && activeAccountId === null);
 
@@ -56,10 +75,32 @@ export function CampaignListPage() {
     [ads, activeAccountId],
   );
 
+  const totals = useMemo(
+    () =>
+      campaigns.reduce(
+        (acc, c) => ({
+          impressions: acc.impressions + (c.metrics?.impressions ?? 0),
+          clicks: acc.clicks + (c.metrics?.clicks ?? 0),
+        }),
+        { impressions: 0, clicks: 0 },
+      ),
+    [campaigns],
+  );
+  const avgCtr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : null;
+
+  const tabFiltered = useMemo(
+    () => campaigns.filter((c) => matchesTab(activeTab, c.status)),
+    [campaigns, activeTab],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? campaigns.filter((c) => c.title.toLowerCase().includes(q)) : campaigns;
-  }, [campaigns, query]);
+    return q ? tabFiltered.filter((c) => c.title.toLowerCase().includes(q)) : tabFiltered;
+  }, [tabFiltered, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSafe = Math.min(page, totalPages);
+  const paged = filtered.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE);
 
   const accountOptions: SelectOption[] = accounts.map((account) => ({
     value: account.id,
@@ -81,10 +122,36 @@ export function CampaignListPage() {
 
       <section className={styles.stats}>
         <StatCard icon="campaigns" label="CAMPANHAS" value={isLoading ? NO_DATA : String(campaigns.length)} />
-        <StatCard icon="impressions" label="IMPRESSÕES" value={NO_DATA} />
-        <StatCard icon="clicks" label="CLIQUES" value={NO_DATA} />
-        <StatCard icon="ctr" label="CTR MÉDIO" value={NO_DATA} accent />
+        <StatCard icon="impressions" label="IMPRESSÕES" value={isLoading ? NO_DATA : totals.impressions.toLocaleString('pt-BR')} />
+        <StatCard icon="clicks" label="CLIQUES" value={isLoading ? NO_DATA : totals.clicks.toLocaleString('pt-BR')} />
+        <StatCard
+          icon="ctr"
+          label="CTR MÉDIO"
+          value={isLoading || avgCtr === null ? NO_DATA : `${avgCtr.toFixed(2)}%`}
+          accent
+        />
       </section>
+
+      <div className={styles.tabs}>
+        {TABS.map((tab) => {
+          const count = campaigns.filter((c) => matchesTab(tab.key, c.status)).length;
+          const active = tab.key === activeTab;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              className={`${styles.tab} ${active ? styles.tabActive : ''}`}
+              onClick={() => {
+                setActiveTab(tab.key);
+                setPage(1);
+              }}
+            >
+              {tab.label}
+              <span className={styles.tabCount}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className={styles.toolbar}>
         {accounts.length > 1 && (
@@ -104,7 +171,10 @@ export function CampaignListPage() {
             className={styles.search}
             placeholder="Buscar campanhas..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
           />
         </div>
       </div>
@@ -131,22 +201,56 @@ export function CampaignListPage() {
       )}
 
       {!isLoading && campaigns.length > 0 && (
-        <div className={styles.table}>
-          <div className={styles.tableHead}>
-            <span>CAMPANHA</span>
-            <span>STATUS</span>
-            <span>FORMATO</span>
-            <span>DESTINO</span>
-            <span>PERÍODO</span>
-            <span className={styles.right}>ORÇAMENTO</span>
+        <>
+          <div className={styles.table}>
+            {paged.map((ad) => (
+              <CampaignRow key={ad.id} ad={ad} />
+            ))}
+            {filtered.length === 0 && (
+              <div className={styles.noMatch}>Nenhuma campanha corresponde à busca.</div>
+            )}
           </div>
-          {filtered.map((ad) => (
-            <CampaignRow key={ad.id} ad={ad} />
-          ))}
-          {filtered.length === 0 && (
-            <div className={styles.noMatch}>Nenhuma campanha corresponde à busca.</div>
+
+          {filtered.length > 0 && (
+            <div className={styles.pagination}>
+              <span className={styles.paginationInfo}>
+                MOSTRANDO <b>{paged.length}</b> DE <b>{filtered.length}</b>
+              </span>
+              {totalPages > 1 && (
+                <div className={styles.pageButtons}>
+                  <button
+                    type="button"
+                    className={styles.pageBtn}
+                    disabled={pageSafe <= 1}
+                    onClick={() => setPage(pageSafe - 1)}
+                    aria-label="Página anterior"
+                  >
+                    ‹
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`${styles.pageBtn} ${n === pageSafe ? styles.pageBtnActive : ''}`}
+                      onClick={() => setPage(n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className={styles.pageBtn}
+                    disabled={pageSafe >= totalPages}
+                    onClick={() => setPage(pageSafe + 1)}
+                    aria-label="Próxima página"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
@@ -178,20 +282,60 @@ function StatCard({ icon, label, value, accent }: { icon: string; label: string;
 }
 
 function CampaignRow({ ad }: { ad: AdResponse }) {
+  const pct = ad.totalLimitCents > 0 ? Math.min(100, Math.round((ad.totalSpendCents / ad.totalLimitCents) * 100)) : 0;
+  const thumbBg = ad.bannerUrl ? `url(${ad.bannerUrl}) center/cover no-repeat` : gradientFor(ad.id);
+
   return (
     <Link href={`/campaigns/${ad.id}`} className={styles.row}>
-      <span className={styles.cellTitle}>{ad.title}</span>
-      <span>
-        <Badge variant={STATUS_BADGE_VARIANT[ad.status]}>{STATUS_LABEL[ad.status]}</Badge>
-      </span>
-      <span className={styles.cellMono}>{FORMAT_LABEL[ad.format]}</span>
-      <span className={ad.destination ? styles.cellMono : styles.cellHint}>
-        {destinationLabel(ad.destination)}
-      </span>
-      <span className={styles.cellMono}>{formatPeriod(ad.startsAt, ad.endsAt)}</span>
-      <span className={`${styles.cellMono} ${styles.right}`}>
-        {formatCentsToBRL(ad.totalSpendCents)} / {formatCentsToBRL(ad.totalLimitCents)}
-      </span>
+      <div className={styles.thumb} style={{ background: thumbBg }}>
+        <span className={styles.thumbFormat}>{FORMAT_SHORT[ad.format]}</span>
+      </div>
+
+      <div className={styles.info}>
+        <div className={styles.infoTop}>
+          <Badge variant={STATUS_BADGE_VARIANT[ad.status]}>{STATUS_LABEL[ad.status]}</Badge>
+          <span className={ad.destination ? styles.cellMono : styles.cellHint}>
+            {destinationLabel(ad.destination)}
+          </span>
+        </div>
+        <div className={styles.cellTitle}>{ad.title}</div>
+        <div className={styles.infoMeta}>
+          <span>
+            <b>FMT</b> {FORMAT_LABEL[ad.format]}
+          </span>
+          <span>
+            <b>PER</b> {formatPeriod(ad.startsAt, ad.endsAt)}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.metrics}>
+        <RowMetric label="IMPRESS." value={(ad.metrics?.impressions ?? 0).toLocaleString('pt-BR')} />
+        <RowMetric label="CLIQUES" value={(ad.metrics?.clicks ?? 0).toLocaleString('pt-BR')} />
+        <RowMetric label="CTR" value={ad.metrics?.ctr != null ? `${ad.metrics.ctr.toFixed(2)}%` : NO_DATA} accent />
+        <RowMetric label="GASTO" value={formatCentsToBRL(ad.metrics?.spendCents ?? 0)} accent />
+      </div>
+
+      <div className={styles.budget}>
+        <span className={styles.budgetText}>
+          {formatCentsToBRL(ad.totalSpendCents)} / {formatCentsToBRL(ad.totalLimitCents)}
+        </span>
+        <div className={styles.budgetTrack}>
+          <div
+            className={`${styles.budgetFill} ${pct >= 80 ? styles.budgetFillWarn : ''}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
     </Link>
+  );
+}
+
+function RowMetric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className={styles.rowMetric}>
+      <div className={styles.rowMetricLabel}>{label}</div>
+      <div className={`${styles.rowMetricValue} ${accent ? styles.rowMetricAccent : ''}`}>{value}</div>
+    </div>
   );
 }

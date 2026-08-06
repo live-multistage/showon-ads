@@ -93,7 +93,7 @@ function ReportCard({ ad }: { ad: AdResponse }) {
   const pill = STATUS_PILL[ad.status];
 
   const val = (v: string) => (isLoading ? '…' : v);
-  const ctr = report?.ctr != null ? `${(report.ctr * 100).toFixed(2)}%` : '—';
+  const ctr = report?.ctr != null ? `${report.ctr.toFixed(2)}%` : '—';
   const spentPct =
     ad.totalLimitCents > 0 ? Math.min(100, (ad.totalSpendCents / ad.totalLimitCents) * 100) : 0;
 

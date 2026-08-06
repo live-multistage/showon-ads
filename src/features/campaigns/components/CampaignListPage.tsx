@@ -207,7 +207,9 @@ export function CampaignListPage() {
               <CampaignRow key={ad.id} ad={ad} />
             ))}
             {filtered.length === 0 && (
-              <div className={styles.noMatch}>Nenhuma campanha corresponde à busca.</div>
+              <div className={styles.noMatch}>
+                {query ? 'Nenhuma campanha corresponde à busca.' : 'Nenhuma campanha neste status.'}
+              </div>
             )}
           </div>
 

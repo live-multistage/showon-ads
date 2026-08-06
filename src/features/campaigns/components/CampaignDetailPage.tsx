@@ -216,7 +216,7 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
         <div className={styles.metricsGrid}>
           <Metric icon="impressions" label="IMPRESSÕES" value={report ? report.impressions.toLocaleString('pt-BR') : '—'} />
           <Metric icon="clicks" label="CLIQUES" value={report ? report.clicks.toLocaleString('pt-BR') : '—'} />
-          <Metric icon="ctr" label="CTR" value={report?.ctr != null ? `${(report.ctr * 100).toFixed(2)}%` : '—'} accent />
+          <Metric icon="ctr" label="CTR" value={report?.ctr != null ? `${report.ctr.toFixed(2)}%` : '—'} accent />
           <Metric icon="spend" label="GASTO" value={report ? formatCentsToBRL(report.spendCents) : '—'} />
         </div>
       </section>

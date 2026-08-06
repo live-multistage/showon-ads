@@ -100,7 +100,7 @@ describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedUseAdReportQuery.mockReturnValue({
-      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 0.02, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [] },
+      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 2, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [] },
       isLoading: false,
     } as unknown as ReturnType<typeof useAdReportQuery>);
     mockReviews([]);
@@ -293,7 +293,7 @@ describe('CampaignDetailPage', () => {
         status: 'ACTIVE',
         impressions: 1000,
         clicks: 20,
-        ctr: 0.02,
+        ctr: 2,
         spendCents: 5000,
         dailyBreakdown: [],
         placementBreakdown: [{ placement: 'FEED', impressions: 800, clicks: 15, ctr: 1.88, spendCents: 4000 }],

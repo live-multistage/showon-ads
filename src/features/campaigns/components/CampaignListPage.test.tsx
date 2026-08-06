@@ -81,6 +81,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     dailyBudgetCents: 1000,
     totalLimitCents: 100000,
     totalSpendCents: 25000,
+    metrics: { impressions: 0, clicks: 0, ctr: null, spendCents: 0 },
     startsAt: '2026-01-01T00:00:00.000Z',
     endsAt: '2026-02-01T00:00:00.000Z',
     createdBy: 'user-1',
@@ -141,9 +142,14 @@ describe('CampaignListPage', () => {
 
     expect(screen.getByText('Ativo')).toBeInTheDocument();
     expect(screen.getByText('Pausado')).toBeInTheDocument();
-    expect(screen.getByText('Em análise')).toBeInTheDocument();
+    // 'span' scopes to the status Badge — the REVIEW status label and the
+    // "Em análise" status-tab button text are otherwise textually identical.
+    expect(screen.getByText('Em análise', { selector: 'span' })).toBeInTheDocument();
     expect(screen.getByText('Encerrado')).toBeInTheDocument();
     expect(screen.getByText('Rascunho')).toBeInTheDocument();
+
+    // 6 ads > PAGE_SIZE (5) — the 6th (Rejeitado) lands on page 2.
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
     expect(screen.getByText('Rejeitado')).toBeInTheDocument();
   });
 
@@ -222,5 +228,59 @@ describe('CampaignListPage', () => {
 
     expect(screen.getByText('Account B campaign')).toBeInTheDocument();
     expect(screen.queryByText('Account A campaign')).not.toBeInTheDocument();
+  });
+
+  it('sums impressions and clicks into the KPI strip and computes average CTR', () => {
+    mockedUseListAdsQuery.mockReturnValue({
+      data: [
+        makeAd({ id: 'ad-1', metrics: { impressions: 1000, clicks: 40, ctr: 4, spendCents: 2000 } }),
+        makeAd({ id: 'ad-2', metrics: { impressions: 500, clicks: 10, ctr: 2, spendCents: 1000 } }),
+      ],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useListAdsQuery>);
+
+    renderPage();
+
+    expect(screen.getByText('1.500')).toBeInTheDocument();
+    expect(screen.getByText('50')).toBeInTheDocument();
+    expect(screen.getByText('3.33%')).toBeInTheDocument();
+  });
+
+  it('filters rows by status tab and shows per-tab counts', () => {
+    mockedUseListAdsQuery.mockReturnValue({
+      data: [
+        makeAd({ id: 'ad-active', title: 'Active campaign', status: 'ACTIVE' }),
+        makeAd({ id: 'ad-paused', title: 'Paused campaign', status: 'PAUSED' }),
+      ],
+      isLoading: false,
+    } as unknown as ReturnType<typeof useListAdsQuery>);
+
+    renderPage();
+
+    expect(screen.getByText('Active campaign')).toBeInTheDocument();
+    expect(screen.getByText('Paused campaign')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Ativas/ }));
+
+    expect(screen.getByText('Active campaign')).toBeInTheDocument();
+    expect(screen.queryByText('Paused campaign')).not.toBeInTheDocument();
+  });
+
+  it('paginates rows 5 per page', () => {
+    const ads = Array.from({ length: 7 }, (_, i) => makeAd({ id: `ad-${i}`, title: `Campaign ${i}` }));
+    mockedUseListAdsQuery.mockReturnValue({
+      data: ads,
+      isLoading: false,
+    } as unknown as ReturnType<typeof useListAdsQuery>);
+
+    renderPage();
+
+    expect(screen.getByText('Campaign 0')).toBeInTheDocument();
+    expect(screen.queryByText('Campaign 6')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+
+    expect(screen.getByText('Campaign 6')).toBeInTheDocument();
+    expect(screen.queryByText('Campaign 0')).not.toBeInTheDocument();
   });
 });

@@ -29,6 +29,13 @@ export interface AdReviewEntry {
   createdAt: string;
 }
 
+export interface AdMetricsSummary {
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+  spendCents: number;
+}
+
 export interface AdResponse {
   id: string;
   advertiserAccountId: string;
@@ -48,6 +55,7 @@ export interface AdResponse {
   dailyBudgetCents: number;
   totalLimitCents: number;
   totalSpendCents: number;
+  metrics?: AdMetricsSummary;
   startsAt: string;
   endsAt: string;
   createdBy: string;
@@ -106,6 +114,14 @@ export interface AdDailyBreakdown {
   spendCents: number;
 }
 
+export interface AdPlacementBreakdownItem {
+  placement: AdPlacement;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+  spendCents: number;
+}
+
 export interface AdReportResponse {
   adId: string;
   title: string;
@@ -115,6 +131,7 @@ export interface AdReportResponse {
   ctr: number | null;
   spendCents: number;
   dailyBreakdown: AdDailyBreakdown[];
+  placementBreakdown: AdPlacementBreakdownItem[];
 }
 
 // Mirrors AdvertiserAccount.toJSON() in orchestrator's domain/advertiser-account.ts.

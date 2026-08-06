@@ -34,7 +34,7 @@ import type {
   AdStatusAction,
 } from '@/features/advertisements/types/advertisement.types';
 import { formatCentsToBRL } from '../utils/format-currency';
-import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, destinationLabel } from '../utils/ad-display';
+import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, placementLabel, destinationLabel } from '../utils/ad-display';
 import { EditCampaignForm } from './EditCampaignForm';
 import styles from './CampaignDetailPage.module.scss';
 
@@ -269,6 +269,36 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
                 </li>
               ))}
             </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Breakdown por posição</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {report && report.placementBreakdown.length > 0 ? (
+            <div className={styles.placementTable}>
+              <div className={styles.placementHead}>
+                <span>POSIÇÃO</span>
+                <span className={styles.right}>IMPRESSÕES</span>
+                <span className={styles.right}>CLIQUES</span>
+                <span className={styles.right}>CTR</span>
+                <span className={styles.right}>GASTO</span>
+              </div>
+              {report.placementBreakdown.map((row) => (
+                <div key={row.placement} className={styles.placementRow}>
+                  <span>{placementLabel(row.placement)}</span>
+                  <span className={styles.right}>{row.impressions.toLocaleString('pt-BR')}</span>
+                  <span className={styles.right}>{row.clicks.toLocaleString('pt-BR')}</span>
+                  <span className={styles.right}>{row.ctr != null ? `${row.ctr.toFixed(2)}%` : '—'}</span>
+                  <span className={styles.right}>{formatCentsToBRL(row.spendCents)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.empty}>Sem dados de posição ainda.</p>
           )}
         </CardContent>
       </Card>

@@ -100,7 +100,7 @@ describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedUseAdReportQuery.mockReturnValue({
-      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 0.02, spendCents: 5000, dailyBreakdown: [] },
+      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 0.02, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [] },
       isLoading: false,
     } as unknown as ReturnType<typeof useAdReportQuery>);
     mockReviews([]);
@@ -275,5 +275,34 @@ describe('CampaignDetailPage', () => {
 
     fireEvent.click(submitButton);
     expect(mutateSpy).toHaveBeenCalledWith({ adId: 'ad-1', action: 'submit' });
+  });
+
+  it('shows an empty state when there is no placement breakdown yet', () => {
+    mockAd({ status: 'ACTIVE' });
+    render(<CampaignDetailPage id="ad-1" />);
+
+    expect(screen.getByText('Sem dados de posição ainda.')).toBeInTheDocument();
+  });
+
+  it('renders one row per placement with its label and numbers', () => {
+    mockAd({ status: 'ACTIVE' });
+    mockedUseAdReportQuery.mockReturnValue({
+      data: {
+        adId: 'ad-1',
+        title: 'Summer Promo',
+        status: 'ACTIVE',
+        impressions: 1000,
+        clicks: 20,
+        ctr: 0.02,
+        spendCents: 5000,
+        dailyBreakdown: [],
+        placementBreakdown: [{ placement: 'FEED', impressions: 800, clicks: 15, ctr: 1.88, spendCents: 4000 }],
+      },
+    } as unknown as ReturnType<typeof useAdReportQuery>);
+
+    render(<CampaignDetailPage id="ad-1" />);
+
+    expect(screen.getByText('Feed')).toBeInTheDocument();
+    expect(screen.getByText('800')).toBeInTheDocument();
   });
 });

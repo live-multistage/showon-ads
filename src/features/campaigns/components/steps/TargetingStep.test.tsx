@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TargetingStep } from './TargetingStep';
-import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import { ALL_PLACEMENTS, validateStep, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 
 function makeDraft(overrides: Partial<CampaignWizardDraft> = {}): CampaignWizardDraft {
   return {
@@ -15,6 +15,7 @@ function makeDraft(overrides: Partial<CampaignWizardDraft> = {}): CampaignWizard
     targetDomains: [],
     targetCategories: [],
     targetAgeBrackets: [],
+    placements: ALL_PLACEMENTS,
     billingModel: null,
     bidReais: '',
     dailyBudgetReais: '',
@@ -71,5 +72,56 @@ describe('TargetingStep — age brackets', () => {
     expect(
       screen.getByText('Seu anúncio será exibido apenas para as faixas etárias selecionadas.'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('TargetingStep — placements', () => {
+  it('renders a checkbox per placement, all checked by default', () => {
+    render(<TargetingStep draft={makeDraft()} updateDraft={vi.fn()} />);
+
+    const checkboxes = screen.getAllByRole('checkbox', {
+      name: /feed|página do evento|checkout|pós-compra|pausa do player/i,
+    });
+    expect(checkboxes).toHaveLength(5);
+    checkboxes.forEach((c) => expect(c).toBeChecked());
+  });
+
+  it('unchecking a placement removes it from the draft', () => {
+    const updateDraft = vi.fn();
+    render(<TargetingStep draft={makeDraft()} updateDraft={updateDraft} />);
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
+
+    expect(updateDraft).toHaveBeenCalledWith({
+      placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'],
+    });
+  });
+
+  it('checking a previously-unselected placement adds it back to the draft', () => {
+    const updateDraft = vi.fn();
+    render(
+      <TargetingStep
+        draft={makeDraft({ placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'] })}
+        updateDraft={updateDraft}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
+
+    expect(updateDraft).toHaveBeenCalledWith({
+      placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE', 'PLAYER_PAUSE'],
+    });
+  });
+});
+
+describe('validateStep — targeting', () => {
+  it('rejects a draft with zero placements selected', () => {
+    expect(validateStep('targeting', makeDraft({ placements: [] }))).toBe(
+      'Selecione pelo menos um posicionamento.',
+    );
+  });
+
+  it('accepts a draft with at least one placement selected', () => {
+    expect(validateStep('targeting', makeDraft({ placements: ['FEED'] }))).toBeNull();
   });
 });

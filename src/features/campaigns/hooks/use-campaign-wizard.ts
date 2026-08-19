@@ -21,11 +21,10 @@ export type WizardStepId = (typeof WIZARD_STEPS)[number];
 
 export type DestinationType = 'EVENT' | 'EXTERNAL_URL';
 
-// No placement-picker step exists in the wizard (out of task 19's scope per
-// the task brief and design spec — neither shipped in live-show-react ever
-// exposed one either). Every campaign serves on every placement; add a step
-// here if per-placement targeting becomes a real product need.
-const ALL_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'];
+// Placements are picked via a checkbox group folded into the Targeting step
+// (see TargetingStep.tsx) rather than a dedicated wizard step. All start
+// selected, so existing advertiser behavior is unchanged by default.
+export const ALL_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE', 'PLAYER_PAUSE'];
 
 export interface CampaignWizardDraft {
   title: string;
@@ -38,6 +37,7 @@ export interface CampaignWizardDraft {
   targetDomains: string[];
   targetCategories: string[];
   targetAgeBrackets: AgeBracket[];
+  placements: AdPlacement[];
   billingModel: AdBillingModel | null;
   bidReais: string;
   dailyBudgetReais: string;
@@ -59,6 +59,7 @@ const INITIAL_DRAFT: CampaignWizardDraft = {
   targetDomains: [],
   targetCategories: [],
   targetAgeBrackets: [],
+  placements: ALL_PLACEMENTS,
   billingModel: null,
   bidReais: '',
   dailyBudgetReais: '',
@@ -103,9 +104,12 @@ function validateDestinationStep(draft: CampaignWizardDraft): string | null {
   return validateExternalUrl(draft.externalUrl);
 }
 
-// Targeting has no required fields — domains/categories are optional filters,
-// an empty selection just means "no targeting restriction" server-side.
-function validateTargetingStep(): string | null {
+// Domains/categories/age brackets are optional filters — an empty selection
+// just means "no targeting restriction" server-side. Placements are the one
+// required field here: at least one must stay selected or the ad has
+// nowhere to serve.
+function validateTargetingStep(draft: CampaignWizardDraft): string | null {
+  if (draft.placements.length === 0) return 'Selecione pelo menos um posicionamento.';
   return null;
 }
 
@@ -128,7 +132,7 @@ function validateBudgetStep(draft: CampaignWizardDraft): string | null {
 export function validateStep(id: WizardStepId, draft: CampaignWizardDraft): string | null {
   if (id === 'creative') return validateCreativeStep(draft);
   if (id === 'destination') return validateDestinationStep(draft);
-  if (id === 'targeting') return validateTargetingStep();
+  if (id === 'targeting') return validateTargetingStep(draft);
   if (id === 'budget') return validateBudgetStep(draft);
   return null;
 }
@@ -159,7 +163,7 @@ export function draftToCreateAdRequest(
     destination: draftToDestination(draft),
     title: draft.title.trim(),
     format: draft.format as AdFormat,
-    placements: ALL_PLACEMENTS,
+    placements: draft.placements,
     targetDomains: draft.targetDomains,
     targetCategories: draft.targetCategories,
     targetAgeBrackets: draft.targetAgeBrackets,

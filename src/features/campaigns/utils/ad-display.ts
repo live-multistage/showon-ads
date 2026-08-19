@@ -42,6 +42,7 @@ export const PLACEMENT_LABEL: Record<AdPlacement, string> = {
   EVENT_DETAIL: 'Página do evento',
   CHECKOUT: 'Checkout',
   POST_PURCHASE: 'Pós-compra',
+  PLAYER_PAUSE: 'Pausa do player',
 };
 
 export function placementLabel(placement: string): string {

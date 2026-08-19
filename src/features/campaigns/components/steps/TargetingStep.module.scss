@@ -22,3 +22,19 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+
+  label {
+    cursor: pointer;
+  }
+}

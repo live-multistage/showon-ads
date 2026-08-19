@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, type KeyboardEvent } from 'react';
-import { Chip, Input, Label } from '@live-show/design-system';
-import type { AgeBracket } from '@/features/advertisements/types/advertisement.types';
-import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import { Checkbox, Chip, Input, Label } from '@live-show/design-system';
+import type { AdPlacement, AgeBracket } from '@/features/advertisements/types/advertisement.types';
+import { placementLabel } from '../../utils/ad-display';
+import { ALL_PLACEMENTS, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 import styles from './TargetingStep.module.scss';
 
 // Ported from live-show-react's AdCreatePage.tsx INTERESTS list — the only
@@ -75,8 +76,34 @@ export function TargetingStep({ draft, updateDraft }: TargetingStepProps) {
     });
   }
 
+  function togglePlacement(placement: AdPlacement) {
+    const isSelected = draft.placements.includes(placement);
+    updateDraft({
+      placements: isSelected
+        ? draft.placements.filter((p) => p !== placement)
+        : [...draft.placements, placement],
+    });
+  }
+
   return (
     <div className={styles.step}>
+      <div className={styles.field}>
+        <Label>Posicionamentos</Label>
+        <p className={styles.hint}>Onde seu anúncio pode ser exibido.</p>
+        <div className={styles.checkboxList}>
+          {ALL_PLACEMENTS.map((placement) => (
+            <div key={placement} className={styles.checkboxRow}>
+              <Checkbox
+                id={`placement-${placement}`}
+                checked={draft.placements.includes(placement)}
+                onCheckedChange={() => togglePlacement(placement)}
+              />
+              <label htmlFor={`placement-${placement}`}>{placementLabel(placement)}</label>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className={styles.field}>
         <Label>Faixa etária do público</Label>
         <p className={styles.hint}>

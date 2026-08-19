@@ -36,6 +36,7 @@ export function adToDraft(ad: AdResponse): CampaignWizardDraft {
     targetDomains: [...ad.targetDomains],
     targetCategories: [...ad.targetCategories],
     targetAgeBrackets: [...(ad.targetAgeBrackets ?? [])],
+    placements: [...ad.placements],
     billingModel: ad.billingModel,
     bidReais: centsToReaisInput(ad.bidCents),
     dailyBudgetReais: centsToReaisInput(ad.dailyBudgetCents),
@@ -47,18 +48,15 @@ export function adToDraft(ad: AdResponse): CampaignWizardDraft {
   };
 }
 
-// Inverse of adToDraft for the PATCH payload (use-update-ad). Placements
-// aren't part of the wizard's draft — no placement-picker step exists in
-// either the create wizard or this edit form (task 18/19/20 all scope
-// out per-placement targeting) — so they're omitted here and left untouched
-// server-side, matching Ad#update's partial-fields contract. The banner is
-// never part of this payload either: it's replaced via its own upload
-// endpoint (see EditCampaignForm), not PATCH /ads/:id.
+// Inverse of adToDraft for the PATCH payload (use-update-ad). The banner is
+// never part of this payload: it's replaced via its own upload endpoint
+// (see EditCampaignForm), not PATCH /ads/:id.
 export function draftToUpdateAdRequest(draft: CampaignWizardDraft): UpdateAdRequest {
   return {
     destination: draftToDestination(draft),
     title: draft.title.trim(),
     format: draft.format ?? undefined,
+    placements: draft.placements,
     targetDomains: draft.targetDomains,
     targetCategories: draft.targetCategories,
     targetAgeBrackets: draft.targetAgeBrackets,

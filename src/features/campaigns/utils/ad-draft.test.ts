@@ -53,6 +53,7 @@ describe('adToDraft', () => {
     expect(draft.targetDomains).toEqual(['ENTERTAINMENT']);
     expect(draft.targetCategories).toEqual(['festival']);
     expect(draft.targetAgeBrackets).toEqual(['AGE_18_24', 'AGE_25_34']);
+    expect(draft.placements).toEqual(['FEED']);
     expect(draft.billingModel).toBe('CPM');
     expect(draft.bidReais).toBe('10.5');
     expect(draft.dailyBudgetReais).toBe('50');
@@ -91,7 +92,7 @@ describe('adToDraft', () => {
 });
 
 describe('draftToUpdateAdRequest', () => {
-  it('builds a PATCH payload with cents conversions and the destination union, omitting placements', () => {
+  it('builds a PATCH payload with cents conversions, the destination union, and placements', () => {
     const draft = adToDraft(makeAd({}));
     const request = draftToUpdateAdRequest(draft);
 
@@ -99,6 +100,7 @@ describe('draftToUpdateAdRequest', () => {
       destination: { type: 'EXTERNAL_URL', url: 'https://example.com' },
       title: 'Summer Promo',
       format: 'HORIZONTAL_728x90',
+      placements: ['FEED'],
       targetDomains: ['ENTERTAINMENT'],
       targetCategories: ['festival'],
       targetAgeBrackets: ['AGE_18_24', 'AGE_25_34'],
@@ -111,7 +113,6 @@ describe('draftToUpdateAdRequest', () => {
       startsAt: new Date('2026-08-01T10:00:00.000Z').toISOString(),
       endsAt: new Date('2026-09-01T10:00:00.000Z').toISOString(),
     });
-    expect(request).not.toHaveProperty('placements');
     expect(request).not.toHaveProperty('bannerUrl');
   });
 

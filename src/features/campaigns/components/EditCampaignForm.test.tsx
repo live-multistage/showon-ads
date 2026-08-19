@@ -124,6 +124,16 @@ describe('EditCampaignForm', () => {
     expect(mockUpdateMutateAsync).toHaveBeenCalled();
   });
 
+  it('blocks saving when every placement is unchecked', () => {
+    render(<EditCampaignForm ad={makeAd({})} onCancel={vi.fn()} onSaved={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Feed' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(screen.getByText('Selecione pelo menos um posicionamento.')).toBeInTheDocument();
+    expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
+  });
+
   it('replaces the banner immediately via the upload endpoint, independent of Save', () => {
     render(<EditCampaignForm ad={makeAd({})} onCancel={vi.fn()} onSaved={vi.fn()} />);
 

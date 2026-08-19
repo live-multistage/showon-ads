@@ -90,7 +90,7 @@ export function TargetingStep({ draft, updateDraft }: TargetingStepProps) {
       <div className={styles.field}>
         <Label>Posicionamentos</Label>
         <p className={styles.hint}>Onde seu anúncio pode ser exibido.</p>
-        <div className={styles.checkboxList}>
+        <div className={styles.checkboxList} role="group" aria-label="Posicionamentos">
           {ALL_PLACEMENTS.map((placement) => (
             <div key={placement} className={styles.checkboxRow}>
               <Checkbox

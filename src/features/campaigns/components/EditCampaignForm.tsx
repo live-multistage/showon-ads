@@ -30,7 +30,12 @@ function validateDestinationForSave(draft: CampaignWizardDraft): string | null {
 }
 
 function validateForSave(draft: CampaignWizardDraft): string | null {
-  return validateStep('creative', draft) || validateDestinationForSave(draft) || validateStep('budget', draft);
+  return (
+    validateStep('creative', draft) ||
+    validateDestinationForSave(draft) ||
+    validateStep('targeting', draft) ||
+    validateStep('budget', draft)
+  );
 }
 
 // Reuses the create wizard's step components (task 18/19) in a stacked,

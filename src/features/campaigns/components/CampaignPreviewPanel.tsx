@@ -8,6 +8,7 @@ const FORMAT_META: Record<AdFormat, { label: string; ratio: string; dims: string
   HORIZONTAL_728x90: { label: 'Horizontal', ratio: '728 / 90', dims: '728×90' },
   VERTICAL_300x600: { label: 'Vertical', ratio: '300 / 600', dims: '300×600' },
   WIDE_16_9: { label: 'Tela ampla 16:9', ratio: '16 / 9', dims: '1920×1080' },
+  VIDEO_16_9: { label: 'Vídeo 16:9', ratio: '16 / 9', dims: '1920×1080' },
 };
 
 interface CampaignPreviewPanelProps {

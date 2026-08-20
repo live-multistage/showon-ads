@@ -7,15 +7,10 @@ import { useAdReportQuery } from '@/features/advertisements/queries/use-ad-repor
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 import type { AdResponse, AdStatus } from '@/features/advertisements/types/advertisement.types';
 import { formatCentsToBRL } from '../utils/format-currency';
-import { STATUS_LABEL, destinationLabel } from '../utils/ad-display';
+import { STATUS_LABEL, destinationLabel, FORMAT_SHORT } from '../utils/ad-display';
 import styles from './ReportsPage.module.scss';
 
 const intFmt = new Intl.NumberFormat('pt-BR');
-
-const FORMAT_SHORT: Record<string, string> = {
-  HORIZONTAL_728x90: '728×90',
-  VERTICAL_300x600: '300×600',
-};
 
 // Preview gradient derived from the ad id — stable per campaign, same idea as
 // the viewer-side AdBanner placeholder.

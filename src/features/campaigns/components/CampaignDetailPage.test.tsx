@@ -50,6 +50,8 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     targetCategories: [],
     targetAgeBrackets: [],
     bannerUrl: 'https://cdn.example.com/banner.png',
+    videoUrl: null,
+    videoDurationSec: null,
     frequencyCapMax: null,
     frequencyCapWindow: null,
     billingModel: 'CPM',

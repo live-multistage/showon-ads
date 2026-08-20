@@ -74,6 +74,8 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     targetCategories: [],
     targetAgeBrackets: [],
     bannerUrl: null,
+    videoUrl: null,
+    videoDurationSec: null,
     frequencyCapMax: null,
     frequencyCapWindow: null,
     billingModel: 'CPM',

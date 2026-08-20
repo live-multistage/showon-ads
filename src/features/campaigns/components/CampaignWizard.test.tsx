@@ -123,7 +123,7 @@ describe('CampaignWizard', () => {
 
     expect(
       screen.getByText(
-        'Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.',
+        'Os posicionamentos selecionados não podem ser combinados, pois usam formatos incompatíveis.',
       ),
     ).toBeInTheDocument();
   });

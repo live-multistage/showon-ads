@@ -1,5 +1,14 @@
 import type { AdDestination, AdFormat, AdPlacement, AdStatus } from '@/features/advertisements/types/advertisement.types';
 
+// All selectable placements — includes exclusive placements like PLAYER_PAUSE and PRE_ROLL
+// that can't be combined with page placements (FEED, EVENT_DETAIL, CHECKOUT, POST_PURCHASE).
+export const ALL_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE', 'PLAYER_PAUSE', 'PRE_ROLL'];
+
+// Placements selected by default when a new campaign is created.
+// Exclusive placements (PLAYER_PAUSE, PRE_ROLL) are opt-in because they use
+// dedicated formats that can't be combined with page placement formats.
+export const DEFAULT_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'];
+
 // Shared display maps — used by both the campaign list and detail pages so
 // status/format labels never drift between the two.
 export const STATUS_LABEL: Record<AdStatus, string> = {
@@ -24,6 +33,7 @@ export const FORMAT_LABEL: Record<AdFormat, string> = {
   HORIZONTAL_728x90: 'Horizontal 728×90',
   VERTICAL_300x600: 'Vertical 300×600',
   WIDE_16_9: 'Tela ampla 16:9',
+  VIDEO_16_9: 'Vídeo 16:9',
 };
 
 // Mirrors the orchestrator domain's PLACEMENT_ACCEPTED_FORMATS (single source
@@ -36,6 +46,7 @@ export const PLACEMENT_ACCEPTED_FORMATS: Record<AdPlacement, AdFormat[]> = {
   CHECKOUT: ['HORIZONTAL_728x90', 'VERTICAL_300x600'],
   POST_PURCHASE: ['HORIZONTAL_728x90', 'VERTICAL_300x600'],
   PLAYER_PAUSE: ['WIDE_16_9'],
+  PRE_ROLL: ['VIDEO_16_9'],
 };
 
 // Formats accepted by every one of the given placements. Empty when the
@@ -61,6 +72,7 @@ export const FORMAT_SHORT: Record<AdFormat, string> = {
   HORIZONTAL_728x90: '728×90',
   VERTICAL_300x600: '300×600',
   WIDE_16_9: '16:9',
+  VIDEO_16_9: 'Vídeo',
 };
 
 export const PLACEMENT_LABEL: Record<AdPlacement, string> = {
@@ -69,6 +81,7 @@ export const PLACEMENT_LABEL: Record<AdPlacement, string> = {
   CHECKOUT: 'Checkout',
   POST_PURCHASE: 'Pós-compra',
   PLAYER_PAUSE: 'Pausa do player',
+  PRE_ROLL: 'Pre-roll (antes da live)',
 };
 
 export function placementLabel(placement: string): string {

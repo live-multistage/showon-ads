@@ -80,9 +80,9 @@ describe('TargetingStep — placements', () => {
     render(<TargetingStep draft={makeDraft()} updateDraft={vi.fn()} />);
 
     const checkboxes = screen.getAllByRole('checkbox', {
-      name: /feed|página do evento|checkout|pós-compra|pausa do player/i,
+      name: /feed|página do evento|checkout|pós-compra|pausa do player|pre-roll/i,
     });
-    expect(checkboxes).toHaveLength(5);
+    expect(checkboxes).toHaveLength(6);
     checkboxes.forEach((c) => expect(c).toBeChecked());
   });
 
@@ -93,7 +93,7 @@ describe('TargetingStep — placements', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
 
     expect(updateDraft).toHaveBeenCalledWith({
-      placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'],
+      placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE', 'PRE_ROLL'],
     });
   });
 
@@ -131,7 +131,7 @@ describe('validateStep — targeting', () => {
 
   it('rejects PLAYER_PAUSE combined with a page placement (empty format intersection)', () => {
     expect(validateStep('targeting', makeDraft({ placements: ['FEED', 'PLAYER_PAUSE'] }))).toBe(
-      'Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.',
+      'Os posicionamentos selecionados não podem ser combinados, pois usam formatos incompatíveis.',
     );
   });
 

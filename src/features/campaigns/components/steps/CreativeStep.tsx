@@ -8,7 +8,7 @@ import styles from './CreativeStep.module.scss';
 
 const TITLE_MAX = 80;
 
-// The backend AdFormat enum defines these three. Which ones render as cards
+// The backend AdFormat enum defines these four. Which ones render as cards
 // depends on the placements picked in the Targeting step — see
 // PLACEMENT_ACCEPTED_FORMATS / acceptedFormatsFor below. The mock's fourth
 // "Quadrado 300×300" card has no server-side format, so it's intentionally
@@ -29,12 +29,20 @@ const FORMATS: {
     placement: 'PAUSA DO PLAYER',
     variant: 'wide',
   },
+  {
+    value: 'VIDEO_16_9',
+    label: 'Vídeo 16:9',
+    dims: 'mín. 1280×720, ideal 1920×1080',
+    placement: 'PRE-ROLL',
+    variant: 'wide',
+  },
 ];
 
 const IDEAL_DIM: Record<AdFormat, string> = {
   HORIZONTAL_728x90: '728×90',
   VERTICAL_300x600: '300×600',
   WIDE_16_9: '1920×1080',
+  VIDEO_16_9: '1920×1080',
 };
 
 interface CreativeStepProps {

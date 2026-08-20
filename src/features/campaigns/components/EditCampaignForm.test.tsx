@@ -52,6 +52,8 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     targetCategories: [],
     targetAgeBrackets: [],
     bannerUrl: 'https://cdn.example.com/banner.png',
+    videoUrl: null,
+    videoDurationSec: null,
     frequencyCapMax: null,
     frequencyCapWindow: null,
     billingModel: 'CPM',
@@ -144,7 +146,7 @@ describe('EditCampaignForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
     expect(
-      screen.getByText('Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.'),
+      screen.getByText('Os posicionamentos selecionados não podem ser combinados, pois usam formatos incompatíveis.'),
     ).toBeInTheDocument();
     expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
   });

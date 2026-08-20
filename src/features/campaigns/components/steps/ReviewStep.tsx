@@ -8,6 +8,7 @@ import styles from './ReviewStep.module.scss';
 const FORMAT_LABELS: Record<string, string> = {
   HORIZONTAL_728x90: 'Horizontal (728×90)',
   VERTICAL_300x600: 'Vertical (300×600)',
+  WIDE_16_9: 'Tela ampla 16:9 (1920×1080)',
 };
 
 const AGE_BRACKET_LABELS: Record<string, string> = {

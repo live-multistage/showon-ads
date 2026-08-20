@@ -101,14 +101,31 @@ describe('CampaignWizard', () => {
     render(<CampaignWizard />);
     advanceToTargeting();
 
+    // Default selection is the 4 page placements (Pausa do player starts
+    // unchecked), so unchecking these four is enough to hit zero placements.
     fireEvent.click(screen.getByRole('checkbox', { name: 'Feed' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Página do evento' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Checkout' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Pós-compra' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
 
     expect(screen.getByText('Selecione pelo menos um posicionamento.')).toBeInTheDocument();
+  });
+
+  it('blocks advancing past targeting when Pausa do player is combined with a page placement', () => {
+    render(<CampaignWizard />);
+    advanceToTargeting();
+
+    // Default already has the 4 page placements checked — opting into
+    // Pausa do player on top of them yields an empty format intersection.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+
+    expect(
+      screen.getByText(
+        'Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.',
+      ),
+    ).toBeInTheDocument();
   });
 
   function advanceToCreative() {

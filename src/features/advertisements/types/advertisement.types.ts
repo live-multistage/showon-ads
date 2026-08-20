@@ -3,7 +3,7 @@
 // advertiserAccountId replaces organizationId, and the flat eventId field is
 // replaced by a destination union (see domain/ad-destination.ts).
 export type AdStatus = 'DRAFT' | 'REVIEW' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'REJECTED';
-export type AdFormat = 'HORIZONTAL_728x90' | 'VERTICAL_300x600';
+export type AdFormat = 'HORIZONTAL_728x90' | 'VERTICAL_300x600' | 'WIDE_16_9';
 export type AdPlacement = 'FEED' | 'EVENT_DETAIL' | 'CHECKOUT' | 'POST_PURCHASE' | 'PLAYER_PAUSE';
 export type AdBillingModel = 'CPM' | 'CPC';
 export type AdStatusAction = 'submit' | 'activate' | 'pause' | 'end';

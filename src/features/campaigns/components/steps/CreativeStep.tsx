@@ -1,13 +1,16 @@
 'use client';
 
-import type { ChangeEvent } from 'react';
+import { useEffect, type ChangeEvent } from 'react';
 import type { AdFormat } from '@/features/advertisements/types/advertisement.types';
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import { acceptedFormatsFor } from '../../utils/ad-display';
 import styles from './CreativeStep.module.scss';
 
 const TITLE_MAX = 80;
 
-// The backend AdFormat enum only defines these two — the mock's third
+// The backend AdFormat enum defines these three. Which ones render as cards
+// depends on the placements picked in the Targeting step — see
+// PLACEMENT_ACCEPTED_FORMATS / acceptedFormatsFor below. The mock's fourth
 // "Quadrado 300×300" card has no server-side format, so it's intentionally
 // omitted rather than shown as an unsubmittable option.
 const FORMATS: {
@@ -15,15 +18,23 @@ const FORMATS: {
   label: string;
   dims: string;
   placement: string;
-  variant: 'horizontal' | 'vertical';
+  variant: 'horizontal' | 'vertical' | 'wide';
 }[] = [
   { value: 'HORIZONTAL_728x90', label: 'Horizontal', dims: '728 × 90', placement: 'FEED · TOPO', variant: 'horizontal' },
   { value: 'VERTICAL_300x600', label: 'Vertical', dims: '300 × 600', placement: 'SIDEBAR', variant: 'vertical' },
+  {
+    value: 'WIDE_16_9',
+    label: 'Tela ampla 16:9',
+    dims: 'mín. 1280×720, ideal 1920×1080',
+    placement: 'PAUSA DO PLAYER',
+    variant: 'wide',
+  },
 ];
 
 const IDEAL_DIM: Record<AdFormat, string> = {
   HORIZONTAL_728x90: '728×90',
   VERTICAL_300x600: '300×600',
+  WIDE_16_9: '1920×1080',
 };
 
 interface CreativeStepProps {
@@ -33,6 +44,25 @@ interface CreativeStepProps {
 }
 
 export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProps) {
+  const acceptedFormats = acceptedFormatsFor(draft.placements);
+  const visibleFormats = FORMATS.filter((format) => acceptedFormats.includes(format.value));
+
+  // Going back to Targeting and changing placements can make the
+  // previously-picked format invalid (e.g. adding PLAYER_PAUSE to a page
+  // placement, or vice-versa) — reset it so the step revalidates instead of
+  // silently carrying a format that no longer fits every selected placement.
+  useEffect(() => {
+    // A momentarily-empty placement selection is its own validation error
+    // ("Selecione pelo menos um posicionamento.") — don't pile a format reset
+    // on top of it while the advertiser is mid-edit on Targeting.
+    if (draft.placements.length === 0) return;
+    if (draft.format && !acceptedFormats.includes(draft.format)) {
+      updateDraft({ format: null });
+      setBanner(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- updateDraft/setBanner are not stable across renders
+  }, [draft.format, draft.placements.length, acceptedFormats.join(',')]);
+
   function handleBannerChange(event: ChangeEvent<HTMLInputElement>) {
     setBanner(event.target.files?.[0] ?? null);
   }
@@ -86,7 +116,7 @@ export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProp
           <span className={styles.labelMeta}>SELECIONE UM</span>
         </div>
         <div className={styles.formatGrid}>
-          {FORMATS.map((format) => {
+          {visibleFormats.map((format) => {
             const selected = draft.format === format.value;
             return (
               <button

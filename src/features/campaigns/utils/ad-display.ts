@@ -23,7 +23,32 @@ export const STATUS_BADGE_VARIANT: Record<AdStatus, 'default' | 'secondary' | 'd
 export const FORMAT_LABEL: Record<AdFormat, string> = {
   HORIZONTAL_728x90: 'Horizontal 728×90',
   VERTICAL_300x600: 'Vertical 300×600',
+  WIDE_16_9: 'Tela ampla 16:9',
 };
+
+// Mirrors the orchestrator domain's PLACEMENT_ACCEPTED_FORMATS (single source
+// of truth) — hand-copied per the contract-mirroring convention used for the
+// type unions above. A campaign has one format for every placement it
+// targets, so the format must be accepted by every selected placement.
+export const PLACEMENT_ACCEPTED_FORMATS: Record<AdPlacement, AdFormat[]> = {
+  FEED: ['HORIZONTAL_728x90', 'VERTICAL_300x600'],
+  EVENT_DETAIL: ['HORIZONTAL_728x90', 'VERTICAL_300x600'],
+  CHECKOUT: ['HORIZONTAL_728x90', 'VERTICAL_300x600'],
+  POST_PURCHASE: ['HORIZONTAL_728x90', 'VERTICAL_300x600'],
+  PLAYER_PAUSE: ['WIDE_16_9'],
+};
+
+// Formats accepted by every one of the given placements. Empty when the
+// selection has no compatible format (e.g. PLAYER_PAUSE combined with any
+// page placement) — used to gate targeting validation and to filter the
+// creative step's format cards.
+export function acceptedFormatsFor(placements: AdPlacement[]): AdFormat[] {
+  if (placements.length === 0) return [];
+  return placements.reduce<AdFormat[]>(
+    (acc, placement) => acc.filter((format) => PLACEMENT_ACCEPTED_FORMATS[placement].includes(format)),
+    PLACEMENT_ACCEPTED_FORMATS[placements[0]],
+  );
+}
 
 // No event-title-by-id lookup endpoint exists yet (only /events/search by
 // title), so an EVENT destination is shown generically rather than by name.
@@ -35,6 +60,7 @@ export function destinationLabel(destination: AdDestination | null): string {
 export const FORMAT_SHORT: Record<AdFormat, string> = {
   HORIZONTAL_728x90: '728×90',
   VERTICAL_300x600: '300×600',
+  WIDE_16_9: '16:9',
 };
 
 export const PLACEMENT_LABEL: Record<AdPlacement, string> = {

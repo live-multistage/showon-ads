@@ -124,4 +124,20 @@ describe('validateStep — targeting', () => {
   it('accepts a draft with at least one placement selected', () => {
     expect(validateStep('targeting', makeDraft({ placements: ['FEED'] }))).toBeNull();
   });
+
+  it('accepts PLAYER_PAUSE alone (its own 16:9-only format)', () => {
+    expect(validateStep('targeting', makeDraft({ placements: ['PLAYER_PAUSE'] }))).toBeNull();
+  });
+
+  it('rejects PLAYER_PAUSE combined with a page placement (empty format intersection)', () => {
+    expect(validateStep('targeting', makeDraft({ placements: ['FEED', 'PLAYER_PAUSE'] }))).toBe(
+      'Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.',
+    );
+  });
+
+  it('accepts every page placement combined (they share the same two formats)', () => {
+    expect(
+      validateStep('targeting', makeDraft({ placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'] })),
+    ).toBeNull();
+  });
 });

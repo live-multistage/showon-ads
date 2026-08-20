@@ -134,6 +134,19 @@ describe('EditCampaignForm', () => {
     expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
   });
 
+  it('blocks saving when checking Pausa do player alongside the existing page placement leaves an empty format intersection', () => {
+    render(<EditCampaignForm ad={makeAd({})} onCancel={vi.fn()} onSaved={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
+    // CreativeStep reacts to the now-incompatible format by resetting it to
+    // null before Save is even clicked — Save then fails on the format check
+    // (still an incompatible state that never reaches the backend).
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(screen.getByText('Selecione um formato de anúncio.')).toBeInTheDocument();
+    expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
+  });
+
   it('replaces the banner immediately via the upload endpoint, independent of Save', () => {
     render(<EditCampaignForm ad={makeAd({})} onCancel={vi.fn()} onSaved={vi.fn()} />);
 

@@ -42,6 +42,13 @@ describe('useCampaignWizard', () => {
     expect(result.current.step).toBe('budget');
   });
 
+  // PLAYER_PAUSE is opt-in — combining it with the default page placements
+  // would immediately trip the empty-format-intersection rule.
+  it('defaults to the 4 page placements, with Pausa do player unchecked', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+    expect(result.current.draft.placements).toEqual(['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE']);
+  });
+
   function fillValidBudget() {
     return {
       billingModel: 'CPM' as const,
@@ -107,6 +114,19 @@ describe('useCampaignWizard', () => {
 
     expect(result.current.step).toBe('targeting');
     expect(result.current.error).toBe('Selecione pelo menos um posicionamento.');
+  });
+
+  it('blocks advancing past targeting when placements have an empty format intersection', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+    advanceToTargeting(result);
+
+    act(() => result.current.updateDraft({ placements: ['FEED', 'PLAYER_PAUSE'] }));
+    act(() => result.current.next());
+
+    expect(result.current.step).toBe('targeting');
+    expect(result.current.error).toBe(
+      'Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.',
+    );
   });
 
   function advanceToCreative(result: ReturnType<typeof renderHook<ReturnType<typeof useCampaignWizard>, unknown>>['result']) {

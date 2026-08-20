@@ -12,6 +12,7 @@ import type {
 } from '@/features/advertisements/types/advertisement.types';
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
 import { reaisToCents } from '../utils/format-currency';
+import { acceptedFormatsFor } from '../utils/ad-display';
 
 // Wizard order: budget -> targeting -> creative (creative + destination
 // merged into one step) -> review.
@@ -24,6 +25,12 @@ export type DestinationType = 'EVENT' | 'EXTERNAL_URL';
 // (see TargetingStep.tsx) rather than a dedicated wizard step. All start
 // selected, so existing advertiser behavior is unchanged by default.
 export const ALL_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE', 'PLAYER_PAUSE'];
+
+// PLAYER_PAUSE starts unchecked — it uses a dedicated 16:9 creative that
+// can't be combined with the page placements' formats, so defaulting it in
+// would silently break the format intersection for most advertisers. It's
+// opt-in: a pause campaign is a deliberate, single-placement choice.
+const DEFAULT_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'];
 
 export interface CampaignWizardDraft {
   title: string;
@@ -58,7 +65,7 @@ const INITIAL_DRAFT: CampaignWizardDraft = {
   targetDomains: [],
   targetCategories: [],
   targetAgeBrackets: [],
-  placements: ALL_PLACEMENTS,
+  placements: DEFAULT_PLACEMENTS,
   billingModel: null,
   bidReais: '',
   dailyBudgetReais: '',
@@ -112,6 +119,9 @@ export function validateDestinationStep(draft: CampaignWizardDraft): string | nu
 // nowhere to serve.
 function validateTargetingStep(draft: CampaignWizardDraft): string | null {
   if (draft.placements.length === 0) return 'Selecione pelo menos um posicionamento.';
+  if (acceptedFormatsFor(draft.placements).length === 0) {
+    return 'Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.';
+  }
   return null;
 }
 

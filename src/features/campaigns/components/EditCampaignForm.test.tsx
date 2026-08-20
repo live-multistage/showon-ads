@@ -138,12 +138,14 @@ describe('EditCampaignForm', () => {
     render(<EditCampaignForm ad={makeAd({})} onCancel={vi.fn()} onSaved={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
-    // CreativeStep reacts to the now-incompatible format by resetting it to
-    // null before Save is even clicked — Save then fails on the format check
-    // (still an incompatible state that never reaches the backend).
+    // CreativeStep also resets the now-incompatible format to null, but the
+    // targeting message is the one surfaced — it names the actual problem,
+    // and no format card is selectable while the intersection is empty.
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
-    expect(screen.getByText('Selecione um formato de anúncio.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Pausa do player usa criativo 16:9 e não pode ser combinado com outros posicionamentos.'),
+    ).toBeInTheDocument();
     expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
   });
 

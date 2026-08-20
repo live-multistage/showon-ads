@@ -29,11 +29,15 @@ function validateDestinationForSave(draft: CampaignWizardDraft): string | null {
   return validateDestinationStep(draft);
 }
 
+// Targeting is checked before the creative: picking an incompatible placement
+// combination clears the format (CreativeStep's reset effect) and hides every
+// format card, so "Selecione um formato de anúncio." would be an unactionable
+// dead end — the targeting message names the actual problem.
 function validateForSave(draft: CampaignWizardDraft): string | null {
   return (
+    validateStep('targeting', draft) ||
     validateCreativeStep(draft) ||
     validateDestinationForSave(draft) ||
-    validateStep('targeting', draft) ||
     validateStep('budget', draft)
   );
 }

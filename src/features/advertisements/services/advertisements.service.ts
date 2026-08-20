@@ -52,4 +52,13 @@ export const advertisementsService = {
     });
     return data.bannerUrl;
   },
+
+  uploadVideo: async (id: string, file: File): Promise<{ videoUrl: string; videoDurationSec: number }> => {
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await apiClient.post<{ videoUrl: string; videoDurationSec: number }>(`/ads/${id}/video`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
 };

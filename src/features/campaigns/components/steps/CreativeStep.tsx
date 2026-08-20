@@ -10,9 +10,9 @@ const TITLE_MAX = 80;
 
 // The backend AdFormat enum defines these four. Which ones render as cards
 // depends on the placements picked in the Targeting step — see
-// PLACEMENT_ACCEPTED_FORMATS / acceptedFormatsFor below. The VIDEO_16_9 card
-// is deferred to Task 10. The mock's "Quadrado 300×300" card has no server-side
-// format, so it's intentionally omitted rather than shown as an unsubmittable option.
+// PLACEMENT_ACCEPTED_FORMATS / acceptedFormatsFor below. The mock's
+// "Quadrado 300×300" card has no server-side format, so it's intentionally
+// omitted rather than shown as an unsubmittable option.
 const FORMATS: {
   value: AdFormat;
   label: string;
@@ -27,6 +27,13 @@ const FORMATS: {
     label: 'Tela ampla 16:9',
     dims: 'mín. 1280×720, ideal 1920×1080',
     placement: 'PAUSA DO PLAYER',
+    variant: 'wide',
+  },
+  {
+    value: 'VIDEO_16_9',
+    label: 'Vídeo 16:9',
+    dims: 'ideal 1920×1080',
+    placement: 'PRE-ROLL',
     variant: 'wide',
   },
 ];
@@ -69,6 +76,7 @@ export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProp
   }
 
   const idealDim = draft.format ? IDEAL_DIM[draft.format] : '728×90';
+  const isVideo = draft.format === 'VIDEO_16_9';
 
   return (
     <div className={styles.step}>
@@ -157,16 +165,21 @@ export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProp
         <label className={styles.dropzone}>
           <input
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept={isVideo ? 'video/mp4' : 'image/png,image/jpeg,image/webp'}
             aria-label="Banner"
             className={styles.fileInput}
             onChange={handleBannerChange}
           />
           {draft.bannerPreviewUrl ? (
             <span className={styles.dropzoneFilled}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- object URL preview, not a static asset */}
-              <img src={draft.bannerPreviewUrl} alt="Pré-visualização do banner" className={styles.dropzonePreview} />
-              <span className={styles.dropzoneReplace}>Trocar imagem</span>
+              {isVideo ? (
+                // eslint-disable-next-line jsx-a11y/media-has-caption -- staged local preview, not shown to viewers
+                <video src={draft.bannerPreviewUrl} className={styles.dropzonePreview} controls muted />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- object URL preview, not a static asset
+                <img src={draft.bannerPreviewUrl} alt="Pré-visualização do banner" className={styles.dropzonePreview} />
+              )}
+              <span className={styles.dropzoneReplace}>{isVideo ? 'Trocar vídeo' : 'Trocar imagem'}</span>
             </span>
           ) : (
             <span className={styles.dropzoneEmpty}>
@@ -177,9 +190,15 @@ export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProp
                 </svg>
               </span>
               <span className={styles.dropzoneTitle}>
-                Arraste sua imagem ou <span className={styles.dropzoneLink}>clique para selecionar</span>
+                {isVideo ? (
+                  <>Arraste seu vídeo ou <span className={styles.dropzoneLink}>clique para selecionar</span></>
+                ) : (
+                  <>Arraste sua imagem ou <span className={styles.dropzoneLink}>clique para selecionar</span></>
+                )}
               </span>
-              <span className={styles.dropzoneMeta}>PNG · JPG · WEBP · MÁX 2MB · MÍNIMO {idealDim}</span>
+              <span className={styles.dropzoneMeta}>
+                {isVideo ? 'MP4 · MÁX 50MB · ATÉ 30s' : `PNG · JPG · WEBP · MÁX 2MB · MÍNIMO ${idealDim}`}
+              </span>
             </span>
           )}
         </label>

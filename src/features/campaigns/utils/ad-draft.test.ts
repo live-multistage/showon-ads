@@ -85,6 +85,12 @@ describe('adToDraft', () => {
     expect(draft.targetAgeBrackets).toEqual(['AGE_35_44']);
   });
 
+  it('falls back to videoUrl for the preview when the ad is a VIDEO_16_9 pre-roll', () => {
+    const draft = adToDraft(makeAd({ format: 'VIDEO_16_9', bannerUrl: null, videoUrl: 'https://cdn.example.com/ad.mp4' }));
+
+    expect(draft.bannerPreviewUrl).toBe('https://cdn.example.com/ad.mp4');
+  });
+
   it('defaults to [] for an older payload missing targetAgeBrackets', () => {
     const ad = makeAd({});
     delete (ad as { targetAgeBrackets?: unknown }).targetAgeBrackets;

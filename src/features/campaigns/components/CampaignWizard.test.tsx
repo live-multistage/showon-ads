@@ -21,6 +21,7 @@ vi.mock('@/features/advertisers/providers/ActiveAdvertiserAccountProvider', () =
 
 const mockCreateAdMutateAsync = vi.fn();
 const mockUploadBannerMutateAsync = vi.fn();
+const mockUploadVideoMutateAsync = vi.fn();
 const mockChangeStatusMutateAsync = vi.fn();
 
 vi.mock('@/features/advertisements/mutations/use-create-ad.mutation', () => ({
@@ -28,6 +29,9 @@ vi.mock('@/features/advertisements/mutations/use-create-ad.mutation', () => ({
 }));
 vi.mock('@/features/advertisements/mutations/use-upload-banner.mutation', () => ({
   useUploadBannerMutation: () => ({ mutateAsync: mockUploadBannerMutateAsync, isPending: false }),
+}));
+vi.mock('@/features/advertisements/mutations/use-upload-video.mutation', () => ({
+  useUploadVideoMutation: () => ({ mutateAsync: mockUploadVideoMutateAsync, isPending: false }),
 }));
 vi.mock('@/features/advertisements/mutations/use-change-ad-status.mutation', () => ({
   useChangeAdStatusMutation: () => ({ mutateAsync: mockChangeStatusMutateAsync, isPending: false }),
@@ -55,6 +59,7 @@ describe('CampaignWizard', () => {
     vi.clearAllMocks();
     mockCreateAdMutateAsync.mockResolvedValue({ id: 'ad-1' });
     mockUploadBannerMutateAsync.mockResolvedValue('https://cdn.example.com/banner.png');
+    mockUploadVideoMutateAsync.mockResolvedValue({ videoUrl: 'https://cdn.example.com/video.mp4', videoDurationSec: 15 });
     mockChangeStatusMutateAsync.mockResolvedValue(undefined);
   });
 
@@ -329,5 +334,34 @@ describe('CampaignWizard', () => {
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/campaigns/ad-2'));
     expect(toastErrorMock).toHaveBeenCalledWith(expect.stringContaining('rascunho'));
     expect(mockUploadBannerMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('submit uploads via the video endpoint for a VIDEO_16_9 campaign, not the banner endpoint', async () => {
+    render(<CampaignWizard />);
+    advanceToTargeting();
+
+    // PRE_ROLL is exclusive — swap it in for the default page placements so
+    // VIDEO_16_9 is the only accepted format.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Feed' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Página do evento' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Checkout' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pós-compra' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pre-roll (antes da live)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // targeting -> creative
+
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Pre-roll Promo' } });
+    fireEvent.click(screen.getByRole('button', { name: /Vídeo 16:9/ }));
+
+    const file = new File(['x'], 'ad.mp4', { type: 'video/mp4' });
+    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
+
+    await fillEventDestination();
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para revisão' }));
+
+    await waitFor(() => expect(mockUploadVideoMutateAsync).toHaveBeenCalledWith({ adId: 'ad-1', file }));
+    expect(mockUploadBannerMutateAsync).not.toHaveBeenCalled();
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/campaigns/ad-1'));
   });
 });

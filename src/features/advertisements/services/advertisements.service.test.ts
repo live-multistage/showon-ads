@@ -148,4 +148,20 @@ describe('advertisementsService', () => {
     expect(formData.get('file')).toBe(file);
     expect(url).toBe('https://cdn/banner.png');
   });
+
+  it('uploads a video as multipart form data', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: { videoUrl: 'https://cdn/video.mp4', videoDurationSec: 15 },
+    });
+    const file = new File(['abc'], 'video.mp4', { type: 'video/mp4' });
+
+    const result = await advertisementsService.uploadVideo('ad-1', file);
+
+    expect(mockedApiClient.post).toHaveBeenCalledWith('/ads/ad-1/video', expect.any(FormData), {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    const [, formData] = mockedApiClient.post.mock.calls[0] as [string, FormData];
+    expect(formData.get('file')).toBe(file);
+    expect(result).toEqual({ videoUrl: 'https://cdn/video.mp4', videoDurationSec: 15 });
+  });
 });

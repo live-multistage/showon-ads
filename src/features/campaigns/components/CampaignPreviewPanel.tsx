@@ -31,8 +31,13 @@ export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
         </div>
         <div className={styles.preview} style={{ aspectRatio: meta.ratio }}>
           {draft.bannerPreviewUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- object URL preview
-            <img src={draft.bannerPreviewUrl} alt="Pré-visualização do banner" className={styles.previewImg} />
+            draft.format === 'VIDEO_16_9' ? (
+              // eslint-disable-next-line jsx-a11y/media-has-caption -- advertiser-facing preview, not viewer-facing
+              <video src={draft.bannerPreviewUrl} className={styles.previewImg} controls muted />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- object URL preview
+              <img src={draft.bannerPreviewUrl} alt="Pré-visualização do banner" className={styles.previewImg} />
+            )
           ) : (
             <>
               <span className={styles.previewHatch} aria-hidden />

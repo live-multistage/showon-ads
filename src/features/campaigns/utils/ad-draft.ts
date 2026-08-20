@@ -29,7 +29,9 @@ export function adToDraft(ad: AdResponse): CampaignWizardDraft {
     title: ad.title,
     format: ad.format,
     bannerFile: null,
-    bannerPreviewUrl: ad.bannerUrl,
+    // bannerPreviewUrl doubles as the generic creative-preview slot: a
+    // VIDEO_16_9 ad has no bannerUrl, only videoUrl.
+    bannerPreviewUrl: ad.bannerUrl ?? ad.videoUrl,
     destinationType: ad.destination?.type ?? null,
     event: ad.destination?.type === 'EVENT' ? existingEventPlaceholder(ad.destination.eventId) : null,
     externalUrl: ad.destination?.type === 'EXTERNAL_URL' ? ad.destination.url : '',

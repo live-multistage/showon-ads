@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button, Card, CardContent } from '@live-show/design-system';
 import { useUpdateAdMutation } from '@/features/advertisements/mutations/use-update-ad.mutation';
 import { useUploadBannerMutation } from '@/features/advertisements/mutations/use-upload-banner.mutation';
+import { useUploadVideoMutation } from '@/features/advertisements/mutations/use-upload-video.mutation';
 import type { AdResponse } from '@/features/advertisements/types/advertisement.types';
 import { validateCreativeStep, validateDestinationStep, validateStep, type CampaignWizardDraft } from '../hooks/use-campaign-wizard';
 import { adToDraft, draftToUpdateAdRequest } from '../utils/ad-draft';
@@ -51,6 +52,7 @@ export function EditCampaignForm({ ad, onCancel, onSaved }: EditCampaignFormProp
   const [hasBanner, setHasBanner] = useState(!!ad.bannerUrl);
   const updateAd = useUpdateAdMutation(ad.id);
   const uploadBanner = useUploadBannerMutation();
+  const uploadVideo = useUploadVideoMutation();
 
   // Object URLs created for freshly-picked banner previews — revoked on
   // unmount so an abandoned edit doesn't leak them (the original ad.bannerUrl
@@ -73,6 +75,21 @@ export function EditCampaignForm({ ad, onCancel, onSaved }: EditCampaignFormProp
     const previewUrl = URL.createObjectURL(file);
     createdPreviewUrlsRef.current.push(previewUrl);
     updateDraft({ bannerPreviewUrl: previewUrl });
+
+    if (draft.format === 'VIDEO_16_9') {
+      uploadVideo.mutate(
+        { adId: ad.id, file },
+        {
+          onSuccess: () => {
+            setHasBanner(true);
+            toast.success('Vídeo atualizado.');
+          },
+          onError: () => toast.error('Não foi possível enviar o vídeo.'),
+        },
+      );
+      return;
+    }
+
     uploadBanner.mutate(
       { adId: ad.id, file },
       {

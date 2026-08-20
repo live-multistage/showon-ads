@@ -83,6 +83,29 @@ describe('CreativeStep — format cards filtered by placement', () => {
     expect(setBanner).toHaveBeenCalledWith(null);
   });
 
+  it('shows the video format card only when PRE_ROLL is the placement', () => {
+    const { rerender } = render(
+      <CreativeStep draft={makeDraft({ placements: ['PRE_ROLL'] })} updateDraft={vi.fn()} setBanner={vi.fn()} />,
+    );
+    expect(screen.getByRole('button', { name: /Vídeo 16:9/ })).toBeInTheDocument();
+
+    rerender(<CreativeStep draft={makeDraft({ placements: ['FEED'] })} updateDraft={vi.fn()} setBanner={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /Vídeo 16:9/ })).not.toBeInTheDocument();
+  });
+
+  it('accepts only mp4 files for VIDEO_16_9', () => {
+    render(
+      <CreativeStep
+        draft={makeDraft({ placements: ['PRE_ROLL'], format: 'VIDEO_16_9' })}
+        updateDraft={vi.fn()}
+        setBanner={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Banner')).toHaveAttribute('accept', 'video/mp4');
+    expect(screen.getByText('MP4 · MÁX 50MB · ATÉ 30s')).toBeInTheDocument();
+  });
+
   it('does not reset the format when it stays compatible with the new placements', () => {
     const updateDraft = vi.fn();
     const { rerender } = render(

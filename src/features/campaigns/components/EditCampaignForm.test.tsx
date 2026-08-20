@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { EditCampaignForm } from './EditCampaignForm';
 import { useUpdateAdMutation } from '@/features/advertisements/mutations/use-update-ad.mutation';
 import { useUploadBannerMutation } from '@/features/advertisements/mutations/use-upload-banner.mutation';
+import { useUploadVideoMutation } from '@/features/advertisements/mutations/use-upload-video.mutation';
 import type { AdResponse } from '@/features/advertisements/types/advertisement.types';
 
 // jsdom doesn't implement pointer capture / scrollIntoView, which Radix
@@ -27,6 +28,11 @@ vi.mock('@/features/advertisements/mutations/use-upload-banner.mutation', () => 
   useUploadBannerMutation: vi.fn(),
 }));
 
+const mockUploadVideoMutate = vi.fn();
+vi.mock('@/features/advertisements/mutations/use-upload-video.mutation', () => ({
+  useUploadVideoMutation: vi.fn(),
+}));
+
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 vi.mock('sonner', () => ({
@@ -38,6 +44,7 @@ vi.mock('sonner', () => ({
 
 const mockedUseUpdateAdMutation = vi.mocked(useUpdateAdMutation);
 const mockedUseUploadBannerMutation = vi.mocked(useUploadBannerMutation);
+const mockedUseUploadVideoMutation = vi.mocked(useUploadVideoMutation);
 
 function makeAd(overrides: Partial<AdResponse>): AdResponse {
   return {
@@ -82,6 +89,10 @@ describe('EditCampaignForm', () => {
       mutate: mockUploadMutate,
       isPending: false,
     } as unknown as ReturnType<typeof useUploadBannerMutation>);
+    mockedUseUploadVideoMutation.mockReturnValue({
+      mutate: mockUploadVideoMutate,
+      isPending: false,
+    } as unknown as ReturnType<typeof useUploadVideoMutation>);
   });
 
   it('prefills every reused step with the ad’s current values', () => {
@@ -162,6 +173,25 @@ describe('EditCampaignForm', () => {
       expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
     );
     expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('replaces the video immediately via the video upload endpoint for a VIDEO_16_9 ad', () => {
+    render(
+      <EditCampaignForm
+        ad={makeAd({ format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: 'https://cdn.example.com/ad.mp4' })}
+        onCancel={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    );
+
+    const file = new File(['x'], 'new-ad.mp4', { type: 'video/mp4' });
+    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
+
+    expect(mockUploadVideoMutate).toHaveBeenCalledWith(
+      { adId: 'ad-1', file },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+    expect(mockUploadMutate).not.toHaveBeenCalled();
   });
 
   it('calls onCancel without saving', () => {

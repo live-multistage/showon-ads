@@ -1,12 +1,16 @@
 'use client';
 
-import { useEffect, type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import type { AdFormat } from '@/features/advertisements/types/advertisement.types';
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 import { acceptedFormatsFor } from '../../utils/ad-display';
 import styles from './CreativeStep.module.scss';
 
 const TITLE_MAX = 80;
+
+// Mirrors the backend's video upload limit (Task 4) — rejecting the file
+// client-side avoids a full upload just to get the server's 400.
+const MAX_VIDEO_BYTES = 52_428_800;
 
 // The backend AdFormat enum defines these four. Which ones render as cards
 // depends on the placements picked in the Targeting step — see
@@ -54,6 +58,7 @@ interface CreativeStepProps {
 export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProps) {
   const acceptedFormats = acceptedFormatsFor(draft.placements);
   const visibleFormats = FORMATS.filter((format) => acceptedFormats.includes(format.value));
+  const [fileError, setFileError] = useState<string | null>(null);
 
   // Going back to Targeting and changing placements can make the
   // previously-picked format invalid (e.g. adding PLAYER_PAUSE to a page
@@ -72,7 +77,14 @@ export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProp
   }, [draft.format, draft.placements.length, acceptedFormats.join(',')]);
 
   function handleBannerChange(event: ChangeEvent<HTMLInputElement>) {
-    setBanner(event.target.files?.[0] ?? null);
+    const file = event.target.files?.[0] ?? null;
+    if (file && draft.format === 'VIDEO_16_9' && file.size > MAX_VIDEO_BYTES) {
+      setFileError('O vídeo deve ter no máximo 50MB.');
+      event.target.value = '';
+      return;
+    }
+    setFileError(null);
+    setBanner(file);
   }
 
   const idealDim = draft.format ? IDEAL_DIM[draft.format] : '728×90';
@@ -202,6 +214,11 @@ export function CreativeStep({ draft, updateDraft, setBanner }: CreativeStepProp
             </span>
           )}
         </label>
+        {fileError && (
+          <p className={styles.fileError} role="alert">
+            {fileError}
+          </p>
+        )}
 
         <div className={styles.pills}>
           <span className={`${styles.pill} ${styles.pillViolet}`}>Áreas de segurança 20px</span>

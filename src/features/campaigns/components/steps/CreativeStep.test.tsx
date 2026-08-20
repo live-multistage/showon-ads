@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { CreativeStep } from './CreativeStep';
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 
@@ -104,6 +104,32 @@ describe('CreativeStep — format cards filtered by placement', () => {
 
     expect(screen.getByLabelText('Banner')).toHaveAttribute('accept', 'video/mp4');
     expect(screen.getByText('MP4 · MÁX 50MB · ATÉ 30s')).toBeInTheDocument();
+  });
+
+  it('rejects an mp4 over 50MB and does not stage it, but accepts a normal-size one', () => {
+    const setBanner = vi.fn();
+    render(
+      <CreativeStep
+        draft={makeDraft({ placements: ['PRE_ROLL'], format: 'VIDEO_16_9' })}
+        updateDraft={vi.fn()}
+        setBanner={setBanner}
+      />,
+    );
+    const input = screen.getByLabelText('Banner');
+
+    const oversized = new File([''], 'big.mp4', { type: 'video/mp4' });
+    Object.defineProperty(oversized, 'size', { value: 52_428_801 });
+    fireEvent.change(input, { target: { files: [oversized] } });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('O vídeo deve ter no máximo 50MB.');
+    expect(setBanner).not.toHaveBeenCalled();
+
+    const ok = new File([''], 'ok.mp4', { type: 'video/mp4' });
+    Object.defineProperty(ok, 'size', { value: 52_428_800 });
+    fireEvent.change(input, { target: { files: [ok] } });
+
+    expect(setBanner).toHaveBeenCalledWith(ok);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('does not reset the format when it stays compatible with the new placements', () => {

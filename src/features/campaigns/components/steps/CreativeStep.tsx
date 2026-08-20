@@ -10,9 +10,9 @@ const TITLE_MAX = 80;
 
 // The backend AdFormat enum defines these four. Which ones render as cards
 // depends on the placements picked in the Targeting step — see
-// PLACEMENT_ACCEPTED_FORMATS / acceptedFormatsFor below. The mock's fourth
-// "Quadrado 300×300" card has no server-side format, so it's intentionally
-// omitted rather than shown as an unsubmittable option.
+// PLACEMENT_ACCEPTED_FORMATS / acceptedFormatsFor below. The VIDEO_16_9 card
+// is deferred to Task 10. The mock's "Quadrado 300×300" card has no server-side
+// format, so it's intentionally omitted rather than shown as an unsubmittable option.
 const FORMATS: {
   value: AdFormat;
   label: string;
@@ -27,13 +27,6 @@ const FORMATS: {
     label: 'Tela ampla 16:9',
     dims: 'mín. 1280×720, ideal 1920×1080',
     placement: 'PAUSA DO PLAYER',
-    variant: 'wide',
-  },
-  {
-    value: 'VIDEO_16_9',
-    label: 'Vídeo 16:9',
-    dims: 'mín. 1280×720, ideal 1920×1080',
-    placement: 'PRE-ROLL',
     variant: 'wide',
   },
 ];

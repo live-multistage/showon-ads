@@ -49,130 +49,13 @@ vi.mock('sonner', () => ({
 
 const mockedEventsService = vi.mocked(eventsService, true);
 
+// Wizard order: budget -> targeting -> creative (creative + destination merged) -> review.
 describe('CampaignWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateAdMutateAsync.mockResolvedValue({ id: 'ad-1' });
     mockUploadBannerMutateAsync.mockResolvedValue('https://cdn.example.com/banner.png');
     mockChangeStatusMutateAsync.mockResolvedValue(undefined);
-  });
-
-  it('cannot advance the creative step without a title and format', () => {
-    render(<CampaignWizard />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByText('Informe um título para a campanha.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Título')).toBeInTheDocument();
-  });
-
-  it('advances to destination once title and format are filled in', () => {
-    render(<CampaignWizard />);
-
-    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByRole('group', { name: 'Tipo de destino' })).toBeInTheDocument();
-  });
-
-  function fillCreativeStep() {
-    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-  }
-
-  it('rejects http:// for the EXTERNAL_URL destination', () => {
-    render(<CampaignWizard />);
-    fillCreativeStep();
-
-    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
-    fireEvent.change(screen.getByLabelText('URL de destino'), { target: { value: 'http://example.com' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByText('A URL deve começar com https://.')).toBeInTheDocument();
-  });
-
-  function fillExternalUrlDestination(url = 'https://example.com/landing') {
-    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
-    fireEvent.change(screen.getByLabelText('URL de destino'), { target: { value: url } });
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-  }
-
-  it('accepts a valid https:// URL and advances to the targeting step', () => {
-    render(<CampaignWizard />);
-    fillCreativeStep();
-    fillExternalUrlDestination();
-
-    expect(screen.getByText('Interesses do público')).toBeInTheDocument();
-  });
-
-  async function fillEventDestination() {
-    const response: EventSearchResponse = {
-      items: [{ id: 'evt-1', title: 'Big Show', bannerUrl: null, thumbnailUrl: null, startsAt: '2026-01-01', status: 'PUBLISHED' }],
-      page: 1,
-      pageSize: 20,
-      total: 1,
-    };
-    mockedEventsService.search.mockResolvedValue(response);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
-    fireEvent.change(screen.getByLabelText('Buscar evento'), { target: { value: 'Big' } });
-    fireEvent.click(await screen.findByRole('button', { name: 'Big Show' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-  }
-
-  it('requires a picked event before advancing the EVENT destination', async () => {
-    const response: EventSearchResponse = {
-      items: [{ id: 'evt-1', title: 'Big Show', bannerUrl: null, thumbnailUrl: null, startsAt: '2026-01-01', status: 'PUBLISHED' }],
-      page: 1,
-      pageSize: 20,
-      total: 1,
-    };
-    mockedEventsService.search.mockResolvedValue(response);
-
-    render(<CampaignWizard />);
-    fillCreativeStep();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-    expect(screen.getByText('Selecione um evento.')).toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText('Buscar evento'), { target: { value: 'Big' } });
-
-    await waitFor(() => expect(mockedEventsService.search).toHaveBeenCalledWith('Big'));
-    fireEvent.click(await screen.findByRole('button', { name: 'Big Show' }));
-
-    // Picking the event sets the query to its title; the debounced search
-    // must not re-fire (and reopen the dropdown) on that same value.
-    await new Promise((resolve) => setTimeout(resolve, 350));
-    expect(mockedEventsService.search).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('button', { name: 'Big Show' })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-    expect(screen.getByText('Interesses do público')).toBeInTheDocument();
-  });
-
-  it('shows the banner-required warning for EXTERNAL_URL without a staged file', () => {
-    render(<CampaignWizard />);
-    fillCreativeStep();
-
-    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
-
-    expect(
-      screen.getByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
-    ).toBeInTheDocument();
-  });
-
-  it('does not show the banner-required warning for the EVENT destination', () => {
-    render(<CampaignWizard />);
-    fillCreativeStep();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
-
-    expect(
-      screen.queryByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
-    ).not.toBeInTheDocument();
   });
 
   function fillBudgetStep({
@@ -191,47 +74,177 @@ describe('CampaignWizard', () => {
     fireEvent.change(screen.getByLabelText('Fim da veiculação'), { target: { value: ends } });
   }
 
-  function advanceToBudget() {
-    fillCreativeStep();
-    fillExternalUrlDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // targeting -> budget
-  }
-
-  it('blocks advancing past budget with a non-positive bid', () => {
+  it('cannot advance the budget step with a non-positive bid', () => {
     render(<CampaignWizard />);
-    advanceToBudget();
-
     fillBudgetStep({ bid: '0' });
+
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
 
     expect(screen.getByText('O lance deve ser maior que zero.')).toBeInTheDocument();
   });
 
-  it('blocks advancing past budget when the total limit is less than the daily budget', () => {
+  it('advances to targeting once budget inputs are valid', () => {
     render(<CampaignWizard />);
-    advanceToBudget();
+    fillBudgetStep();
 
-    fillBudgetStep({ daily: '100', total: '50' });
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
 
-    expect(screen.getByText('O limite total deve ser maior ou igual ao orçamento diário.')).toBeInTheDocument();
+    expect(screen.getByText('Interesses do público')).toBeInTheDocument();
   });
 
-  it('advances to the review step with valid budget inputs', () => {
-    render(<CampaignWizard />);
-    advanceToBudget();
-
+  function advanceToTargeting() {
     fillBudgetStep();
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // budget -> targeting
+  }
+
+  it('blocks advancing past targeting when every placement is unchecked', () => {
+    render(<CampaignWizard />);
+    advanceToTargeting();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Feed' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Página do evento' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Checkout' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pós-compra' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+
+    expect(screen.getByText('Selecione pelo menos um posicionamento.')).toBeInTheDocument();
+  });
+
+  function advanceToCreative() {
+    advanceToTargeting();
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // targeting -> creative
+  }
+
+  it('advances to the merged creative+destination step from targeting', () => {
+    render(<CampaignWizard />);
+    advanceToCreative();
+
+    expect(screen.getByLabelText('Título')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Tipo de destino' })).toBeInTheDocument();
+  });
+
+  it('cannot advance the merged step without a title and format', () => {
+    render(<CampaignWizard />);
+    advanceToCreative();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+
+    expect(screen.getByText('Informe um título para a campanha.')).toBeInTheDocument();
+  });
+
+  function fillCreativeFields() {
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
+  }
+
+  it('rejects http:// for the EXTERNAL_URL destination', () => {
+    render(<CampaignWizard />);
+    advanceToCreative();
+    fillCreativeFields();
+
+    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
+    fireEvent.change(screen.getByLabelText('URL de destino'), { target: { value: 'http://example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+
+    expect(screen.getByText('A URL deve começar com https://.')).toBeInTheDocument();
+  });
+
+  function fillExternalUrlDestination(url = 'https://example.com/landing') {
+    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
+    fireEvent.change(screen.getByLabelText('URL de destino'), { target: { value: url } });
+  }
+
+  it('accepts a valid https:// URL and advances to the review step', () => {
+    render(<CampaignWizard />);
+    advanceToCreative();
+    fillCreativeFields();
+    fillExternalUrlDestination();
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
 
     expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeInTheDocument();
   });
 
+  async function fillEventDestination() {
+    const response: EventSearchResponse = {
+      items: [{ id: 'evt-1', title: 'Big Show', bannerUrl: null, thumbnailUrl: null, startsAt: '2026-01-01', status: 'PUBLISHED' }],
+      page: 1,
+      pageSize: 20,
+      total: 1,
+    };
+    mockedEventsService.search.mockResolvedValue(response);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
+    fireEvent.change(screen.getByLabelText('Buscar evento'), { target: { value: 'Big' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Big Show' }));
+  }
+
+  it('requires a picked event before advancing the EVENT destination', async () => {
+    const response: EventSearchResponse = {
+      items: [{ id: 'evt-1', title: 'Big Show', bannerUrl: null, thumbnailUrl: null, startsAt: '2026-01-01', status: 'PUBLISHED' }],
+      page: 1,
+      pageSize: 20,
+      total: 1,
+    };
+    mockedEventsService.search.mockResolvedValue(response);
+
+    render(<CampaignWizard />);
+    advanceToCreative();
+    fillCreativeFields();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+    expect(screen.getByText('Selecione um evento.')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Buscar evento'), { target: { value: 'Big' } });
+
+    await waitFor(() => expect(mockedEventsService.search).toHaveBeenCalledWith('Big'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Big Show' }));
+
+    // Picking the event sets the query to its title; the debounced search
+    // must not re-fire (and reopen the dropdown) on that same value.
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    expect(mockedEventsService.search).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'Big Show' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+    expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeInTheDocument();
+  });
+
+  it('shows the banner-required warning for EXTERNAL_URL without a staged file', () => {
+    render(<CampaignWizard />);
+    advanceToCreative();
+    fillCreativeFields();
+
+    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
+
+    expect(
+      screen.getByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not show the banner-required warning for the EVENT destination', () => {
+    render(<CampaignWizard />);
+    advanceToCreative();
+    fillCreativeFields();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
+
+    expect(
+      screen.queryByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
+    ).not.toBeInTheDocument();
+  });
+
+  function advanceToReview() {
+    advanceToCreative();
+    fillCreativeFields();
+    fillExternalUrlDestination();
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
+  }
+
   it('shows every entered value on the review step', () => {
     render(<CampaignWizard />);
-    advanceToBudget();
-    fillBudgetStep({ bid: '10', daily: '50', total: '500' });
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+    advanceToReview();
 
     expect(screen.getByText('Summer Promo')).toBeInTheDocument();
     expect(screen.getByText('Horizontal (728×90)')).toBeInTheDocument();
@@ -244,9 +257,7 @@ describe('CampaignWizard', () => {
 
   it('hard-blocks submit for an EXTERNAL_URL destination with no staged banner', () => {
     render(<CampaignWizard />);
-    advanceToBudget();
-    fillBudgetStep();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+    advanceToReview();
 
     expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeDisabled();
   });
@@ -266,19 +277,15 @@ describe('CampaignWizard', () => {
     });
 
     render(<CampaignWizard />);
+    advanceToCreative();
+    fillCreativeFields();
 
-    // Stage a banner while still on the creative step (each step only
-    // renders its own fields, so this must happen before advancing).
-    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
+    // Stage a banner while still on the merged creative+destination step.
     const file = new File(['x'], 'banner.png', { type: 'image/png' });
     fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
 
     await fillEventDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // targeting -> budget
-    fillBudgetStep();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // budget -> review
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
 
     fireEvent.click(screen.getByRole('button', { name: 'Enviar para revisão' }));
 
@@ -295,11 +302,10 @@ describe('CampaignWizard', () => {
     mockChangeStatusMutateAsync.mockRejectedValue(new Error('network error'));
 
     render(<CampaignWizard />);
-    fillCreativeStep();
+    advanceToCreative();
+    fillCreativeFields();
     await fillEventDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // targeting -> budget
-    fillBudgetStep();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // budget -> review
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
 
     fireEvent.click(screen.getByRole('button', { name: 'Enviar para revisão' }));
 

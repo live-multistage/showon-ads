@@ -68,7 +68,7 @@ export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
 
       {/* estimate */}
       <div className={styles.card}>
-        <div className={styles.estLabel}>ESTIMATIVA (CONFIGURE PASSOS 3–4)</div>
+        <div className={styles.estLabel}>ESTIMATIVA (CONFIGURE PASSOS 1–2)</div>
         <div className={styles.estValue}>— –– impressões</div>
         <div className={styles.estHint}>Alcance depende de público e orçamento.</div>
       </div>

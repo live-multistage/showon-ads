@@ -13,18 +13,16 @@ import { CampaignPreviewPanel } from './CampaignPreviewPanel';
 import styles from './CampaignWizard.module.scss';
 
 const STEP_LABELS: Record<WizardStepId, string> = {
-  creative: 'Criativo',
-  destination: 'Destino',
-  targeting: 'Segmentação',
   budget: 'Orçamento',
+  targeting: 'Segmentação',
+  creative: 'Criativo e destino',
   review: 'Revisão',
 };
 
 const STEP_DESC: Record<WizardStepId, string> = {
-  creative: 'BANNER E TÍTULO',
-  destination: 'EVENTO OU URL',
-  targeting: 'PÚBLICO-ALVO',
   budget: 'INVESTIMENTO',
+  targeting: 'PÚBLICO-ALVO',
+  creative: 'BANNER, TÍTULO E DESTINO',
   review: 'CONFIRA E ENVIE',
 };
 
@@ -85,7 +83,7 @@ export function CampaignWizard() {
             </span>
           </div>
           <h1 className={styles.title}>Nova campanha</h1>
-          <p className={styles.subtitle}>Configure criativo, destino, público e orçamento em 5 passos.</p>
+          <p className={styles.subtitle}>Configure orçamento, público, criativo e destino em 4 passos.</p>
         </div>
         <div className={styles.headerActions}>
           <button type="button" className={styles.btnGhost} onClick={() => router.push('/campaigns')}>
@@ -140,12 +138,14 @@ export function CampaignWizard() {
       ) : (
         <div className={styles.grid}>
           <div className={styles.stepCard}>
-            {step === 'creative' && <CreativeStep draft={draft} updateDraft={updateDraft} setBanner={setBanner} />}
-            {step === 'destination' && (
-              <DestinationStep draft={draft} updateDraft={updateDraft} bannerRequiredWarning={bannerRequiredWarning} />
-            )}
-            {step === 'targeting' && <TargetingStep draft={draft} updateDraft={updateDraft} />}
             {step === 'budget' && <BudgetStep draft={draft} updateDraft={updateDraft} />}
+            {step === 'targeting' && <TargetingStep draft={draft} updateDraft={updateDraft} />}
+            {step === 'creative' && (
+              <>
+                <CreativeStep draft={draft} updateDraft={updateDraft} setBanner={setBanner} />
+                <DestinationStep draft={draft} updateDraft={updateDraft} bannerRequiredWarning={bannerRequiredWarning} />
+              </>
+            )}
 
             {error && (
               <p className={styles.error} role="alert">

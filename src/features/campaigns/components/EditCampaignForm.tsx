@@ -6,7 +6,7 @@ import { Button, Card, CardContent } from '@live-show/design-system';
 import { useUpdateAdMutation } from '@/features/advertisements/mutations/use-update-ad.mutation';
 import { useUploadBannerMutation } from '@/features/advertisements/mutations/use-upload-banner.mutation';
 import type { AdResponse } from '@/features/advertisements/types/advertisement.types';
-import { validateStep, type CampaignWizardDraft } from '../hooks/use-campaign-wizard';
+import { validateCreativeStep, validateDestinationStep, validateStep, type CampaignWizardDraft } from '../hooks/use-campaign-wizard';
 import { adToDraft, draftToUpdateAdRequest } from '../utils/ad-draft';
 import { CreativeStep } from './steps/CreativeStep';
 import { DestinationStep } from './steps/DestinationStep';
@@ -26,12 +26,12 @@ interface EditCampaignFormProps {
 // validated by reusing the wizard's own step check.
 function validateDestinationForSave(draft: CampaignWizardDraft): string | null {
   if (draft.destinationType === null) return null;
-  return validateStep('destination', draft);
+  return validateDestinationStep(draft);
 }
 
 function validateForSave(draft: CampaignWizardDraft): string | null {
   return (
-    validateStep('creative', draft) ||
+    validateCreativeStep(draft) ||
     validateDestinationForSave(draft) ||
     validateStep('targeting', draft) ||
     validateStep('budget', draft)

@@ -13,10 +13,9 @@ import type {
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
 import { reaisToCents } from '../utils/format-currency';
 
-// Full step list per task 18 — 'creative' and 'destination' shipped there;
-// 'targeting' / 'budget' / 'review' plus the create→upload→submit
-// orchestration are task 19's scope.
-export const WIZARD_STEPS = ['creative', 'destination', 'targeting', 'budget', 'review'] as const;
+// Wizard order: budget -> targeting -> creative (creative + destination
+// merged into one step) -> review.
+export const WIZARD_STEPS = ['budget', 'targeting', 'creative', 'review'] as const;
 export type WizardStepId = (typeof WIZARD_STEPS)[number];
 
 export type DestinationType = 'EVENT' | 'EXTERNAL_URL';
@@ -90,13 +89,16 @@ export function validateExternalUrl(value: string): string | null {
   return null;
 }
 
-function validateCreativeStep(draft: CampaignWizardDraft): string | null {
+// Exported so EditCampaignForm (task 20) can validate the creative fields on
+// their own, independent of the destination-optional-on-save rule below.
+export function validateCreativeStep(draft: CampaignWizardDraft): string | null {
   if (!draft.title.trim()) return 'Informe um título para a campanha.';
   if (!draft.format) return 'Selecione um formato de anúncio.';
   return null;
 }
 
-function validateDestinationStep(draft: CampaignWizardDraft): string | null {
+// Exported for the same reason as validateCreativeStep.
+export function validateDestinationStep(draft: CampaignWizardDraft): string | null {
   if (draft.destinationType === null) return 'Escolha um destino para o anúncio.';
   if (draft.destinationType === 'EVENT') {
     return draft.event ? null : 'Selecione um evento.';
@@ -130,8 +132,9 @@ function validateBudgetStep(draft: CampaignWizardDraft): string | null {
 // Exported so the campaign detail page's edit mode (task 20) can reuse the
 // exact same per-step validation instead of re-implementing it.
 export function validateStep(id: WizardStepId, draft: CampaignWizardDraft): string | null {
-  if (id === 'creative') return validateCreativeStep(draft);
-  if (id === 'destination') return validateDestinationStep(draft);
+  // 'creative' now renders CreativeStep + DestinationStep stacked, so it
+  // validates both — creative error surfaces first.
+  if (id === 'creative') return validateCreativeStep(draft) || validateDestinationStep(draft);
   if (id === 'targeting') return validateTargetingStep(draft);
   if (id === 'budget') return validateBudgetStep(draft);
   return null;

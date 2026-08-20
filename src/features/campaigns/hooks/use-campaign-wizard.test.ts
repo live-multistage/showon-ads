@@ -35,14 +35,95 @@ describe('validateExternalUrl', () => {
   });
 });
 
+// New order: budget -> targeting -> creative (creative + destination merged) -> review.
 describe('useCampaignWizard', () => {
-  it('starts on the creative step', () => {
+  it('starts on the budget step', () => {
     const { result } = renderHook(() => useCampaignWizard());
+    expect(result.current.step).toBe('budget');
+  });
+
+  function fillValidBudget() {
+    return {
+      billingModel: 'CPM' as const,
+      bidReais: '10',
+      dailyBudgetReais: '50',
+      totalLimitReais: '500',
+      startsAt: '2026-08-01T10:00',
+      endsAt: '2026-09-01T10:00',
+    };
+  }
+
+  it('blocks advancing past budget with a non-positive bid', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+
+    act(() => result.current.updateDraft({ ...fillValidBudget(), bidReais: '0' }));
+    act(() => result.current.next());
+
+    expect(result.current.step).toBe('budget');
+    expect(result.current.error).toBe('O lance deve ser maior que zero.');
+  });
+
+  it('blocks a total limit lower than the daily budget', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+
+    act(() => result.current.updateDraft({ ...fillValidBudget(), dailyBudgetReais: '100', totalLimitReais: '50' }));
+    act(() => result.current.next());
+
+    expect(result.current.step).toBe('budget');
+    expect(result.current.error).toBe('O limite total deve ser maior ou igual ao orçamento diário.');
+  });
+
+  it('blocks an end date that is not after the start date', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+
+    act(() =>
+      result.current.updateDraft({ ...fillValidBudget(), startsAt: '2026-09-01T10:00', endsAt: '2026-08-01T10:00' }),
+    );
+    act(() => result.current.next());
+
+    expect(result.current.step).toBe('budget');
+    expect(result.current.error).toBe('A data de início deve ser anterior à data de fim.');
+  });
+
+  function advanceToTargeting(result: ReturnType<typeof renderHook<ReturnType<typeof useCampaignWizard>, unknown>>['result']) {
+    act(() => result.current.updateDraft(fillValidBudget()));
+    act(() => result.current.next());
+  }
+
+  it('advances to targeting with valid budget inputs', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+    advanceToTargeting(result);
+
+    expect(result.current.step).toBe('targeting');
+    expect(result.current.error).toBeNull();
+  });
+
+  it('blocks advancing past targeting when every placement is unchecked', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+    advanceToTargeting(result);
+
+    act(() => result.current.updateDraft({ placements: [] }));
+    act(() => result.current.next());
+
+    expect(result.current.step).toBe('targeting');
+    expect(result.current.error).toBe('Selecione pelo menos um posicionamento.');
+  });
+
+  function advanceToCreative(result: ReturnType<typeof renderHook<ReturnType<typeof useCampaignWizard>, unknown>>['result']) {
+    advanceToTargeting(result);
+    act(() => result.current.next());
+  }
+
+  it('advances to the merged creative+destination step from targeting', () => {
+    const { result } = renderHook(() => useCampaignWizard());
+    advanceToCreative(result);
+
     expect(result.current.step).toBe('creative');
   });
 
-  it('blocks advancing past creative without a title', () => {
+  it('blocks advancing past the merged step without a title (creative error first)', () => {
     const { result } = renderHook(() => useCampaignWizard());
+    advanceToCreative(result);
 
     act(() => result.current.updateDraft({ format: 'HORIZONTAL_728x90' }));
     act(() => result.current.next());
@@ -51,8 +132,9 @@ describe('useCampaignWizard', () => {
     expect(result.current.error).toBe('Informe um título para a campanha.');
   });
 
-  it('blocks advancing past creative without a format', () => {
+  it('blocks advancing past the merged step without a format', () => {
     const { result } = renderHook(() => useCampaignWizard());
+    advanceToCreative(result);
 
     act(() => result.current.updateDraft({ title: 'Summer Promo' }));
     act(() => result.current.next());
@@ -61,66 +143,64 @@ describe('useCampaignWizard', () => {
     expect(result.current.error).toBe('Selecione um formato de anúncio.');
   });
 
-  it('advances to destination once title and format are set', () => {
+  it('blocks advancing past the merged step without a destination once creative is valid', () => {
     const { result } = renderHook(() => useCampaignWizard());
+    advanceToCreative(result);
 
     act(() => result.current.updateDraft({ title: 'Summer Promo', format: 'HORIZONTAL_728x90' }));
     act(() => result.current.next());
 
-    expect(result.current.step).toBe('destination');
-    expect(result.current.error).toBeNull();
+    expect(result.current.step).toBe('creative');
+    expect(result.current.error).toBe('Escolha um destino para o anúncio.');
   });
-
-  function advanceToDestination(result: ReturnType<typeof renderHook<ReturnType<typeof useCampaignWizard>, unknown>>['result']) {
-    act(() => result.current.updateDraft({ title: 'Summer Promo', format: 'HORIZONTAL_728x90' }));
-    act(() => result.current.next());
-  }
 
   it('requires a picked event when destination is EVENT', () => {
     const { result } = renderHook(() => useCampaignWizard());
-    advanceToDestination(result);
-
-    act(() => result.current.updateDraft({ destinationType: 'EVENT' }));
-    act(() => result.current.next());
-
-    expect(result.current.step).toBe('destination');
-    expect(result.current.error).toBe('Selecione um evento.');
-  });
-
-  it('advances once an event is picked', () => {
-    const { result } = renderHook(() => useCampaignWizard());
-    advanceToDestination(result);
+    advanceToCreative(result);
 
     act(() =>
-      result.current.updateDraft({
-        destinationType: 'EVENT',
-        event: { id: 'evt-1', title: 'Big Show', bannerUrl: null, thumbnailUrl: null, startsAt: '2026-01-01', status: 'PUBLISHED' },
-      }),
+      result.current.updateDraft({ title: 'Summer Promo', format: 'HORIZONTAL_728x90', destinationType: 'EVENT' }),
     );
     act(() => result.current.next());
 
-    expect(result.current.step).toBe('targeting');
+    expect(result.current.step).toBe('creative');
+    expect(result.current.error).toBe('Selecione um evento.');
   });
 
   it('rejects http:// for the EXTERNAL_URL destination', () => {
     const { result } = renderHook(() => useCampaignWizard());
-    advanceToDestination(result);
+    advanceToCreative(result);
 
-    act(() => result.current.updateDraft({ destinationType: 'EXTERNAL_URL', externalUrl: 'http://example.com' }));
+    act(() =>
+      result.current.updateDraft({
+        title: 'Summer Promo',
+        format: 'HORIZONTAL_728x90',
+        destinationType: 'EXTERNAL_URL',
+        externalUrl: 'http://example.com',
+      }),
+    );
     act(() => result.current.next());
 
-    expect(result.current.step).toBe('destination');
+    expect(result.current.step).toBe('creative');
     expect(result.current.error).toBe('A URL deve começar com https://.');
   });
 
-  it('advances for a valid https URL', () => {
+  it('advances to review once creative and destination are both valid', () => {
     const { result } = renderHook(() => useCampaignWizard());
-    advanceToDestination(result);
+    advanceToCreative(result);
 
-    act(() => result.current.updateDraft({ destinationType: 'EXTERNAL_URL', externalUrl: 'https://example.com' }));
+    act(() =>
+      result.current.updateDraft({
+        title: 'Summer Promo',
+        format: 'HORIZONTAL_728x90',
+        destinationType: 'EXTERNAL_URL',
+        externalUrl: 'https://example.com',
+      }),
+    );
     act(() => result.current.next());
 
-    expect(result.current.step).toBe('targeting');
+    expect(result.current.step).toBe('review');
+    expect(result.current.error).toBeNull();
   });
 
   it('surfaces a banner-required warning for EXTERNAL_URL without a staged file', () => {
@@ -157,102 +237,15 @@ describe('useCampaignWizard', () => {
 
   it('back() returns to the previous step and clears the error', () => {
     const { result } = renderHook(() => useCampaignWizard());
-    advanceToDestination(result);
 
-    act(() => result.current.next()); // blocked, sets an error
+    act(() => result.current.next()); // blocked, sets an error on budget
     expect(result.current.error).not.toBeNull();
 
-    act(() => result.current.back());
-    expect(result.current.step).toBe('creative');
-    expect(result.current.error).toBeNull();
-  });
-
-  function advanceToBudget(result: ReturnType<typeof renderHook<ReturnType<typeof useCampaignWizard>, unknown>>['result']) {
-    advanceToDestination(result);
-    act(() =>
-      result.current.updateDraft({ destinationType: 'EXTERNAL_URL', externalUrl: 'https://example.com' }),
-    );
+    act(() => result.current.updateDraft(fillValidBudget()));
     act(() => result.current.next()); // -> targeting
-    act(() => result.current.next()); // -> budget (nothing required there)
-  }
-
-  it('blocks a non-positive bid on the budget step', () => {
-    const { result } = renderHook(() => useCampaignWizard());
-    advanceToBudget(result);
-
-    act(() =>
-      result.current.updateDraft({
-        billingModel: 'CPM',
-        bidReais: '0',
-        dailyBudgetReais: '50',
-        totalLimitReais: '500',
-        startsAt: '2026-08-01T10:00',
-        endsAt: '2026-09-01T10:00',
-      }),
-    );
-    act(() => result.current.next());
+    act(() => result.current.back());
 
     expect(result.current.step).toBe('budget');
-    expect(result.current.error).toBe('O lance deve ser maior que zero.');
-  });
-
-  it('blocks a total limit lower than the daily budget', () => {
-    const { result } = renderHook(() => useCampaignWizard());
-    advanceToBudget(result);
-
-    act(() =>
-      result.current.updateDraft({
-        billingModel: 'CPM',
-        bidReais: '10',
-        dailyBudgetReais: '100',
-        totalLimitReais: '50',
-        startsAt: '2026-08-01T10:00',
-        endsAt: '2026-09-01T10:00',
-      }),
-    );
-    act(() => result.current.next());
-
-    expect(result.current.step).toBe('budget');
-    expect(result.current.error).toBe('O limite total deve ser maior ou igual ao orçamento diário.');
-  });
-
-  it('blocks an end date that is not after the start date', () => {
-    const { result } = renderHook(() => useCampaignWizard());
-    advanceToBudget(result);
-
-    act(() =>
-      result.current.updateDraft({
-        billingModel: 'CPM',
-        bidReais: '10',
-        dailyBudgetReais: '50',
-        totalLimitReais: '500',
-        startsAt: '2026-09-01T10:00',
-        endsAt: '2026-08-01T10:00',
-      }),
-    );
-    act(() => result.current.next());
-
-    expect(result.current.step).toBe('budget');
-    expect(result.current.error).toBe('A data de início deve ser anterior à data de fim.');
-  });
-
-  it('advances to review with valid budget inputs', () => {
-    const { result } = renderHook(() => useCampaignWizard());
-    advanceToBudget(result);
-
-    act(() =>
-      result.current.updateDraft({
-        billingModel: 'CPM',
-        bidReais: '10',
-        dailyBudgetReais: '50',
-        totalLimitReais: '500',
-        startsAt: '2026-08-01T10:00',
-        endsAt: '2026-09-01T10:00',
-      }),
-    );
-    act(() => result.current.next());
-
-    expect(result.current.step).toBe('review');
     expect(result.current.error).toBeNull();
   });
 });

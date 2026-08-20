@@ -67,4 +67,7 @@ next-env.d.ts
 *.pem
 .npmrc.local
 
-certificates.claude/worktrees/
+certificates
+
+# ── Claude Code ────────────────────────────────────────────────
+.claude/worktrees/

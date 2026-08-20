@@ -194,6 +194,37 @@ describe('EditCampaignForm', () => {
     expect(mockUploadMutate).not.toHaveBeenCalled();
   });
 
+  it('does not show the banner-required warning for a VIDEO_16_9 ad that already has a video', () => {
+    render(
+      <EditCampaignForm
+        ad={makeAd({ format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: 'https://cdn.example.com/ad.mp4' })}
+        onCancel={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.queryByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Anúncios em vídeo precisam de um vídeo antes de serem enviados para revisão.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a video-specific warning for a VIDEO_16_9 ad still missing a video', () => {
+    render(
+      <EditCampaignForm
+        ad={makeAd({ format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: null })}
+        onCancel={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText('Anúncios em vídeo precisam de um vídeo antes de serem enviados para revisão.'),
+    ).toBeInTheDocument();
+  });
+
   it('calls onCancel without saving', () => {
     const onCancel = vi.fn();
     render(<EditCampaignForm ad={makeAd({})} onCancel={onCancel} onSaved={vi.fn()} />);

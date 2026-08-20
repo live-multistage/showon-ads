@@ -49,7 +49,10 @@ function validateForSave(draft: CampaignWizardDraft): string | null {
 export function EditCampaignForm({ ad, onCancel, onSaved }: EditCampaignFormProps) {
   const [draft, setDraft] = useState<CampaignWizardDraft>(() => adToDraft(ad));
   const [error, setError] = useState<string | null>(null);
-  const [hasBanner, setHasBanner] = useState(!!ad.bannerUrl);
+  // VIDEO_16_9 ads never get a banner from the wizard — the video is the
+  // creative, so seed from videoUrl instead or every video ad falsely warns
+  // "precisa de um banner" on load.
+  const [hasBanner, setHasBanner] = useState(!!(ad.format === 'VIDEO_16_9' ? ad.videoUrl : ad.bannerUrl));
   const updateAd = useUpdateAdMutation(ad.id);
   const uploadBanner = useUploadBannerMutation();
   const uploadVideo = useUploadVideoMutation();
@@ -104,7 +107,9 @@ export function EditCampaignForm({ ad, onCancel, onSaved }: EditCampaignFormProp
 
   const bannerRequiredWarning =
     draft.destinationType === 'EXTERNAL_URL' && !hasBanner
-      ? 'Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'
+      ? draft.format === 'VIDEO_16_9'
+        ? 'Anúncios em vídeo precisam de um vídeo antes de serem enviados para revisão.'
+        : 'Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'
       : null;
 
   async function handleSave() {

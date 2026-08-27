@@ -31,16 +31,6 @@
   padding: 24px;
 }
 
-.badge {
-  display: inline-block;
-  @include ads.mono-label(10px, ads.$accent);
-  background: ads.$accent-soft;
-  border: 1px solid rgba(236, 72, 153, 0.35);
-  border-radius: 6px;
-  padding: 3px 8px;
-  margin-bottom: 14px;
-}
-
 .cardTitle {
   font-family: ads.$ui;
   font-weight: 600;
@@ -59,34 +49,113 @@
   max-width: 440px;
 }
 
-.placeholderRow {
+.lowBalance {
+  @include ads.mono-label(11px, ads.$accent);
+  background: ads.$accent-soft;
+  border: 1px solid ads.$accent-border;
+  border-radius: ads.$radius-field;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.balance {
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 32px;
+  color: ads.$text;
+  margin-bottom: 20px;
+}
+
+.topUpRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+}
+
+.preset {
+  @include ads.mono-label(12px, ads.$text-dim);
   background: ads.$field;
   border: 1px solid ads.$border;
-  border-radius: 8px;
+  border-radius: ads.$radius-field;
+  padding: 8px 12px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ads.$accent-hover-border;
+    color: ads.$text;
+  }
 }
 
-.cardChip {
-  width: 40px;
-  height: 28px;
-  background: #1f1f23;
-  border-radius: 4px;
-  flex-shrink: 0;
+.amountInput {
+  @include ads.field-input;
+  width: 100px;
 }
 
-.cardNumber {
+.primary {
+  @include ads.mono-label(12px, ads.$accent-ink);
+  background: ads.$accent;
+  border: none;
+  border-radius: ads.$radius-btn;
+  padding: 10px 16px;
+  cursor: pointer;
+
+  &:hover {
+    background: ads.$accent-bright;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid ads.$border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.historyLabel {
+  font-family: ads.$ui;
+  font-size: 14px;
+  color: ads.$text;
+  min-width: 80px;
+}
+
+.historyRef {
+  font-family: ads.$mono;
+  font-size: 12px;
+  color: ads.$text-muted;
+  flex: 1;
+}
+
+.historyDate {
+  font-family: ads.$mono;
+  font-size: 12px;
+  color: ads.$text-muted;
+}
+
+.positive {
+  font-family: ads.$mono;
+  font-size: 14px;
+  color: ads.$success;
+}
+
+.negative {
   font-family: ads.$mono;
   font-size: 14px;
   color: ads.$text-dim;
-  letter-spacing: 0.1em;
-}
-
-.cardMeta {
-  font-family: ads.$mono;
-  font-size: 11px;
-  color: ads.$text-muted;
-  margin-top: 2px;
 }

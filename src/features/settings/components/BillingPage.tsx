@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
+import { normalizeError } from '@/shared/api/client';
 import {
   useCreateTopUpMutation,
   useWalletQuery,
@@ -24,6 +26,25 @@ export function BillingPage() {
   const transactions = useWalletTransactionsQuery(accountId);
   const topUp = useCreateTopUpMutation(accountId);
   const [amountReais, setAmountReais] = useState('50');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Stripe Checkout's success_url returns here with ?session_id=...; refresh
+  // the wallet once and strip the param so a page refresh doesn't re-toast.
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) return;
+
+    wallet.refetch();
+    transactions.refetch();
+    toast.success('Recarga confirmada.');
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('session_id');
+    const query = params.toString();
+    router.replace(query ? `/billing?${query}` : '/billing');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleTopUp = () => {
     const cents = Math.round(Number(amountReais.replace(',', '.')) * 100);
@@ -31,7 +52,7 @@ export function BillingPage() {
       toast.error('Informe um valor válido');
       return;
     }
-    topUp.mutate(cents, { onError: () => toast.error('Não foi possível iniciar a recarga') });
+    topUp.mutate(cents, { onError: (error) => toast.error(normalizeError(error).message) });
   };
 
   return (

@@ -3,8 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { walletService } from '../services/wallet.service';
 
-const walletKey = (accountId: string) => ['wallet', accountId] as const;
-const txKey = (accountId: string) => ['wallet', accountId, 'transactions'] as const;
+export const walletKey = (accountId: string) => ['wallet', accountId] as const;
+export const txKey = (accountId: string) => ['wallet', accountId, 'transactions'] as const;
 
 export function useWalletQuery(accountId: string | undefined) {
   return useQuery({

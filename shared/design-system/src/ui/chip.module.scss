@@ -1,0 +1,57 @@
+@use '../styles/_variables' as *;
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: 'Space Mono', monospace;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+// Genre filter pill — Space Mono 11px uppercase (DESIGN.md §5)
+.default {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.04);
+  padding: 7px 13px;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 500;
+  color: $text-secondary;
+  letter-spacing: 0.05em;
+
+  &:hover {
+    border-color: rgba(255, 46, 158, 0.4);
+    color: $text-primary;
+  }
+}
+
+.active {
+  border-radius: 999px;
+  border: 1px solid $action;
+  background-color: $action;
+  padding: 7px 13px;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  color: $bg;
+  letter-spacing: 0.05em;
+}
+
+// Footer static tag — Space Mono 10px uppercase
+.tag {
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 5px 9px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  color: $text-secondary;
+  letter-spacing: 0.08em;
+  cursor: default;
+}

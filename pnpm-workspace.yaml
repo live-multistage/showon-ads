@@ -1,0 +1,7 @@
+# live-show-ads deploys standalone (Vercel builds the showon-ads repo alone),
+# so the shared @live-show/* packages are vendored under shared/ and consumed
+# as a local workspace. Keep them in sync from the monorepo with
+# scripts/sync-shared.sh. Mirrors live-show-react's standalone setup.
+packages:
+  - .
+  - shared/*

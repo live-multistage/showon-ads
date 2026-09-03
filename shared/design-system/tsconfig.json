@@ -1,0 +1,23 @@
+{
+  // Compiler options mirror live-show-react/tsconfig.json (the consuming
+  // Next.js app) minus the "next" plugin, which only applies inside a Next
+  // build. Kept as an inline copy rather than `extends` across the nested
+  // live-show-react git repo so this package typechecks standalone.
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vitest.setup.ts", "vitest.config.ts"],
+  "exclude": ["node_modules"]
+}

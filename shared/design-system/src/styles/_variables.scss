@@ -1,0 +1,48 @@
+// ── Base (neutral dark — surfaces carry no hue) ───────────────────
+$bg:           #08080a;
+$surface:      #101013;
+$surface-dark: #0b0b0d;
+$surface-card: #101013;
+$accent:       #1a0a12;
+
+// ── Brand (magenta = energy / nightlife accent) ───────────────────
+$action:       #ff2e9e;
+$action-dim:   rgba(255, 46, 158, 0.14);
+$action-bg:    rgba(255, 46, 158, 0.12);
+$violet:       #9810fa;
+$violet-dim:   rgba(152, 16, 250, 0.8);
+$violet-glow:  rgba(152, 16, 250, 0.12);
+
+// ── Text ──────────────────────────────────────────────────────────
+$text-primary:   #FFFFFF;
+$text-secondary: #A1A1AA;
+$text-muted:     #71717A;
+$white-50:       rgba(255, 255, 255, 0.5);
+
+// ── Borders & hover ───────────────────────────────────────────────
+$border:       #27272A;
+$bg-hover:     #1f1f23;
+
+// ── Feedback (stays red — never magenta) ──────────────────────────
+$error:        #F87171;
+$error-bg:     rgba(248, 113, 113, 0.12);
+$danger:       #EF4444;
+$danger-bg:    rgba(239, 68, 68, 0.12);
+$success:      #16A34A;
+$success-light: #4ADE80;
+$success-bg:   rgba(22, 163, 74, 0.1);
+
+// ── Accent colors ─────────────────────────────────────────────────
+$price:        #FB64B6;
+
+// ── Aliases (backwards compat) ────────────────────────────────────
+$muted:        $text-secondary;
+$text-label:   $text-secondary;
+$text-secondary-alt: $text-secondary;
+$surface2:     $surface;
+$surface-2:    $surface;
+
+// ── Breakpoints ───────────────────────────────────────────────────
+$sm: 640px;
+$md: 768px;
+$lg: 1024px;

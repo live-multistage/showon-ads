@@ -1,0 +1,195 @@
+@use '../styles/_variables' as *;
+
+// ── Trigger ──────────────────────────────────────────────────────────────────
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  background-color: $surface;
+  border: 1px solid $border;
+  border-radius: 6px;
+  color: $text-primary;
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  user-select: none;
+
+  &:hover { border-color: rgba(255, 255, 255, 0.18); }
+
+  &:focus-visible,
+  &[data-state='open'] {
+    border-color: $action;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18);
+  }
+
+  &[data-placeholder] .triggerValue { color: $text-muted; }
+  &[disabled] { opacity: 0.5; cursor: not-allowed; }
+}
+
+.triggerValue {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.triggerLeadingIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.triggerIcon {
+  color: $text-muted;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+
+  [data-state='open'] & { transform: rotate(180deg); }
+}
+
+// ── Content (dropdown) ───────────────────────────────────────────────────────
+
+.content {
+  background-color: $surface-dark;
+  border: 1px solid $border;
+  border-radius: 8px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(236, 72, 153, 0.08);
+  overflow: hidden;
+  z-index: 50;
+  min-width: var(--radix-select-trigger-width);
+  max-height: var(--radix-select-content-available-height);
+
+  &[data-state='open'] { animation: contentOpen 0.15s ease; }
+  &[data-state='closed'] { animation: contentClose 0.1s ease; }
+}
+
+@keyframes contentOpen {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes contentClose {
+  from { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+.viewport {
+  padding: 4px;
+  overflow-y: auto;
+  scroll-my-1: 4px;
+}
+
+// ── Items ────────────────────────────────────────────────────────────────────
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border-radius: 5px;
+  color: $text-secondary;
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.1s, color 0.1s;
+  user-select: none;
+
+  &[data-highlighted] {
+    background-color: $action-bg;
+    color: $text-primary;
+
+    .itemIndicator { color: $action; }
+  }
+
+  &[data-state='checked'] {
+    color: $text-primary;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 15%;
+      height: 70%;
+      width: 2px;
+      border-radius: 2px;
+      background-color: $action;
+    }
+  }
+
+  &[data-disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.itemText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemDescription {
+  font-size: 0.75rem;
+  color: $text-muted;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.itemIndicator {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  color: $action;
+}
+
+// ── Group ────────────────────────────────────────────────────────────────────
+
+.group {
+  padding-top: 4px;
+
+  & + & { border-top: 1px solid $border; margin-top: 4px; padding-top: 4px; }
+}
+
+.groupLabel {
+  padding: 0.25rem 0.625rem 0.375rem;
+  font-size: 0.65rem;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $text-muted;
+  user-select: none;
+}
+
+// ── Separator ────────────────────────────────────────────────────────────────
+
+.separator {
+  height: 1px;
+  background-color: $border;
+  margin: 4px -4px;
+}
+
+// ── Scroll buttons ───────────────────────────────────────────────────────────
+
+.scrollButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+  color: $text-muted;
+  cursor: default;
+}

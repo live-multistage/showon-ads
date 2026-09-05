@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import axios, { AxiosError, type AxiosHeaders } from 'axios';
-import { apiClient, clearSession, getStoredUser, setSession } from './client';
+import { apiClient, clearSession, getStoredUser, normalizeError, setSession } from './client';
 
 // Verifies the request interceptor actually attaches the Bearer token from
 // localStorage (or omits it) — the piece every advertisements/advertisers
@@ -31,6 +31,43 @@ describe('apiClient auth interceptor', () => {
 
     const headers = response.config.headers as AxiosHeaders;
     expect(headers.get('Authorization')).toBeUndefined();
+  });
+
+  it('sends a fresh X-Request-Id UUID on every request', async () => {
+    const first = await apiClient.get('/ping');
+    const second = await apiClient.get('/ping');
+
+    const firstId = (first.config.headers as AxiosHeaders).get('X-Request-Id') as string;
+    const secondId = (second.config.headers as AxiosHeaders).get('X-Request-Id') as string;
+    expect(firstId).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(firstId).not.toBe(secondId);
+  });
+});
+
+describe('normalizeError', () => {
+  it('surfaces the request-sent X-Request-Id', () => {
+    const headers = { 'X-Request-Id': 'req-123' } as unknown as AxiosHeaders;
+    const err = new AxiosError('boom', '500', { headers } as never, undefined, {
+      status: 500,
+      statusText: 'Internal Server Error',
+      headers: {},
+      config: { headers } as never,
+      data: { message: 'boom' },
+    });
+
+    expect(normalizeError(err).requestId).toBe('req-123');
+  });
+
+  it('falls back to the response body requestId when the request had none', () => {
+    const err = new AxiosError('boom', '500', {} as never, undefined, {
+      status: 500,
+      statusText: 'Internal Server Error',
+      headers: {},
+      config: {} as never,
+      data: { message: 'boom', requestId: 'from-body' },
+    });
+
+    expect(normalizeError(err).requestId).toBe('from-body');
   });
 });
 

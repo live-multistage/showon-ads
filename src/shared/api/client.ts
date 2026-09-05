@@ -15,14 +15,20 @@ export interface AppError {
   message: string;
   status: number;
   code?: string;
+  requestId?: string;
 }
 
 export function normalizeError(error: unknown): AppError {
   if (axios.isAxiosError(error)) {
+    // The header we sent is authoritative; the response body's requestId
+    // (set by nestjs-pino) is a fallback for errors that never reach our
+    // interceptor, e.g. an nginx 5xx.
+    const sentRequestId = error.config?.headers?.['X-Request-Id'] as string | undefined;
     return {
       message: error.response?.data?.message ?? error.message,
       status: error.response?.status ?? 0,
       code: error.response?.data?.code,
+      requestId: sentRequestId ?? error.response?.data?.requestId,
     };
   }
   return { message: 'Unexpected error', status: 0 };
@@ -87,6 +93,9 @@ export const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use((req: InternalAxiosRequestConfig) => {
   const token = getStoredToken();
   if (token) req.headers.set('Authorization', `Bearer ${token}`);
+  // Correlates this request with backend logs end-to-end (nestjs-pino echoes it back).
+  // crypto.randomUUID is a native Web Crypto API — no dependency needed.
+  req.headers.set('X-Request-Id', crypto.randomUUID());
   return req;
 });
 

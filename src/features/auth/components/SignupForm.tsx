@@ -5,26 +5,32 @@ import Link from 'next/link';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@live-show/design-system';
 import { normalizeError } from '@/shared/api/client';
 import { useRegisterMutation } from '../mutations/use-register.mutation';
+import { useResendVerificationMutation } from '../mutations/use-resend-verification.mutation';
 import styles from './SignupForm.module.scss';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface SignupFormProps {
-  onRegistered: () => void;
   // Prefilled from the `?email=` query param (e.g. an invite link) so the
   // invitee doesn't retype it — and doesn't accidentally sign up under a
   // different address than the one that was invited. Stays editable.
   initialEmail?: string | null;
 }
 
-// Step 1 of signup: user account fields. On success the caller (SignupFlow)
-// advances to the company step, which reuses AdvertiserOnboardingForm.
-export function SignupForm({ onRegistered, initialEmail }: SignupFormProps) {
+// Registration now requires email verification before the account can log
+// in — there is no token to hand off, so this form no longer chains into the
+// company-name step; it just confirms the email was sent. The advertiser
+// onboarding step (AdvertiserOnboardingForm) happens after the user verifies
+// and logs in, via AuthGuard.
+export function SignupForm({ initialEmail }: SignupFormProps) {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState(initialEmail ?? '');
   const [password, setPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const { mutate, isPending, error } = useRegisterMutation();
+  const resend = useResendVerificationMutation();
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -43,13 +49,42 @@ export function SignupForm({ onRegistered, initialEmail }: SignupFormProps) {
     }
 
     setValidationError(null);
+    const trimmedEmail = email.trim();
     mutate(
-      { email: email.trim(), displayName: displayName.trim(), password },
-      { onSuccess: onRegistered },
+      { email: trimmedEmail, displayName: displayName.trim(), password },
+      { onSuccess: () => setSubmittedEmail(trimmedEmail) },
     );
   }
 
+  function handleResend() {
+    if (!submittedEmail) return;
+    resend.mutate({ email: submittedEmail }, { onSuccess: () => setResent(true) });
+  }
+
   const errorMessage = validationError ?? (error ? normalizeError(error).message : null);
+
+  if (submittedEmail) {
+    return (
+      <Card className={styles.card}>
+        <CardHeader>
+          <CardTitle>Check your email</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>We sent a confirmation link to {submittedEmail}. Open it to confirm your account.</p>
+
+          <Button type="button" onClick={handleResend} disabled={resend.isPending || resent}>
+            Resend email
+          </Button>
+          {resent && <p>If there is a pending account, a new email was sent.</p>}
+          {resend.isError && <p role="alert">Could not resend right now. Try again shortly.</p>}
+
+          <p>
+            Already have an account? <Link href="/login">Log in</Link>
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={styles.card}>

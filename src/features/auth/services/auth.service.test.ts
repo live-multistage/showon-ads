@@ -32,8 +32,8 @@ describe('authService', () => {
     expect(result).toEqual(authResponse);
   });
 
-  it('registers against /auth/register', async () => {
-    mockedApiClient.post.mockResolvedValueOnce({ data: authResponse });
+  it('registers against /auth/register and returns no tokens', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({ data: { verificationRequired: true } });
 
     const result = await authService.register({ email: 'a@b.com', displayName: 'A', password: 'secret123' });
 
@@ -42,6 +42,14 @@ describe('authService', () => {
       displayName: 'A',
       password: 'secret123',
     });
-    expect(result).toEqual(authResponse);
+    expect(result).toEqual({ verificationRequired: true });
+  });
+
+  it('resends the verification email against /auth/resend-verification', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({ data: undefined });
+
+    await authService.resendVerification('a@b.com');
+
+    expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/resend-verification', { email: 'a@b.com' });
   });
 });

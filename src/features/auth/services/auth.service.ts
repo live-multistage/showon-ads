@@ -1,17 +1,23 @@
 import { apiClient } from '@/shared/api/client';
-import type { AuthResponse, LoginRequest, RegisterRequest } from '../types/auth.types';
+import type { AuthResponse, LoginRequest, RegisterRequest, RegisterResponse } from '../types/auth.types';
 
-// AuthController: POST /auth/login and /auth/register both return
-// { user, accessToken, refreshToken, refreshExpiresAt } — register already
-// authenticates the new user, so signup never needs a follow-up login call.
+// AuthController: POST /auth/login returns { user, accessToken, refreshToken,
+// refreshExpiresAt }. POST /auth/register now returns 201
+// { verificationRequired: true } — the account needs its email confirmed
+// before it can log in, so registration no longer starts a session.
 export const authService = {
   login: async (payload: LoginRequest): Promise<AuthResponse> => {
     const { data } = await apiClient.post<AuthResponse>('/auth/login', payload);
     return data;
   },
 
-  register: async (payload: RegisterRequest): Promise<AuthResponse> => {
-    const { data } = await apiClient.post<AuthResponse>('/auth/register', payload);
+  register: async (payload: RegisterRequest): Promise<RegisterResponse> => {
+    const { data } = await apiClient.post<RegisterResponse>('/auth/register', payload);
     return data;
+  },
+
+  resendVerification: async (email: string): Promise<void> => {
+    // Always 202 — never reveals whether the address has a pending account.
+    await apiClient.post('/auth/resend-verification', { email });
   },
 };

@@ -27,3 +27,10 @@ export interface AuthResponse {
   refreshToken: string;
   refreshExpiresAt: string;
 }
+
+// POST /auth/register now returns 201 with no tokens: the account exists but
+// is unusable until the verification link is clicked, so there is no session
+// to start yet.
+export interface RegisterResponse {
+  verificationRequired: true;
+}

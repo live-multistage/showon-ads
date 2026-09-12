@@ -96,6 +96,21 @@ describe('LoginForm', () => {
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/invite/abc'));
   });
 
+  it('shows a clear message when the account email is not verified', async () => {
+    mockedAuthService.login.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 403, data: { code: 'EMAIL_NOT_VERIFIED', message: 'Email not verified' } },
+    });
+
+    renderWithProviders(<LoginForm />);
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/confirm your email/i);
+  });
+
   it('falls back to / when ?redirect= is an open-redirect vector', async () => {
     searchParams = new URLSearchParams({ redirect: '//evil.com' });
     mockedAuthService.login.mockResolvedValueOnce(authResponse);

@@ -3,11 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SignupFlow } from './SignupFlow';
 import { authService } from '../services/auth.service';
-import { advertisersService } from '@/features/advertisements/services/advertisers.service';
-import type { AuthResponse } from '../types/auth.types';
-import type { AdvertiserAccountResponse } from '@/features/advertisements/types/advertisement.types';
 
-const assignMock = vi.fn();
 let searchParams = new URLSearchParams();
 
 vi.mock('next/link', () => ({
@@ -22,47 +18,26 @@ vi.mock('../services/auth.service', () => ({
   authService: {
     login: vi.fn(),
     register: vi.fn(),
-  },
-}));
-
-vi.mock('@/features/advertisements/services/advertisers.service', () => ({
-  advertisersService: {
-    create: vi.fn(),
-    me: vi.fn(),
+    resendVerification: vi.fn(),
   },
 }));
 
 const mockedAuthService = vi.mocked(authService, true);
-const mockedAdvertisersService = vi.mocked(advertisersService, true);
 
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient();
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
-const authResponse: AuthResponse = {
-  user: { id: 'u1', email: 'new@example.com', displayName: 'New User', role: 'USER', createdAt: '', updatedAt: '' },
-  accessToken: 'access-token',
-  refreshToken: 'refresh-token',
-  refreshExpiresAt: '2026-01-01T00:00:00.000Z',
-};
-
-const advertiserAccount = {} as AdvertiserAccountResponse;
-
 describe('SignupFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     searchParams = new URLSearchParams();
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { ...window.location, assign: assignMock },
-    });
   });
 
-  it('chains user-create then advertiser-create, in order', async () => {
-    mockedAuthService.register.mockResolvedValueOnce(authResponse);
-    mockedAdvertisersService.create.mockResolvedValueOnce(advertiserAccount);
+  it('registers the account and shows the check-email state (no auto-login)', async () => {
+    mockedAuthService.register.mockResolvedValueOnce({ verificationRequired: true });
 
     renderWithProviders(<SignupFlow />);
 
@@ -79,23 +54,8 @@ describe('SignupFlow', () => {
       });
     });
 
-    // Step 2 — the company form — only appears after registration resolves.
-    expect(await screen.findByLabelText('Company name')).toBeInTheDocument();
-    expect(mockedAdvertisersService.create).not.toHaveBeenCalled();
-
-    fireEvent.change(screen.getByLabelText('Company name'), { target: { value: 'Acme Corp' } });
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
-
-    await waitFor(() => {
-      expect(mockedAdvertisersService.create).toHaveBeenCalledWith({ name: 'Acme Corp' });
-    });
-
-    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
-
-    // Call order matters: user-create must happen before advertiser-create.
-    const registerOrder = mockedAuthService.register.mock.invocationCallOrder[0];
-    const createOrder = mockedAdvertisersService.create.mock.invocationCallOrder[0];
-    expect(registerOrder).toBeLessThan(createOrder);
+    expect(await screen.findByText('Check your email')).toBeInTheDocument();
+    expect(localStorage.getItem('access_token')).toBeNull();
   });
 
   it('prefills the email field from ?email= (invite round-trip)', () => {
@@ -106,10 +66,9 @@ describe('SignupFlow', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('invitee@example.com');
   });
 
-  it('navigates to the redirect target when ?redirect= is a safe internal path', async () => {
-    searchParams = new URLSearchParams({ redirect: '/invite/abc' });
-    mockedAuthService.register.mockResolvedValueOnce(authResponse);
-    mockedAdvertisersService.create.mockResolvedValueOnce(advertiserAccount);
+  it('lets the user resend the verification email from the check-email state', async () => {
+    mockedAuthService.register.mockResolvedValueOnce({ verificationRequired: true });
+    mockedAuthService.resendVerification.mockResolvedValueOnce(undefined);
 
     renderWithProviders(<SignupFlow />);
 
@@ -118,16 +77,17 @@ describe('SignupFlow', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
     fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
-    fireEvent.change(await screen.findByLabelText('Company name'), { target: { value: 'Acme Corp' } });
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await screen.findByText('Check your email');
+    fireEvent.click(screen.getByRole('button', { name: /resend email/i }));
 
-    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/invite/abc'));
+    await waitFor(() => {
+      expect(mockedAuthService.resendVerification).toHaveBeenCalledWith('new@example.com');
+    });
   });
 
-  it('falls back to / when ?redirect= is an open-redirect vector', async () => {
-    searchParams = new URLSearchParams({ redirect: '//evil.com' });
-    mockedAuthService.register.mockResolvedValueOnce(authResponse);
-    mockedAdvertisersService.create.mockResolvedValueOnce(advertiserAccount);
+  it('shows an error when resend fails', async () => {
+    mockedAuthService.register.mockResolvedValueOnce({ verificationRequired: true });
+    mockedAuthService.resendVerification.mockRejectedValueOnce(new Error('network'));
 
     renderWithProviders(<SignupFlow />);
 
@@ -136,9 +96,9 @@ describe('SignupFlow', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
     fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
-    fireEvent.change(await screen.findByLabelText('Company name'), { target: { value: 'Acme Corp' } });
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await screen.findByText('Check your email');
+    fireEvent.click(screen.getByRole('button', { name: /resend email/i }));
 
-    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/could not resend/i);
   });
 });

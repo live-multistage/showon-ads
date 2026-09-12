@@ -40,7 +40,12 @@ export function LoginForm() {
     mutate({ email: email.trim(), password }, { onSuccess: () => window.location.assign(redirectTarget) });
   }
 
-  const errorMessage = validationError ?? (error ? normalizeError(error).message : null);
+  const normalizedError = error ? normalizeError(error) : null;
+  const errorMessage =
+    validationError ??
+    (normalizedError?.code === 'EMAIL_NOT_VERIFIED'
+      ? 'Please confirm your email before logging in.'
+      : normalizedError?.message ?? null);
 
   return (
     <div className={styles.root}>

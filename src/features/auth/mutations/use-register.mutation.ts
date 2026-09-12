@@ -1,15 +1,13 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { setSession } from '@/shared/api/client';
 import { authService } from '../services/auth.service';
-import type { AuthResponse, RegisterRequest } from '../types/auth.types';
+import type { RegisterRequest, RegisterResponse } from '../types/auth.types';
 
+// No setSession here: register no longer returns tokens (verification is
+// required first), so there is nothing to start a session with.
 export function useRegisterMutation() {
-  return useMutation<AuthResponse, unknown, RegisterRequest>({
+  return useMutation<RegisterResponse, unknown, RegisterRequest>({
     mutationFn: (payload) => authService.register(payload),
-    onSuccess: (data) => {
-      setSession(data.user, { accessToken: data.accessToken, refreshToken: data.refreshToken });
-    },
   });
 }

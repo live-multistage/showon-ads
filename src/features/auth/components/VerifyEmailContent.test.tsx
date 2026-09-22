@@ -36,10 +36,10 @@ describe('VerifyEmailContent', () => {
 
     render(<VerifyEmailContent token="good-token" />);
 
-    expect(screen.getByRole('heading', { name: 'Confirmando seu e-mail' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Confirmando seu e-mail…' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Verificando e-mail' })).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Aguarde um instante');
-    expect(screen.getByRole('button', { name: 'Verificando…' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Aguarde só um instante');
+    expect(screen.getByRole('button', { name: 'Aguarde…' })).toBeDisabled();
   });
 
   it('calls the API on mount and shows success with a sign-in link', async () => {
@@ -75,13 +75,13 @@ describe('VerifyEmailContent', () => {
 
     render(<VerifyEmailContent token="bad-token" />);
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Este link não é mais válido' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Link inválido ou expirado' })).toBeInTheDocument());
   });
 
   it('shows the expired card immediately when there is no token', () => {
     renderExpired();
 
-    expect(screen.getByRole('heading', { name: 'Este link não é mais válido' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Link inválido ou expirado' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voltar para entrar' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: /Entrar/ })).toHaveAttribute('href', '/login');
   });

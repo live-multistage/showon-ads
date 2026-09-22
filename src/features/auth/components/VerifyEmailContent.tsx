@@ -38,11 +38,11 @@ export function VerifyEmailContent({ token }: VerifyEmailContentProps) {
     return (
       <EmailStatusCard
         variant="loading"
-        eyebrow="VERIFICANDO"
-        title="Confirmando seu e-mail"
-        message="Aguarde um instante enquanto validamos seu link de confirmação."
+        eyebrow="CONFIRMANDO"
+        title="Confirmando seu e-mail…"
+        message="Aguarde só um instante enquanto validamos seu link de confirmação."
         iconLabel="Verificando e-mail"
-        primaryAction={{ label: 'Verificando…', disabled: true }}
+        primaryAction={{ label: 'Aguarde…', disabled: true }}
       />
     );
   }
@@ -66,8 +66,8 @@ export function VerifyEmailContent({ token }: VerifyEmailContentProps) {
     <EmailStatusCard
       variant="expired"
       eyebrow="LINK EXPIRADO"
-      title="Este link não é mais válido"
-      message="O link de confirmação expirou ou já foi utilizado. Solicite um novo e-mail de confirmação."
+      title="Link inválido ou expirado"
+      message="Este link de confirmação não é mais válido. Peça um novo e-mail de confirmação para ativar sua conta."
       primaryAction={resendOpen ? undefined : { label: 'Reenviar confirmação', onClick: () => setResendOpen(true) }}
       secondaryAction={{ label: 'Voltar para entrar', href: '/login' }}
       footer={(

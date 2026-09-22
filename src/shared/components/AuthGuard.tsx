@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from '@/features/auth/hooks/use-session';
 import { useMyAdvertiserAccountsQuery } from '@/features/advertisements/queries/use-my-advertiser-accounts';
 import { AdvertiserOnboardingForm } from '@/features/auth/components/AdvertiserOnboardingForm';
+import { ActiveAdvertiserAccountProvider } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 
 // Login/signup manage their own auth state and must render regardless of
 // session — there is no server-side token verification possible here (the
@@ -48,5 +49,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return <AdvertiserOnboardingForm />;
   }
 
-  return <>{children}</>;
+  // Provided once here, not per page: every gated page can read the active
+  // account (a page that forgot its own wrapper crashed /billing), and the
+  // selection survives navigation between pages.
+  return <ActiveAdvertiserAccountProvider>{children}</ActiveAdvertiserAccountProvider>;
 }

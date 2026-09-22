@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthGuard } from './AuthGuard';
+import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 import { advertisersService } from '@/features/advertisements/services/advertisers.service';
 import type { AdvertiserAccountResponse } from '@/features/advertisements/types/advertisement.types';
 
@@ -95,5 +96,30 @@ describe('AuthGuard', () => {
 
     expect(await screen.findByText('protected content')).toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  // Every gated page (e.g. /billing) reads the active account without mounting
+  // its own provider — the guard provides it once for the whole app.
+  it('provides the active advertiser account to gated pages', async () => {
+    localStorage.setItem('access_token', 'token');
+    localStorage.setItem('refresh_token', 'refresh');
+    localStorage.setItem(
+      'auth_user',
+      JSON.stringify({ id: 'u1', email: 'a@b.com', displayName: 'A', role: 'USER' }),
+    );
+    mockedAdvertisersService.me.mockResolvedValue([{ id: 'acc-1' } as AdvertiserAccountResponse]);
+
+    function ActiveAccountProbe() {
+      const { activeAccountId } = useActiveAdvertiserAccount();
+      return <p>active: {activeAccountId ?? 'none'}</p>;
+    }
+
+    renderWithProviders(
+      <AuthGuard>
+        <ActiveAccountProbe />
+      </AuthGuard>,
+    );
+
+    expect(await screen.findByText('active: acc-1')).toBeInTheDocument();
   });
 });

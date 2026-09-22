@@ -41,10 +41,10 @@ describe('SignupFlow', () => {
 
     renderWithProviders(<SignupFlow />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New User' } });
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
 
     await waitFor(() => {
       expect(mockedAuthService.register).toHaveBeenCalledWith({
@@ -54,7 +54,7 @@ describe('SignupFlow', () => {
       });
     });
 
-    expect(await screen.findByText('Check your email')).toBeInTheDocument();
+    expect(await screen.findByText('Confira seu e-mail')).toBeInTheDocument();
     expect(localStorage.getItem('access_token')).toBeNull();
   });
 
@@ -63,7 +63,7 @@ describe('SignupFlow', () => {
 
     renderWithProviders(<SignupFlow />);
 
-    expect(screen.getByLabelText('Email')).toHaveValue('invitee@example.com');
+    expect(screen.getByLabelText('E-mail')).toHaveValue('invitee@example.com');
   });
 
   it('lets the user resend the verification email from the check-email state', async () => {
@@ -72,13 +72,13 @@ describe('SignupFlow', () => {
 
     renderWithProviders(<SignupFlow />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New User' } });
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
 
-    await screen.findByText('Check your email');
-    fireEvent.click(screen.getByRole('button', { name: /resend email/i }));
+    await screen.findByText('Confira seu e-mail');
+    fireEvent.click(screen.getByRole('button', { name: /reenviar e-mail/i }));
 
     await waitFor(() => {
       expect(mockedAuthService.resendVerification).toHaveBeenCalledWith('new@example.com');
@@ -91,14 +91,35 @@ describe('SignupFlow', () => {
 
     renderWithProviders(<SignupFlow />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New User' } });
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
 
-    await screen.findByText('Check your email');
-    fireEvent.click(screen.getByRole('button', { name: /resend email/i }));
+    await screen.findByText('Confira seu e-mail');
+    fireEvent.click(screen.getByRole('button', { name: /reenviar e-mail/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/could not resend/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não foi possível reenviar/i);
+  });
+
+  it('flags the invalid field instead of registering', () => {
+    renderWithProviders(<SignupFlow />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'not-an-email' } });
+    fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Informe um e-mail válido.');
+    expect(screen.getByLabelText('E-mail')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Nome')).not.toHaveAttribute('aria-invalid');
+    expect(mockedAuthService.register).not.toHaveBeenCalled();
+  });
+
+  it('toggles password visibility', () => {
+    renderWithProviders(<SignupFlow />);
+
+    expect(screen.getByLabelText('Senha')).toHaveAttribute('type', 'password');
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar senha' }));
+    expect(screen.getByLabelText('Senha')).toHaveAttribute('type', 'text');
   });
 });

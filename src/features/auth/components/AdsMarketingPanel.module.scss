@@ -1,109 +1,116 @@
+@use '../../../styles/ads-theme' as t;
+
 .panel {
   position: relative;
-  background: #08080a;
-  overflow: hidden;
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
+  padding: 40px 56px;
+  overflow: hidden;
+  background: t.$bg;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 
   @media (max-width: 900px) {
     display: none;
   }
 }
 
-.glowPink {
+.glowPink,
+.glowPurple,
+.scanlines {
   position: absolute;
-  top: -120px;
-  left: -80px;
+  pointer-events: none;
+}
+
+.glowPink {
+  top: -180px;
+  left: -160px;
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 46, 158, .18), transparent 65%);
-  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 46, 158, 0.32), transparent 65%);
 }
 
 .glowPurple {
-  position: absolute;
-  bottom: -100px;
-  right: -60px;
-  width: 420px;
-  height: 420px;
+  bottom: -200px;
+  right: -120px;
+  width: 560px;
+  height: 560px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(120, 40, 200, .14), transparent 65%);
-  pointer-events: none;
+  background: radial-gradient(circle, rgba(155, 123, 255, 0.28), transparent 65%);
 }
 
-.content {
+.scanlines {
+  inset: 0;
+  background: repeating-linear-gradient(transparent 0 38px, rgba(255, 255, 255, 0.025) 38px 39px);
+}
+
+.logoRow,
+.body {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 48px 56px;
-  width: 100%;
 }
 
 .logoRow {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
 }
 
-.logoWordmark {
-  font-family: 'Space Mono', monospace;
-  font-size: 13px;
+.wordmark {
+  font-family: t.$mono;
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: .18em;
   color: #f4f4f5;
 }
 
+.accent {
+  color: t.$accent;
+}
+
 .badge {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
+  font-family: t.$mono;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: .16em;
-  color: #ff2e9e;
-  background: rgba(255, 46, 158, .12);
-  border: 1px solid rgba(255, 46, 158, .35);
+  letter-spacing: 0.14em;
+  color: #ff8ec9;
+  border: 1px solid rgba(255, 46, 158, 0.4);
   border-radius: 6px;
   padding: 3px 8px;
-  line-height: 1;
 }
 
 .body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  margin: auto 0;
   padding: 48px 0;
 }
 
 .eyebrow {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  letter-spacing: .16em;
-  color: #ff2e9e;
   margin: 0 0 20px;
+  font-family: t.$mono;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #ff7ec2;
 }
 
 .title {
-  font-family: 'Archivo', sans-serif;
-  font-size: 54px;
+  margin: 0 0 18px;
+  max-width: 13ch;
+  font-family: t.$ui;
+  font-size: 56px;
   font-weight: 800;
-  letter-spacing: -.04em;
-  line-height: 1.05;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
   color: #f4f4f5;
-  margin: 0 0 20px;
 
   @media (max-width: 1200px) {
-    font-size: 42px;
+    font-size: 44px;
   }
 }
 
 .desc {
-  font-size: 16px;
-  color: #9a9aa2;
-  line-height: 1.6;
-  max-width: 400px;
-  margin: 0 0 32px;
+  margin: 0 0 36px;
+  max-width: 40ch;
+  font-size: 17px;
+  line-height: 1.55;
+  color: #b9b9c0;
 }
 
 .features {
@@ -112,21 +119,27 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  max-width: 440px;
 }
 
 .feature {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: #c4c4cc;
+  gap: 13px;
+  font-size: 15px;
+  color: #e7e7ea;
 }
 
-.featureDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ff2e9e;
-  flex-shrink: 0;
+.check {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: t.$accent-soft;
+  border: 1px solid rgba(255, 46, 158, 0.34);
+  color: #ff8ec9;
 }

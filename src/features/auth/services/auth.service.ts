@@ -1,5 +1,11 @@
 import { apiClient } from '@/shared/api/client';
-import type { AuthResponse, LoginRequest, RegisterRequest, RegisterResponse } from '../types/auth.types';
+import type {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  RegisterResponse,
+  VerifyEmailRequest,
+} from '../types/auth.types';
 
 // AuthController: POST /auth/login returns { user, accessToken, refreshToken,
 // refreshExpiresAt }. POST /auth/register now returns 201
@@ -19,5 +25,10 @@ export const authService = {
   resendVerification: async (email: string): Promise<void> => {
     // Always 202 — never reveals whether the address has a pending account.
     await apiClient.post('/auth/resend-verification', { email });
+  },
+
+  // 2xx on success; 400 { code: 'TOKEN_INVALID' } on unknown/expired/used token.
+  verifyEmail: async (payload: VerifyEmailRequest): Promise<void> => {
+    await apiClient.post('/auth/verify-email', payload);
   },
 };

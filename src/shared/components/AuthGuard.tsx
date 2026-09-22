@@ -12,7 +12,7 @@ import { ActiveAdvertiserAccountProvider } from '@/features/advertisers/provider
 // session lives in localStorage, unreachable from Next.js middleware), so
 // this is a client-side redirect guard, not a real access boundary. The
 // orchestrator API is the actual authorization boundary.
-const PUBLIC_PATHS = new Set(['/login', '/signup']);
+const PUBLIC_PATHS = new Set(['/login', '/signup', '/verify-email']);
 
 // Invite accept pages must render for logged-out visitors (they preview the
 // invite before choosing signup/login) AND for freshly-signed-up members who

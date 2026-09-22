@@ -40,6 +40,7 @@ describe('authService', () => {
       displayName: 'A',
       password: 'secret123',
       acceptTerms: true,
+      signupOrigin: 'ADS',
     });
 
     expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/register', {
@@ -47,6 +48,7 @@ describe('authService', () => {
       displayName: 'A',
       password: 'secret123',
       acceptTerms: true,
+      signupOrigin: 'ADS',
     });
     expect(result).toEqual({ verificationRequired: true });
   });
@@ -57,5 +59,13 @@ describe('authService', () => {
     await authService.resendVerification('a@b.com');
 
     expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/resend-verification', { email: 'a@b.com' });
+  });
+
+  it('verifies the email against /auth/verify-email', async () => {
+    mockedApiClient.post.mockResolvedValueOnce({ data: undefined });
+
+    await authService.verifyEmail({ token: 'good-token' });
+
+    expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/verify-email', { token: 'good-token' });
   });
 });

@@ -1,0 +1,53 @@
+@use '../../../styles/ads-theme' as t;
+
+// Inline "resend confirmation" form shown inside the expired card.
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 11px;
+  text-align: left;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: t.$text-dim;
+}
+
+// Nested one level so it outranks the design-system's single-class .input
+// rule regardless of CSS chunk order (see SignupForm.module.scss).
+.form .input {
+  height: 50px;
+  border-radius: 13px;
+  font-size: 15px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.form .submit {
+  width: 100%;
+  height: 50px;
+  margin-top: 4px;
+  border-radius: 13px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: t.$accent-ink;
+
+  &:focus-visible {
+    outline: 2px solid t.$accent;
+    outline-offset: 3px;
+  }
+}
+
+.error,
+.confirm {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.error { color: #f87171; }
+.confirm { color: t.$text-dim; }

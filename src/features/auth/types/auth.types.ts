@@ -21,6 +21,13 @@ export interface RegisterRequest {
   password: string;
   // CreateUserDto rejects anything but `true` with TERMS_REQUIRED.
   acceptTerms: true;
+  // Tells the backend which app's verification link to email — this app
+  // gets `${ADS_APP_URL}/verify-email?token=...` instead of the main site's.
+  signupOrigin: 'ADS';
+}
+
+export interface VerifyEmailRequest {
+  token: string;
 }
 
 export interface AuthResponse {

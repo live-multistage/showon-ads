@@ -21,7 +21,7 @@ const IconCard = () => svg(18, <><rect x="1" y="4" width="22" height="16" rx="2"
 
 // The auth screens render their own full-bleed brand layout (AdsMarketingPanel),
 // so the sidebar chrome is suppressed there — same as the main app's login.
-const CHROMELESS_PATHS = new Set(['/login', '/signup']);
+const CHROMELESS_PATHS = new Set(['/login', '/signup', '/verify-email']);
 
 interface NavItem {
   href: string;

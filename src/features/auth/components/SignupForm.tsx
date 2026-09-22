@@ -71,7 +71,13 @@ export function SignupForm({ initialEmail }: SignupFormProps) {
 
     const trimmedEmail = email.trim();
     mutate(
-      { email: trimmedEmail, displayName: displayName.trim(), password, acceptTerms: true },
+      {
+        email: trimmedEmail,
+        displayName: displayName.trim(),
+        password,
+        acceptTerms: true,
+        signupOrigin: 'ADS',
+      },
       { onSuccess: () => setSubmittedEmail(trimmedEmail) },
     );
   }

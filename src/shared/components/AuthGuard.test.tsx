@@ -59,6 +59,19 @@ describe('AuthGuard', () => {
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
+  it('renders children without redirecting on /verify-email even with no session', async () => {
+    currentPathname = '/verify-email';
+
+    renderWithProviders(
+      <AuthGuard>
+        <p>verify email page</p>
+      </AuthGuard>,
+    );
+
+    expect(screen.getByText('verify email page')).toBeInTheDocument();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
   it('shows the advertiser creation step when the session has zero accounts', async () => {
     localStorage.setItem('access_token', 'token');
     localStorage.setItem('refresh_token', 'refresh');

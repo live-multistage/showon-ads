@@ -53,6 +53,7 @@ describe('SignupFlow', () => {
         displayName: 'New User',
         password: 'super-secret',
         acceptTerms: true,
+        signupOrigin: 'ADS',
       });
     });
 

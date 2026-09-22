@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { Button, Input, Label } from '@live-show/design-system';
+import { Button, Checkbox, Input, Label } from '@live-show/design-system';
 import { normalizeError } from '@/shared/api/client';
 import { useRegisterMutation } from '../mutations/use-register.mutation';
 import { useResendVerificationMutation } from '../mutations/use-resend-verification.mutation';
@@ -12,7 +12,7 @@ import styles from './SignupForm.module.scss';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SITE_URL = 'https://showon.io';
 
-type Field = 'displayName' | 'email' | 'password';
+type Field = 'displayName' | 'email' | 'password' | 'acceptTerms';
 
 interface ValidationError {
   field: Field;
@@ -26,11 +26,22 @@ interface SignupFormProps {
   initialEmail?: string | null;
 }
 
-function validate(displayName: string, email: string, password: string): ValidationError | null {
+function validate(
+  displayName: string,
+  email: string,
+  password: string,
+  acceptTerms: boolean,
+): ValidationError | null {
   if (!displayName.trim()) return { field: 'displayName', message: 'Informe seu nome.' };
   if (!EMAIL_PATTERN.test(email.trim())) return { field: 'email', message: 'Informe um e-mail válido.' };
   if (password.length < 8) {
     return { field: 'password', message: 'A senha precisa ter ao menos 8 caracteres.' };
+  }
+  if (!acceptTerms) {
+    return {
+      field: 'acceptTerms',
+      message: 'Aceite os Termos de Uso e a Política de Privacidade para continuar.',
+    };
   }
   return null;
 }
@@ -44,6 +55,7 @@ export function SignupForm({ initialEmail }: SignupFormProps) {
   const [email, setEmail] = useState(initialEmail ?? '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [validationError, setValidationError] = useState<ValidationError | null>(null);
   const { mutate, isPending, error } = useRegisterMutation();
   const resend = useResendVerificationMutation();
@@ -53,13 +65,13 @@ export function SignupForm({ initialEmail }: SignupFormProps) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
-    const invalid = validate(displayName, email, password);
+    const invalid = validate(displayName, email, password, acceptTerms);
     setValidationError(invalid);
     if (invalid) return;
 
     const trimmedEmail = email.trim();
     mutate(
-      { email: trimmedEmail, displayName: displayName.trim(), password },
+      { email: trimmedEmail, displayName: displayName.trim(), password, acceptTerms: true },
       { onSuccess: () => setSubmittedEmail(trimmedEmail) },
     );
   }
@@ -197,6 +209,30 @@ export function SignupForm({ initialEmail }: SignupFormProps) {
                     </svg>
                   </button>
                 </div>
+              </div>
+
+              <div className={styles.termsRow}>
+                <Checkbox
+                  id="acceptTerms"
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                  disabled={isPending}
+                  aria-invalid={validationError?.field === 'acceptTerms' || undefined}
+                  aria-describedby={validationError?.field === 'acceptTerms' ? 'signup-error' : undefined}
+                />
+                <Label htmlFor="acceptTerms" className={styles.termsLabel}>
+                  <span>
+                    Li e aceito os{' '}
+                    <a href={`${SITE_URL}/termos`} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                      Termos de Uso
+                    </a>{' '}
+                    e a{' '}
+                    <a href={`${SITE_URL}/privacidade`} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                      Política de Privacidade
+                    </a>
+                    .
+                  </span>
+                </Label>
               </div>
 
               {errorMessage && (

@@ -19,6 +19,8 @@ export interface RegisterRequest {
   email: string;
   displayName: string;
   password: string;
+  // CreateUserDto rejects anything but `true` with TERMS_REQUIRED.
+  acceptTerms: true;
 }
 
 export interface AuthResponse {

@@ -136,6 +136,26 @@ $field-border: rgba(255, 255, 255, 0.08);
   }
 }
 
+// Nested like .form .label so it outranks the design-system Label rule.
+.termsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.termsRow button {
+  margin-top: 1px;
+}
+
+.form .termsLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #a1a1aa;
+  user-select: auto;
+}
+
 .togglePassword {
   position: absolute;
   right: 10px;

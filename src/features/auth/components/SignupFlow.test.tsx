@@ -44,6 +44,7 @@ describe('SignupFlow', () => {
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'new@example.com' } });
     fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
 
     await waitFor(() => {
@@ -51,6 +52,7 @@ describe('SignupFlow', () => {
         email: 'new@example.com',
         displayName: 'New User',
         password: 'super-secret',
+        acceptTerms: true,
       });
     });
 
@@ -75,6 +77,7 @@ describe('SignupFlow', () => {
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'new@example.com' } });
     fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
 
     await screen.findByText('Confira seu e-mail');
@@ -94,6 +97,7 @@ describe('SignupFlow', () => {
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'new@example.com' } });
     fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
 
     await screen.findByText('Confira seu e-mail');
@@ -121,5 +125,18 @@ describe('SignupFlow', () => {
     expect(screen.getByLabelText('Senha')).toHaveAttribute('type', 'password');
     fireEvent.click(screen.getByRole('button', { name: 'Mostrar senha' }));
     expect(screen.getByLabelText('Senha')).toHaveAttribute('type', 'text');
+  });
+
+  it('requires accepting the terms before registering', () => {
+    renderWithProviders(<SignupFlow />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/aceite os termos de uso/i);
+    expect(screen.getByRole('checkbox')).toHaveAttribute('aria-invalid', 'true');
+    expect(mockedAuthService.register).not.toHaveBeenCalled();
   });
 });

@@ -30,6 +30,13 @@ $esc-states: (
     ring: rgba(255, 46, 158, 0.28),
     tone: t.$accent,
   ),
+  unavailable: (
+    glow: rgba(250, 204, 21, 0.16),
+    bg: rgba(250, 204, 21, 0.1),
+    border: rgba(250, 204, 21, 0.3),
+    ring: rgba(250, 204, 21, 0.4),
+    tone: #facc15,
+  ),
 );
 
 @each $name, $s in $esc-states {

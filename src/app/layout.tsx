@@ -3,6 +3,7 @@ import { Toaster } from '@live-show/design-system';
 import { Providers } from '@/shared/providers';
 import { AppShell } from '@/shared/components/AppShell';
 import { AuthGuard } from '@/shared/components/AuthGuard';
+import { PlatformGate } from '@/shared/components/PlatformGate';
 import '@/styles/globals.scss';
 
 export const metadata: Metadata = {
@@ -18,9 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <body>
         <Providers>
-          <AppShell>
-            <AuthGuard>{children}</AuthGuard>
-          </AppShell>
+          <PlatformGate>
+            <AppShell>
+              <AuthGuard>{children}</AuthGuard>
+            </AppShell>
+          </PlatformGate>
           <Toaster />
         </Providers>
       </body>

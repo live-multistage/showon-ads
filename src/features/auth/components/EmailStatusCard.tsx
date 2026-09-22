@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Logo } from '@live-show/design-system';
 import styles from './EmailStatusCard.module.scss';
 
-export type EmailStatusVariant = 'loading' | 'success' | 'expired';
+export type EmailStatusVariant = 'loading' | 'success' | 'expired' | 'unavailable';
 
 export type EmailStatusAction =
   | { label: string; href: string }

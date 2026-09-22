@@ -73,7 +73,7 @@ describe('AuthGuard', () => {
       </AuthGuard>,
     );
 
-    expect(await screen.findByText('Create your advertiser account')).toBeInTheDocument();
+    expect(await screen.findByText('Crie sua conta de anunciante')).toBeInTheDocument();
     expect(screen.queryByText('protected content')).not.toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();
   });

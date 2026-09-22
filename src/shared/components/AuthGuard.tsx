@@ -45,12 +45,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isAccountsLoading) return null;
 
   if ((advertiserAccounts?.length ?? 0) === 0) {
-    return (
-      <AdvertiserOnboardingForm
-        title="Create your advertiser account"
-        description="You need an advertiser account before you can continue."
-      />
-    );
+    return <AdvertiserOnboardingForm />;
   }
 
   return <>{children}</>;

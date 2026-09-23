@@ -1,0 +1,10 @@
+<svg width="272" height="220" viewBox="0 0 272 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="showon.io">
+  <path d="M40 40 L40 180 L98 146" stroke="#FF2E9E" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path>
+  <path d="M40 40 L98 74" stroke="#FF2E9E" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path>
+  <circle cx="110" cy="110" r="7" fill="#FF2E9E"></circle>
+  <rect x="128" y="92" width="14" height="36" rx="7" fill="#FF2E9E"></rect>
+  <rect x="152" y="70" width="14" height="80" rx="7" fill="#FF2E9E"></rect>
+  <rect x="176" y="48" width="14" height="124" rx="7" fill="#FF2E9E"></rect>
+  <rect x="200" y="76" width="14" height="68" rx="7" fill="#FF2E9E"></rect>
+  <circle cx="232" cy="110" r="7" fill="#FF2E9E"></circle>
+</svg>

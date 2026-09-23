@@ -8,10 +8,10 @@ import '@/styles/globals.scss';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ads Manager',
-    template: '%s · Ads Manager',
+    default: 'Showon Ads Manager',
+    template: '%s · Showon Ads',
   },
-  description: 'Ads Manager for live-show advertisers.',
+  description: 'Gerencie campanhas de anúncios na Showon.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

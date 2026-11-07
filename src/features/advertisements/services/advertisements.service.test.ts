@@ -135,6 +135,16 @@ describe('advertisementsService', () => {
     expect(mockedApiClient.get).toHaveBeenCalledWith('/ads/ad-1/report');
   });
 
+  it('reads missing video/pause counters from an older API as zero', async () => {
+    mockedApiClient.get.mockResolvedValueOnce({ data: { adId: 'ad-1', impressions: 3 } });
+
+    const report = await advertisementsService.getReport('ad-1');
+
+    expect(report.video).toEqual({ q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 });
+    expect(report.pause).toEqual({ closed: 0 });
+    expect(report.impressions).toBe(3);
+  });
+
   it('uploads a banner as multipart form data', async () => {
     mockedApiClient.post.mockResolvedValueOnce({ data: { bannerUrl: 'https://cdn/banner.png' } });
     const file = new File(['abc'], 'banner.png', { type: 'image/png' });

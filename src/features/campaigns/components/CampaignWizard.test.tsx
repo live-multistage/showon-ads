@@ -478,10 +478,12 @@ describe('CampaignWizard', () => {
   });
 
   it('explains a missing creative reported by the backend', async () => {
-    mockChangeStatusMutateAsync.mockRejectedValue({ isAxiosError: true, response: { status: 400, data: { code: 'AD_CREATIVE_REQUIRED', message: 'x' } }, message: 'x' });
+    mockChangeStatusMutateAsync.mockRejectedValue({ isAxiosError: true, response: { status: 400, data: { code: 'AD_CREATIVE_REQUIRED', message: 'A pausa precisa de uma imagem.' } }, message: 'x' });
     render(<CampaignWizard />);
     await reachReviewWithEvent();
     fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
-    await waitFor(() => expect(toastErrorMock).toHaveBeenCalledWith(expect.stringContaining('Falta o arquivo do criativo')));
+    await waitFor(() =>
+      expect(toastErrorMock).toHaveBeenCalledWith('Campanha criada como rascunho. A pausa precisa de uma imagem.'),
+    );
   });
 });

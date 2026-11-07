@@ -11,6 +11,11 @@ vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
+let mockBalance: number | undefined = 18240;
+vi.mock('@/features/settings/queries/use-wallet', () => ({
+  useWalletQuery: () => ({ data: mockBalance === undefined ? undefined : { balanceCents: mockBalance, lowBalance: false } }),
+}));
+
 vi.mock('@/features/advertisements/queries/use-get-ad', () => ({ useGetAdQuery: vi.fn() }));
 vi.mock('@/features/advertisements/queries/use-ad-report', () => ({ useAdReportQuery: vi.fn() }));
 vi.mock('@/features/advertisements/queries/use-ad-reviews', () => ({ useAdReviewsQuery: vi.fn() }));
@@ -102,6 +107,7 @@ const mutateSpy = vi.fn();
 describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockBalance = 18240;
     mockedUseAdReportQuery.mockReturnValue({
       data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 2, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [] },
       isLoading: false,
@@ -123,14 +129,102 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByLabelText('Carregando campanha')).toBeInTheDocument();
   });
 
-  it('shows a not-found state when the ad fails to load', () => {
-    mockedUseGetAdQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true } as unknown as ReturnType<
+  const httpError = (status: number) => ({ isAxiosError: true, response: { status, data: {} }, message: 'x' });
+
+  it('shows a not-found state only for a 404', () => {
+    mockedUseGetAdQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: httpError(404) } as unknown as ReturnType<
       typeof useGetAdQuery
     >);
 
     render(<CampaignDetailPage id="missing" />);
 
     expect(screen.getByText('Anúncio não encontrado.')).toBeInTheDocument();
+  });
+
+  it('a failed load is an error with retry, not "não encontrada"', () => {
+    const refetch = vi.fn();
+    mockedUseGetAdQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: httpError(500), refetch } as unknown as ReturnType<
+      typeof useGetAdQuery
+    >);
+
+    render(<CampaignDetailPage id="ad-1" />);
+
+    expect(screen.queryByText('Anúncio não encontrado.')).toBeNull();
+    expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível carregar a campanha.');
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  describe('delivery diagnosis', () => {
+    const live = { status: 'ACTIVE' as const, endsAt: '2099-01-01T00:00:00.000Z' };
+
+    it('active with an empty wallet explains the stop and links to the wallet', () => {
+      mockBalance = 0;
+      mockAd(live);
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('status')).toHaveTextContent('Parada: a carteira está sem saldo');
+    });
+
+    it('shows nothing extra while delivering', () => {
+      mockAd(live);
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.queryByRole('status')).toBeNull();
+    });
+
+    it('under review says it is waiting for the team', () => {
+      mockAd({ status: 'REVIEW' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('status')).toHaveTextContent('Aguardando análise');
+    });
+
+    it('a video draft without file says the video is missing', () => {
+      mockAd({ status: 'DRAFT', format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: null });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('status')).toHaveTextContent('Falta enviar o vídeo');
+    });
+  });
+
+  describe('video and pause creative', () => {
+    it('plays the video of a pre-roll campaign and shows its duration', () => {
+      mockAd({ format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: 'https://cdn.example.com/v.mp4', videoDurationSec: 20 });
+      const { container } = render(<CampaignDetailPage id="ad-1" />);
+      expect(container.querySelector('video')).toHaveAttribute('src', 'https://cdn.example.com/v.mp4');
+      expect(screen.getByText('20 s')).toBeInTheDocument();
+    });
+
+    it('shows the pause image and the variant in the type', () => {
+      mockAd({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN', bannerUrl: 'https://cdn.example.com/p.webp' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText('Pausa · Tela cheia').length).toBeGreaterThan(0);
+      expect(screen.getByRole('img', { name: 'Summer Promo' })).toHaveAttribute('src', 'https://cdn.example.com/p.webp');
+    });
+  });
+
+  describe('submit for review with a video', () => {
+    it('is not blocked for a video with an external destination once the video exists', () => {
+      mockAd({
+        status: 'DRAFT',
+        format: 'VIDEO_16_9',
+        placements: ['PRE_ROLL'],
+        bannerUrl: null,
+        videoUrl: 'https://cdn.example.com/v.mp4',
+        destination: { type: 'EXTERNAL_URL', url: 'https://example.com' },
+      });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeEnabled();
+    });
+
+    it('is blocked for a video ad without the file', () => {
+      mockAd({ status: 'DRAFT', format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: null });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeDisabled();
+    });
+
+    it('is blocked for a pause ad without the image', () => {
+      mockAd({ status: 'DRAFT', format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], bannerUrl: null });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeDisabled();
+    });
   });
 
   it('renders metrics from the report query', () => {

@@ -1,8 +1,6 @@
-import type { Metadata } from 'next';
-import { ReportsPage } from '@/features/campaigns/components/ReportsPage';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Relatórios' };
-
+// Relatórios saiu do menu: o desempenho de cada campanha mora no detalhe dela.
 export default function ReportsRoute() {
-  return <ReportsPage />;
+  redirect('/');
 }

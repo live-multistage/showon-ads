@@ -21,6 +21,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@live-show/design-system';
+import { useWalletQuery } from '@/features/settings/queries/use-wallet';
+import { normalizeError } from '@/shared/api/client';
 import { useGetAdQuery } from '@/features/advertisements/queries/use-get-ad';
 import { useAdReportQuery } from '@/features/advertisements/queries/use-ad-report';
 import { useAdReviewsQuery } from '@/features/advertisements/queries/use-ad-reviews';
@@ -34,8 +36,10 @@ import type {
   AdStatusAction,
 } from '@/features/advertisements/types/advertisement.types';
 import { formatCentsToBRL } from '../utils/format-currency';
-import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, placementLabel, destinationLabel } from '../utils/ad-display';
+import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, campaignKindBadge, campaignKindOf, placementLabel, destinationLabel } from '../utils/ad-display';
+import { deriveDelivery } from '../utils/derive-delivery';
 import { EditCampaignForm } from './EditCampaignForm';
+import { DeliveryDiagnosis } from './DeliveryDiagnosis';
 import styles from './CampaignDetailPage.module.scss';
 
 // Matches Ad#update's editable-status guard (domain/ad.ts) — ACTIVE/REVIEW/
@@ -71,10 +75,18 @@ function availableActions(status: AdStatus): StatusActionCfg[] {
 
 // Mirrors Ad#submitForReview's own guards, so submit is disabled client-side
 // instead of round-tripping to a 4xx: a legacy ad has no destination at all,
-// and an EXTERNAL_URL ad needs a banner before it can go to review.
+// an EXTERNAL_URL banner ad needs its banner, a video ad needs its video and a
+// pause ad needs its image. A video with an external destination is fine: its
+// creative is the video, not a banner.
 function submitBlockReason(ad: AdResponse): string | null {
   if (ad.destination === null) {
     return 'Destino obrigatório: edite a campanha e defina um destino antes de enviar para revisão.';
+  }
+  if (ad.format === 'VIDEO_16_9') {
+    return ad.videoUrl ? null : 'Envie o vídeo antes de enviar para análise.';
+  }
+  if (ad.format === 'WIDE_16_9' && !ad.bannerUrl) {
+    return 'Envie a imagem da pausa antes de enviar para análise.';
   }
   if (ad.destination.type === 'EXTERNAL_URL' && !ad.bannerUrl) {
     return 'Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.';
@@ -94,10 +106,11 @@ interface CampaignDetailPageProps {
 }
 
 export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
-  const { data: ad, isLoading, isError } = useGetAdQuery(id);
+  const { data: ad, isLoading, isError, error, refetch } = useGetAdQuery(id);
   const { data: report } = useAdReportQuery(id);
   const { data: reviews } = useAdReviewsQuery(id);
   const changeStatus = useChangeAdStatusMutation();
+  const wallet = useWalletQuery(ad?.advertiserAccountId);
   const [editing, setEditing] = useState(false);
 
   if (isLoading) {
@@ -106,6 +119,22 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
         <Skeleton style={{ height: '2rem', width: '16rem' }} />
         <Skeleton style={{ height: '8rem' }} />
         <Skeleton style={{ height: '8rem' }} />
+      </div>
+    );
+  }
+
+  // Falha de rede/servidor não é "não encontrada": a campanha existe, só não carregou.
+  if (isError && normalizeError(error).status !== 404) {
+    return (
+      <div className={styles.centered} role="alert">
+        <p>Não foi possível carregar a campanha.</p>
+        <p>Verifique a conexão e tente de novo. Suas campanhas continuam no ar normalmente.</p>
+        <Button variant="outline" onClick={() => refetch()}>
+          Tentar de novo
+        </Button>
+        <Link href="/" className={styles.backLink}>
+          Voltar para campanhas
+        </Link>
       </div>
     );
   }
@@ -125,6 +154,14 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
   const actions = availableActions(ad.status);
   const rejectionReason = reviews?.find((r) => r.outcome === 'REJECT')?.reason ?? null;
   const blockReason = submitBlockReason(ad);
+  // Gasto do dia: a série diária do relatório traz o dia de hoje (UTC) quando houve entrega.
+  const today = new Date().toISOString().slice(0, 10);
+  const spentTodayCents = report ? (report.dailyBreakdown.find((d) => d.date.slice(0, 10) === today)?.spendCents ?? 0) : null;
+  const delivery = deriveDelivery(ad, {
+    now: new Date(),
+    walletBalanceCents: wallet.data?.balanceCents ?? null,
+    spentTodayCents,
+  });
   // Reviews come back oldest-first from the API; show the most recent first.
   const timeline = reviews ? [...reviews].reverse() : [];
 
@@ -158,8 +195,9 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
           <Badge variant={STATUS_BADGE_VARIANT[ad.status]}>{STATUS_LABEL[ad.status]}</Badge>
         </div>
         <p className={styles.meta}>
-          {FORMAT_LABEL[ad.format]} · {destinationLabel(ad.destination)}
+          {campaignKindBadge(ad)} · {FORMAT_LABEL[ad.format]} · {destinationLabel(ad.destination)}
         </p>
+        <DeliveryDiagnosis delivery={delivery} startsAt={ad.startsAt} rejectionReason={rejectionReason} />
         {canEdit && (
           <div className={styles.editRow}>
             <Button variant="outline" onClick={() => setEditing(true)}>
@@ -397,7 +435,9 @@ function PerformanceChart({ points }: { points: AdDailyBreakdown[] }) {
 
 // ── Creative preview ──────────────────────────────────
 function CreativeCard({ ad }: { ad: AdResponse }) {
-  const fileName = ad.bannerUrl ? ad.bannerUrl.split('/').pop() : null;
+  const kind = campaignKindOf(ad.format);
+  const url = kind === 'preroll' ? ad.videoUrl : ad.bannerUrl;
+  const fileName = url ? url.split('/').pop() : null;
   return (
     <section className={styles.panel}>
       <div className={styles.panelHead}>
@@ -409,18 +449,33 @@ function CreativeCard({ ad }: { ad: AdResponse }) {
         CRIATIVO
       </div>
       <div className={styles.creativePreview}>
-        {ad.bannerUrl ? (
+        {kind === 'preroll' && ad.videoUrl ? (
+          // eslint-disable-next-line jsx-a11y/media-has-caption -- vídeo do próprio anunciante
+          <video src={ad.videoUrl} controls preload="metadata" className={styles.creativeImg} aria-label={ad.title} />
+        ) : kind !== 'preroll' && ad.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={ad.bannerUrl} alt={ad.title} className={styles.creativeImg} />
         ) : (
-          <span className={styles.creativeName}>{ad.title.toUpperCase()}</span>
+          <span className={styles.creativeName}>
+            {kind === 'preroll' ? 'VÍDEO NÃO ENVIADO' : ad.title.toUpperCase()}
+          </span>
         )}
       </div>
       <dl className={styles.specList}>
         <div className={styles.specRow}>
+          <dt>TIPO</dt>
+          <dd>{campaignKindBadge(ad)}</dd>
+        </div>
+        <div className={styles.specRow}>
           <dt>FORMATO</dt>
           <dd>{FORMAT_LABEL[ad.format]}</dd>
         </div>
+        {kind === 'preroll' && ad.videoDurationSec != null && (
+          <div className={styles.specRow}>
+            <dt>DURAÇÃO</dt>
+            <dd>{ad.videoDurationSec} s</dd>
+          </div>
+        )}
         <div className={styles.specRow}>
           <dt>DESTINO</dt>
           <dd>{destinationLabel(ad.destination)}</dd>

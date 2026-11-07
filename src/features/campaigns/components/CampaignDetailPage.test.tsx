@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { CampaignDetailPage } from './CampaignDetailPage';
 import { useGetAdQuery } from '@/features/advertisements/queries/use-get-ad';
 import { useAdReportQuery } from '@/features/advertisements/queries/use-ad-report';
@@ -102,6 +102,15 @@ function mockReviews(reviews: AdReviewEntry[]) {
   } as unknown as ReturnType<typeof useAdReviewsQuery>);
 }
 
+const ZERO_VIDEO = { q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 };
+
+function mockReport(impressions: number, extra: Record<string, unknown>) {
+  mockedUseAdReportQuery.mockReturnValue({
+    data: { adId: 'ad-1', title: 'x', status: 'ACTIVE', impressions, clicks: 0, ctr: null, spendCents: 0, dailyBreakdown: [], placementBreakdown: [], video: ZERO_VIDEO, pause: { closed: 0 }, ...extra },
+    isLoading: false,
+  } as unknown as ReturnType<typeof useAdReportQuery>);
+}
+
 const mutateSpy = vi.fn();
 
 describe('CampaignDetailPage', () => {
@@ -109,7 +118,7 @@ describe('CampaignDetailPage', () => {
     vi.clearAllMocks();
     mockBalance = 18240;
     mockedUseAdReportQuery.mockReturnValue({
-      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 2, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [] },
+      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 2, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [], video: ZERO_VIDEO, pause: { closed: 0 } },
       isLoading: false,
     } as unknown as ReturnType<typeof useAdReportQuery>);
     mockReviews([]);
@@ -165,10 +174,10 @@ describe('CampaignDetailPage', () => {
       expect(screen.getByRole('status')).toHaveTextContent('Parada: a carteira está sem saldo');
     });
 
-    it('shows nothing extra while delivering', () => {
+    it('shows the positive diagnosis while delivering', () => {
       mockAd(live);
       render(<CampaignDetailPage id="ad-1" />);
-      expect(screen.queryByRole('status')).toBeNull();
+      expect(screen.getByRole('status')).toHaveTextContent('Entregando normalmente');
     });
 
     it('under review says it is waiting for the team', () => {
@@ -401,5 +410,45 @@ describe('CampaignDetailPage', () => {
 
     expect(screen.getByText('Feed')).toBeInTheDocument();
     expect(screen.getByText('800')).toBeInTheDocument();
+  });
+
+  describe('format-specific stats', () => {
+    it('video: shows starts KPI and retention percentages over impressions', () => {
+      mockAd({ format: 'VIDEO_16_9' });
+      mockReport(200, { video: { q25: 150, q50: 100, q75: 50, complete: 20, skip: 40, unmute: 10 } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('INÍCIOS DO VÍDEO')).toBeInTheDocument();
+      expect(screen.queryByText('IMPRESSÕES')).not.toBeInTheDocument();
+      const card = within(screen.getByRole('region', { name: 'Retenção do vídeo' }));
+      expect(card.getByRole('progressbar', { name: '25%' }).closest('li')).toHaveTextContent('75%150');
+      expect(card.getByText('Pularam').closest('div')).toHaveTextContent('20% · 40');
+      expect(card.getByText('Ativaram o som').closest('div')).toHaveTextContent('5% · 10');
+    });
+
+    it('video: shows a dash instead of dividing by zero', () => {
+      mockAd({ format: 'VIDEO_16_9' });
+      mockReport(0, {});
+      render(<CampaignDetailPage id="ad-1" />);
+      const card = within(screen.getByRole('region', { name: 'Retenção do vídeo' }));
+      expect(card.getByRole('progressbar', { name: 'Até o fim' }).closest('li')).toHaveTextContent('—');
+      expect(card.queryByText(/NaN|Infinity/)).not.toBeInTheDocument();
+    });
+
+    it('pause: shows exhibitions KPI and closed share', () => {
+      mockAd({ format: 'WIDE_16_9' });
+      mockReport(50, { pause: { closed: 17 } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('EXIBIÇÕES NA PAUSA')).toBeInTheDocument();
+      expect(within(screen.getByRole('region', { name: 'Na pausa' })).getByText('Fecharam o anúncio').closest('div')).toHaveTextContent('34% · 17');
+      expect(screen.queryByRole('region', { name: 'Retenção do vídeo' })).not.toBeInTheDocument();
+    });
+
+    it('banner: shows neither card', () => {
+      mockAd({ format: 'HORIZONTAL_728x90' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('IMPRESSÕES')).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Retenção do vídeo' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Na pausa' })).not.toBeInTheDocument();
+    });
   });
 });

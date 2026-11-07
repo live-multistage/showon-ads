@@ -9,7 +9,7 @@ interface Copy {
 
 // Texto de apoio por situação: o que está acontecendo e o que fazer.
 const COPY: Record<Delivery, Copy | null> = {
-  ok: null,
+  ok: { title: 'Entregando normalmente', text: 'Sem nenhuma ação necessária: a campanha está sendo exibida.' },
   nofunds: {
     title: 'Parada: a carteira está sem saldo',
     text: 'Ao adicionar créditos, a campanha volta na hora, sem nova análise.',

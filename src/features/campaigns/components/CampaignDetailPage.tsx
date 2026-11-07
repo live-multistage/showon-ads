@@ -40,6 +40,7 @@ import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, campaignKindBadge, ca
 import { deriveDelivery } from '../utils/derive-delivery';
 import { EditCampaignForm } from './EditCampaignForm';
 import { DeliveryDiagnosis } from './DeliveryDiagnosis';
+import { PauseStatsCard, VideoRetentionCard } from './FormatStatsCards';
 import styles from './CampaignDetailPage.module.scss';
 
 // Matches Ad#update's editable-status guard (domain/ad.ts) — ACTIVE/REVIEW/
@@ -163,6 +164,8 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
     spentTodayCents,
   });
   // Reviews come back oldest-first from the API; show the most recent first.
+  const impressionsLabel =
+    ad.format === 'VIDEO_16_9' ? 'INÍCIOS DO VÍDEO' : ad.format === 'WIDE_16_9' ? 'EXIBIÇÕES NA PAUSA' : 'IMPRESSÕES';
   const timeline = reviews ? [...reviews].reverse() : [];
 
   if (editing) {
@@ -252,12 +255,15 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
       <section className={styles.metricsSection}>
         <h2 className={styles.sectionTitle}>Métricas</h2>
         <div className={styles.metricsGrid}>
-          <Metric icon="impressions" label="IMPRESSÕES" value={report ? report.impressions.toLocaleString('pt-BR') : '—'} />
+          <Metric icon="impressions" label={impressionsLabel} value={report ? report.impressions.toLocaleString('pt-BR') : '—'} />
           <Metric icon="clicks" label="CLIQUES" value={report ? report.clicks.toLocaleString('pt-BR') : '—'} />
           <Metric icon="ctr" label="CTR" value={report?.ctr != null ? `${report.ctr.toFixed(2)}%` : '—'} accent />
           <Metric icon="spend" label="GASTO" value={report ? formatCentsToBRL(report.spendCents) : '—'} />
         </div>
       </section>
+
+      {report && ad.format === 'VIDEO_16_9' && <VideoRetentionCard report={report} />}
+      {report && ad.format === 'WIDE_16_9' && <PauseStatsCard report={report} />}
 
       {report && report.dailyBreakdown.length > 1 && (
         <section className={styles.chartCard}>

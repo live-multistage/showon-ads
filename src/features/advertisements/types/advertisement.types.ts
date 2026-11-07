@@ -133,6 +133,20 @@ export interface AdPlacementBreakdownItem {
   spendCents: number;
 }
 
+// Contagens absolutas do período (zeros se nunca houve evento).
+export interface AdVideoStats {
+  q25: number;
+  q50: number;
+  q75: number;
+  complete: number;
+  skip: number;
+  unmute: number;
+}
+
+export interface AdPauseStats {
+  closed: number;
+}
+
 export interface AdReportResponse {
   adId: string;
   title: string;
@@ -143,6 +157,8 @@ export interface AdReportResponse {
   spendCents: number;
   dailyBreakdown: AdDailyBreakdown[];
   placementBreakdown: AdPlacementBreakdownItem[];
+  video: AdVideoStats;
+  pause: AdPauseStats;
 }
 
 // Mirrors AdvertiserAccount.toJSON() in orchestrator's domain/advertiser-account.ts.

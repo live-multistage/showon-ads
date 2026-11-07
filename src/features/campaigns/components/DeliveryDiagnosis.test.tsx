@@ -7,9 +7,10 @@ vi.mock('next/link', () => ({
 }));
 
 describe('DeliveryDiagnosis', () => {
-  it('renders nothing while the campaign is simply delivering', () => {
-    const { container } = render(<DeliveryDiagnosis delivery="ok" startsAt="2026-11-01T00:00:00Z" />);
-    expect(container).toBeEmptyDOMElement();
+  it('shows the positive diagnosis while the campaign is delivering', () => {
+    render(<DeliveryDiagnosis delivery="ok" startsAt="2026-11-01T00:00:00Z" />);
+    expect(screen.getByRole('status')).toHaveTextContent('Entregando normalmente');
+    expect(screen.queryByTestId('diagnosis-action')).not.toBeInTheDocument();
   });
 
   it('no funds: explains it comes back on its own and links to the wallet', () => {

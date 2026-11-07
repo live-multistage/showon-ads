@@ -1,0 +1,93 @@
+@use '../../../styles/ads-theme' as ads;
+
+.card {
+  background: ads.$surface;
+  border: 1px solid ads.$border;
+  border-radius: 20px;
+  padding: 22px;
+  margin-bottom: 28px;
+}
+
+.title {
+  margin: 0 0 16px;
+  font-family: ads.$mono;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: ads.$text;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 7rem 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-family: ads.$mono;
+  font-size: 12px;
+  color: ads.$text-dim;
+}
+
+.value {
+  font-weight: 700;
+  color: ads.$text;
+  text-align: right;
+}
+
+.count {
+  margin-left: 8px;
+  font-weight: 400;
+  color: ads.$text-muted;
+}
+
+.bar {
+  width: 100%;
+  height: 8px;
+  border: 0;
+  border-radius: ads.$radius-pill;
+  background: ads.$surface-2;
+  appearance: none;
+
+  &::-webkit-progress-bar {
+    background: ads.$surface-2;
+    border-radius: ads.$radius-pill;
+  }
+  &::-webkit-progress-value {
+    background: ads.$accent;
+    border-radius: ads.$radius-pill;
+  }
+  &::-moz-progress-bar {
+    background: ads.$accent;
+    border-radius: ads.$radius-pill;
+  }
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  margin: 16px 0 0;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid ads.$border-soft;
+  font-family: ads.$mono;
+  font-size: 12px;
+  color: ads.$text-dim;
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+    color: ads.$text;
+  }
+}

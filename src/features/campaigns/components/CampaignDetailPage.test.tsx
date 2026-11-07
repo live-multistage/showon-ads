@@ -12,7 +12,15 @@ vi.mock('next/link', () => ({
 }));
 
 let mockBalance: number | undefined = 18240;
+let mockEventTitle: string | undefined;
+vi.mock('@/features/advertisements/queries/use-event-title', () => ({
+  useEventTitleQuery: () => ({ data: mockEventTitle }),
+}));
+
 vi.mock('@/features/settings/queries/use-wallet', () => ({
+  useAdvertiserSettingsQuery: () => ({
+    data: { pauseMinBids: { STANDARD: { CPM: 800, CPC: 40 }, FULLSCREEN: { CPM: 1400, CPC: 70 } } },
+  }),
   useWalletQuery: () => ({ data: mockBalance === undefined ? undefined : { balanceCents: mockBalance, lowBalance: false } }),
 }));
 
@@ -117,6 +125,7 @@ describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockBalance = 18240;
+    mockEventTitle = undefined;
     mockedUseAdReportQuery.mockReturnValue({
       data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 2, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [], video: ZERO_VIDEO, pause: { closed: 0 } },
       isLoading: false,
@@ -449,6 +458,53 @@ describe('CampaignDetailPage', () => {
       expect(screen.getByText('IMPRESSÕES')).toBeInTheDocument();
       expect(screen.queryByRole('region', { name: 'Retenção do vídeo' })).not.toBeInTheDocument();
       expect(screen.queryByRole('region', { name: 'Na pausa' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('details copy', () => {
+    it('calls the section "Por posição" and shows no storage file name', () => {
+      mockAd({ status: 'ACTIVE', bannerUrl: 'https://cdn.example.com/ads/4b1f-uuid.png' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('Por posição')).toBeInTheDocument();
+      expect(screen.queryByText(/Breakdown/)).toBeNull();
+      expect(screen.queryByText('ARQUIVO')).toBeNull();
+      expect(screen.queryByText(/4b1f-uuid/)).toBeNull();
+    });
+
+    it('names the destination event', () => {
+      mockEventTitle = 'Rock in Rio 2026';
+      mockAd({ destination: { type: 'EVENT', eventId: 'e1' } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText(/Evento · Rock in Rio 2026/).length).toBeGreaterThan(0);
+    });
+
+    it('shows the domain of an external destination', () => {
+      mockAd({ destination: { type: 'EXTERNAL_URL', url: 'https://www.serraalta.com.br/x' } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText(/Link · serraalta\.com\.br/).length).toBeGreaterThan(0);
+    });
+
+    it('stacks the title above its metadata', () => {
+      mockAd({});
+      render(<CampaignDetailPage id="ad-1" />);
+      const heading = screen.getByRole('heading', { level: 1, name: 'Summer Promo' });
+      const meta = screen.getByText(/Banner · /);
+      expect(heading.compareDocumentPosition(meta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+  });
+
+  describe('pause minimum bid', () => {
+    it('shows the variant minimum in the budget card', () => {
+      mockAd({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN', billingModel: 'CPM', bannerUrl: 'https://x/p.webp' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('LANCE MÍNIMO')).toBeInTheDocument();
+      expect(screen.getByText('R$ 14,00 por mil · Tela cheia')).toBeInTheDocument();
+    });
+
+    it('banners show no minimum', () => {
+      mockAd({});
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.queryByText('LANCE MÍNIMO')).toBeNull();
     });
   });
 });

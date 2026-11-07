@@ -3,6 +3,8 @@
 import { Banner } from '@/shared/components/Banner';
 import { PAUSE_VARIANT_NAME, type CampaignWizardDraft, type WizardStepId } from '../../hooks/use-campaign-wizard';
 import { formatCostPerImpression } from '../../utils/brl';
+import { pauseMinimumLabel } from '../../utils/pause-minimum';
+import type { PauseMinBids } from '@/features/advertisements/types/advertisement.types';
 import { PLACEMENT_LABEL } from '../../utils/ad-display';
 import { formatCentsToBRL, reaisToCents } from '../../utils/format-currency';
 import { StepHeader } from './StepHeader';
@@ -61,9 +63,11 @@ interface ReviewStepProps {
   balanceCents: number | null;
   onEdit: (step: WizardStepId) => void;
   submitFailed?: boolean;
+  pauseMinBids?: PauseMinBids;
 }
 
-export function ReviewStep({ draft, balanceCents, onEdit, submitFailed = false }: ReviewStepProps) {
+export function ReviewStep({ draft, balanceCents, onEdit, submitFailed = false, pauseMinBids }: ReviewStepProps) {
+  const minimum = draft.kind === 'pause' ? pauseMinimumLabel(draft.pauseVariant, draft.billingModel, pauseMinBids) : null;
   const destinationLabel =
     draft.destinationType === 'EVENT' ? (draft.event?.title ?? '—') : draft.destinationType === 'EXTERNAL_URL' ? draft.externalUrl : '—';
   const dailyCents = reaisToCents(draft.dailyBudgetReais);
@@ -109,6 +113,7 @@ export function ReviewStep({ draft, balanceCents, onEdit, submitFailed = false }
         {draft.billingModel === 'CPM' && (
           <Row label="Cada impressão" value={formatCostPerImpression(reaisToCents(draft.bidReais))} />
         )}
+        {minimum && <Row label="Lance mínimo" value={minimum} />}
         <Row label="Por dia" value={formatCentsToBRL(dailyCents)} />
         <Row label="Limite total" value={formatCentsToBRL(reaisToCents(draft.totalLimitReais))} />
         <Row label="Período" value={periodLabel(draft.startsAt, draft.endsAt)} />

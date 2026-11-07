@@ -149,7 +149,7 @@ export function CampaignWizard() {
       {isReview ? (
         <div className={styles.reviewWrap}>
           <div className={styles.stepCard}>
-            <ReviewStep draft={draft} balanceCents={wallet.data?.balanceCents ?? null} onEdit={goToStep} submitFailed={createFailed} />
+            <ReviewStep draft={draft} balanceCents={wallet.data?.balanceCents ?? null} onEdit={goToStep} submitFailed={createFailed} pauseMinBids={pauseMinBids} />
             {submitBlockedByBanner && (
               <p className={styles.error} role="alert">
                 Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.

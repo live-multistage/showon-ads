@@ -68,6 +68,17 @@ export function destinationLabel(destination: AdDestination | null): string {
   return destination.type === 'EVENT' ? 'Evento' : 'URL externa';
 }
 
+// Destino com nome: evento pelo título (quando conhecido) e link externo pelo domínio.
+export function destinationName(destination: AdDestination | null, eventTitle?: string | null): string {
+  if (!destination) return 'Sem destino';
+  if (destination.type === 'EVENT') return eventTitle ? `Evento · ${eventTitle}` : 'Evento';
+  try {
+    return `Link · ${new URL(destination.url).hostname.replace(/^www\./, '')}`;
+  } catch {
+    return 'URL externa';
+  }
+}
+
 export const FORMAT_SHORT: Record<AdFormat, string> = {
   HORIZONTAL_728x90: '728×90',
   VERTICAL_300x600: '300×600',

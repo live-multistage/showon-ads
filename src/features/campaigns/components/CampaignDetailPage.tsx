@@ -21,7 +21,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@live-show/design-system';
-import { useWalletQuery } from '@/features/settings/queries/use-wallet';
+import { useEventTitleQuery } from '@/features/advertisements/queries/use-event-title';
+import { useAdvertiserSettingsQuery, useWalletQuery } from '@/features/settings/queries/use-wallet';
 import { normalizeError } from '@/shared/api/client';
 import { useGetAdQuery } from '@/features/advertisements/queries/use-get-ad';
 import { useAdReportQuery } from '@/features/advertisements/queries/use-ad-report';
@@ -36,8 +37,9 @@ import type {
   AdStatusAction,
 } from '@/features/advertisements/types/advertisement.types';
 import { formatCentsToBRL } from '../utils/format-currency';
-import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, campaignKindBadge, campaignKindOf, placementLabel, destinationLabel } from '../utils/ad-display';
+import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, campaignKindBadge, campaignKindOf, placementLabel, destinationName } from '../utils/ad-display';
 import { deriveDelivery } from '../utils/derive-delivery';
+import { pauseMinimumLabel } from '../utils/pause-minimum';
 import { EditCampaignForm } from './EditCampaignForm';
 import { DeliveryDiagnosis } from './DeliveryDiagnosis';
 import { PauseStatsCard, VideoRetentionCard } from './FormatStatsCards';
@@ -112,6 +114,9 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
   const { data: reviews } = useAdReviewsQuery(id);
   const changeStatus = useChangeAdStatusMutation();
   const wallet = useWalletQuery(ad?.advertiserAccountId);
+  const settings = useAdvertiserSettingsQuery();
+  const eventId = ad?.destination?.type === 'EVENT' ? ad.destination.eventId : undefined;
+  const eventTitle = useEventTitleQuery(eventId).data;
   const [editing, setEditing] = useState(false);
 
   if (isLoading) {
@@ -198,7 +203,7 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
           <Badge variant={STATUS_BADGE_VARIANT[ad.status]}>{STATUS_LABEL[ad.status]}</Badge>
         </div>
         <p className={styles.meta}>
-          {campaignKindBadge(ad)} · {FORMAT_LABEL[ad.format]} · {destinationLabel(ad.destination)}
+          {campaignKindBadge(ad)} · {FORMAT_LABEL[ad.format]} · {destinationName(ad.destination, eventTitle)}
         </p>
         <DeliveryDiagnosis delivery={delivery} startsAt={ad.startsAt} rejectionReason={rejectionReason} />
         {canEdit && (
@@ -288,8 +293,12 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
       )}
 
       <div className={styles.splitRow}>
-        <CreativeCard ad={ad} />
-        <BudgetCard ad={ad} report={report} />
+        <CreativeCard ad={ad} eventTitle={eventTitle} />
+        <BudgetCard
+          ad={ad}
+          report={report}
+          pauseMinimum={campaignKindOf(ad.format) === 'pause' ? pauseMinimumLabel(ad.pauseVariant ?? 'STANDARD', ad.billingModel, settings.data?.pauseMinBids) : null}
+        />
       </div>
 
       <Card>
@@ -319,7 +328,7 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Breakdown por posição</CardTitle>
+          <CardTitle>Por posição</CardTitle>
         </CardHeader>
         <CardContent>
           {report && report.placementBreakdown.length > 0 ? (
@@ -440,10 +449,8 @@ function PerformanceChart({ points }: { points: AdDailyBreakdown[] }) {
 }
 
 // ── Creative preview ──────────────────────────────────
-function CreativeCard({ ad }: { ad: AdResponse }) {
+function CreativeCard({ ad, eventTitle }: { ad: AdResponse; eventTitle?: string | null }) {
   const kind = campaignKindOf(ad.format);
-  const url = kind === 'preroll' ? ad.videoUrl : ad.bannerUrl;
-  const fileName = url ? url.split('/').pop() : null;
   return (
     <section className={styles.panel}>
       <div className={styles.panelHead}>
@@ -484,11 +491,7 @@ function CreativeCard({ ad }: { ad: AdResponse }) {
         )}
         <div className={styles.specRow}>
           <dt>DESTINO</dt>
-          <dd>{destinationLabel(ad.destination)}</dd>
-        </div>
-        <div className={styles.specRow}>
-          <dt>ARQUIVO</dt>
-          <dd>{fileName ?? '—'}</dd>
+          <dd>{destinationName(ad.destination, eventTitle)}</dd>
         </div>
       </dl>
     </section>
@@ -498,7 +501,7 @@ function CreativeCard({ ad }: { ad: AdResponse }) {
 // ── Budget tracker ────────────────────────────────────
 // spend / limit gauge + daily-average, all derived from real ad totals. Daily
 // average = spend ÷ days the campaign has been live so far.
-function BudgetCard({ ad, report }: { ad: AdResponse; report?: AdReportResponse }) {
+function BudgetCard({ ad, report, pauseMinimum }: { ad: AdResponse; report?: AdReportResponse; pauseMinimum?: string | null }) {
   const spent = ad.totalSpendCents;
   const limit = ad.totalLimitCents;
   const remaining = Math.max(0, limit - spent);
@@ -545,6 +548,12 @@ function BudgetCard({ ad, report }: { ad: AdResponse; report?: AdReportResponse 
           <dt>LIMITE</dt>
           <dd>{formatCentsToBRL(limit)}</dd>
         </div>
+        {pauseMinimum && (
+          <div className={styles.specRow}>
+            <dt>LANCE MÍNIMO</dt>
+            <dd>{pauseMinimum}</dd>
+          </div>
+        )}
         <div className={styles.specRow}>
           <dt>DIÁRIO MÉD.</dt>
           <dd>{formatCentsToBRL(dailyAvg)}</dd>

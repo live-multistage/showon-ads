@@ -498,4 +498,24 @@ describe('CampaignWizard', () => {
       expect(toastErrorMock).toHaveBeenCalledWith('Campanha criada como rascunho. A pausa precisa de uma imagem.'),
     );
   });
+
+  it('review: a pause campaign shows the variant minimum', () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Tela cheia/ }));
+    fillCreativeFields();
+    fillExternalUrlDestination();
+    next();
+    next();
+    fillBudgetStep({ bid: '15' });
+    next();
+    expect(screen.getByText('Lance mínimo')).toBeInTheDocument();
+    expect(screen.getByText('R$ 14,00 por mil · Tela cheia')).toBeInTheDocument();
+  });
+
+  it('review: a banner campaign shows no minimum row', () => {
+    render(<CampaignWizard />);
+    advanceToReview();
+    expect(screen.queryByText('Lance mínimo')).toBeNull();
+  });
 });

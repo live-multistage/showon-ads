@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   acceptedFormatsFor,
   campaignKindBadge,
+  destinationName,
   ALL_PLACEMENTS,
   DEFAULT_PLACEMENTS,
   PLACEMENT_ACCEPTED_FORMATS,
@@ -97,5 +98,20 @@ describe('campaignKindBadge', () => {
     expect(campaignKindBadge({ format: 'WIDE_16_9', pauseVariant: null })).toBe('Pausa · Padrão');
     expect(campaignKindBadge({ format: 'VIDEO_16_9', pauseVariant: null })).toBe('Vídeo antes');
     expect(campaignKindBadge({ format: 'HORIZONTAL_728x90', pauseVariant: null })).toBe('Banner');
+  });
+});
+
+describe('destinationName', () => {
+  it('names the event when known, falls back to "Evento"', () => {
+    expect(destinationName({ type: 'EVENT', eventId: 'e1' }, 'Rock in Rio 2026')).toBe('Evento · Rock in Rio 2026');
+    expect(destinationName({ type: 'EVENT', eventId: 'e1' })).toBe('Evento');
+  });
+
+  it('shows the domain of an external link, without www', () => {
+    expect(destinationName({ type: 'EXTERNAL_URL', url: 'https://www.serraalta.com.br/promo?x=1' })).toBe('Link · serraalta.com.br');
+  });
+
+  it('flags a legacy ad without destination', () => {
+    expect(destinationName(null)).toBe('Sem destino');
   });
 });

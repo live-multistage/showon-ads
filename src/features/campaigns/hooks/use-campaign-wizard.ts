@@ -14,6 +14,7 @@ import type {
 } from '@/features/advertisements/types/advertisement.types';
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
 import { loadWizardDraft, saveWizardDraft, clearWizardDraft } from '../utils/wizard-draft-storage';
+import { PAUSE_VARIANT_NAME } from '../utils/pause-minimum';
 import { reaisToCents, formatCentsToBRL } from '../utils/format-currency';
 import { acceptedFormatsFor, ALL_PLACEMENTS, DEFAULT_PLACEMENTS, campaignKindOf, type CampaignKind } from '../utils/ad-display';
 
@@ -137,7 +138,7 @@ function validateTargetingStep(draft: CampaignWizardDraft): string | null {
 
 // Mirrors orchestrator's Ad.create validation (src/advertisements/domain/ad.ts)
 // so the wizard fails fast instead of round-tripping to the API.
-export const PAUSE_VARIANT_NAME: Record<AdPauseVariant, string> = { STANDARD: 'Padrão', FULLSCREEN: 'Tela cheia' };
+export { PAUSE_VARIANT_NAME };
 
 // Mínimo do lance da pausa por variante e modelo. Só pausa tem piso; vídeo e
 // banner seguem com bidCents ≥ 1. Sem as configurações carregadas, o backend

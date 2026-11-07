@@ -80,6 +80,17 @@
   }
 }
 
+.navBadge {
+  margin-left: auto;
+  font-family: ads.$mono;
+  font-size: 11px;
+  color: ads.$text-dim;
+}
+
+.navBadgeLow {
+  color: #f87171;
+}
+
 .navIcon {
   display: inline-flex;
   flex-shrink: 0;

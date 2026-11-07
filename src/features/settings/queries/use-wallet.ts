@@ -35,3 +35,12 @@ export function useCreateTopUpMutation(accountId: string | undefined) {
     },
   });
 }
+
+export function useAdvertiserSettingsQuery(accountId: string | undefined) {
+  return useQuery({
+    queryKey: ['advertiser-settings', accountId ?? ''],
+    queryFn: () => walletService.settings(accountId!),
+    enabled: Boolean(accountId),
+    staleTime: 5 * 60_000,
+  });
+}

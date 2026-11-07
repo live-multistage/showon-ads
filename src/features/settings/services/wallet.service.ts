@@ -14,9 +14,23 @@ export interface WalletTransactionView {
   createdAt: string;
 }
 
+export type PauseVariantKey = 'STANDARD' | 'FULLSCREEN';
+export type BillingModelKey = 'CPM' | 'CPC';
+
+export interface AdvertiserSettings {
+  minTopupCents: number;
+  lowBalanceThresholdCents: number;
+  pauseMinBids: Record<PauseVariantKey, Record<BillingModelKey, number>>;
+}
+
 export const walletService = {
   get: async (accountId: string): Promise<WalletSummary> => {
     const { data } = await apiClient.get<WalletSummary>(`/advertisers/${accountId}/wallet`);
+    return data;
+  },
+
+  settings: async (accountId: string): Promise<AdvertiserSettings> => {
+    const { data } = await apiClient.get<AdvertiserSettings>(`/advertisers/${accountId}/settings`);
     return data;
   },
 

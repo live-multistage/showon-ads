@@ -54,9 +54,12 @@ export function useSubmitCampaign() {
         }
       }
       await changeStatus.mutateAsync({ adId, action: 'submit' });
-    } catch {
+    } catch (error) {
+      const { code } = normalizeError(error);
       toast.error(
-        'Campanha criada como rascunho, mas o envio para revisão falhou. Tente novamente na página da campanha.',
+        code === 'AD_CREATIVE_REQUIRED'
+          ? 'Campanha criada como rascunho. Falta o arquivo do criativo: envie na página da campanha.'
+          : 'Campanha criada como rascunho, mas o envio para revisão falhou. Tente novamente na página da campanha.',
       );
       router.push(`/campaigns/${adId}`);
       return true;

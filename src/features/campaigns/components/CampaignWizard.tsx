@@ -60,9 +60,11 @@ export function CampaignWizard() {
   // Hard block, mirroring the backend's Ad#submitForReview rule: EXTERNAL_URL
   // ads without a banner are rejected by the domain at submit time.
   const submitBlockedByBanner = draft.destinationType === 'EXTERNAL_URL' && !draft.bannerFile;
+  // Vídeo e pausa não existem sem o arquivo: o backend recusa o envio para análise.
+  const missingCreative = draft.kind !== 'banner' && !draft.bannerFile;
 
   function handleSubmit() {
-    if (!activeAccountId || submitBlockedByBanner) return;
+    if (!activeAccountId || submitBlockedByBanner || missingCreative) return;
     void submit(draft, activeAccountId).then((created) => {
       if (created) discardDraft();
     });
@@ -153,6 +155,13 @@ export function CampaignWizard() {
                 Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.
               </p>
             )}
+            {missingCreative && (
+              <p className={styles.error} role="alert">
+                {draft.kind === 'preroll'
+                  ? 'Envie o vídeo antes de enviar para análise.'
+                  : 'Envie a imagem da pausa antes de enviar para análise.'}
+              </p>
+            )}
             {error && (
               <p className={styles.error} role="alert">
                 {error}
@@ -212,7 +221,7 @@ export function CampaignWizard() {
             type="button"
             className={styles.btnPrimary}
             onClick={handleSubmit}
-            disabled={isSubmitting || submitBlockedByBanner || !activeAccountId}
+            disabled={isSubmitting || submitBlockedByBanner || missingCreative || !activeAccountId}
           >
             {isSubmitting ? 'Enviando...' : createFailed ? 'Tentar de novo' : 'Enviar para análise'}
           </button>

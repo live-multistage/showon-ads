@@ -406,6 +406,7 @@ describe('CampaignWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
     fireEvent.click(screen.getByRole('button', { name: /Tela cheia/ }));
     fillCreativeFields();
+    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [new File(['x'], 'p.png', { type: 'image/png' })] } });
     await fillEventDestination();
     next();
     next();
@@ -467,5 +468,20 @@ describe('CampaignWizard', () => {
       render(<CampaignWizard />);
       expect(screen.getByLabelText('Título')).toHaveValue('');
     });
+  });
+
+  it('video and pause cannot be sent for review without their file', async () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    await reachReviewWithEvent();
+    expect(screen.getByRole('button', { name: 'Enviar para análise' })).toBeDisabled();
+  });
+
+  it('explains a missing creative reported by the backend', async () => {
+    mockChangeStatusMutateAsync.mockRejectedValue({ isAxiosError: true, response: { status: 400, data: { code: 'AD_CREATIVE_REQUIRED', message: 'x' } }, message: 'x' });
+    render(<CampaignWizard />);
+    await reachReviewWithEvent();
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalledWith(expect.stringContaining('Falta o arquivo do criativo')));
   });
 });

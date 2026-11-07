@@ -4,9 +4,14 @@ import type {
   CreateAdRequest,
   UpdateAdRequest,
   ChangeAdStatusRequest,
+  AdPauseStats,
   AdReportResponse,
+  AdVideoStats,
   AdReviewEntry,
 } from '../types/advertisement.types';
+
+const EMPTY_VIDEO_STATS: AdVideoStats = { q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 };
+const EMPTY_PAUSE_STATS: AdPauseStats = { closed: 0 };
 
 // GET /ads is membership-scoped server-side (AdsController#list reads
 // req.user.id) — no orgId/query param, unlike the live-show-react version.
@@ -41,7 +46,12 @@ export const advertisementsService = {
 
   getReport: async (id: string): Promise<AdReportResponse> => {
     const { data } = await apiClient.get<AdReportResponse>(`/ads/${id}/report`);
-    return data;
+    // An API deployed before the format counters (video/pause) omits them; read as zero.
+    return {
+      ...data,
+      video: { ...EMPTY_VIDEO_STATS, ...data.video },
+      pause: { ...EMPTY_PAUSE_STATS, ...data.pause },
+    };
   },
 
   uploadBanner: async (id: string, file: File): Promise<string> => {

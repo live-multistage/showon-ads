@@ -11,6 +11,10 @@ import { AdsMarketingPanel } from './AdsMarketingPanel';
 import styles from './LoginForm.module.scss';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SITE_URL = 'https://showon.io';
+const FORGOT_PASSWORD_URL = `${SITE_URL}/forgot-password`;
+const INVALID_CREDENTIALS_STATUS = 401;
+const GENERIC_LOGIN_ERROR = 'Não foi possível entrar agora. Tente de novo.';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -23,11 +27,11 @@ export function LoginForm() {
     event.preventDefault();
 
     if (!email.trim() || !EMAIL_PATTERN.test(email)) {
-      setValidationError('Enter a valid email address.');
+      setValidationError('Informe um e-mail válido.');
       return;
     }
     if (!password) {
-      setValidationError('Enter your password.');
+      setValidationError('Informe sua senha.');
       return;
     }
 
@@ -40,12 +44,7 @@ export function LoginForm() {
     mutate({ email: email.trim(), password }, { onSuccess: () => window.location.assign(redirectTarget) });
   }
 
-  const normalizedError = error ? normalizeError(error) : null;
-  const errorMessage =
-    validationError ??
-    (normalizedError?.code === 'EMAIL_NOT_VERIFIED'
-      ? 'Please confirm your email before logging in.'
-      : normalizedError?.message ?? null);
+  const errorMessage = validationError ?? (error ? loginErrorMessage(error) : null);
 
   return (
     <div className={styles.root}>
@@ -53,12 +52,12 @@ export function LoginForm() {
 
       <div className={styles.formPanel}>
         <div className={styles.formCard}>
-          <h2 className={styles.formTitle}>Log in</h2>
-          <p className={styles.formSubtitle}>Access your Ads Manager account.</p>
+          <h2 className={styles.formTitle}>Entrar</h2>
+          <p className={styles.formSubtitle}>Acesse sua conta do Ads Manager.</p>
 
           <form onSubmit={handleSubmit} className={styles.form} noValidate>
             <div className={styles.field}>
-              <Label htmlFor="email" className={styles.label}>Email</Label>
+              <Label htmlFor="email" className={styles.label}>E-mail</Label>
               <div className={styles.inputWrapper}>
                 <svg className={styles.inputIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 7 10-7" />
@@ -76,7 +75,7 @@ export function LoginForm() {
             </div>
 
             <div className={styles.field}>
-              <Label htmlFor="password" className={styles.label}>Password</Label>
+              <Label htmlFor="password" className={styles.label}>Senha</Label>
               <div className={styles.inputWrapper}>
                 <svg className={styles.inputIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -91,6 +90,9 @@ export function LoginForm() {
                   disabled={isPending}
                 />
               </div>
+              <a href={FORGOT_PASSWORD_URL} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                Esqueci a senha ↗
+              </a>
             </div>
 
             {errorMessage && (
@@ -100,15 +102,22 @@ export function LoginForm() {
             )}
 
             <Button type="submit" disabled={isPending} className={styles.btnSubmit}>
-              {isPending ? 'Logging in…' : 'Log in'}
+              {isPending ? 'Entrando…' : 'Entrar'}
             </Button>
           </form>
 
           <p className={styles.footer}>
-            No account? <Link href="/signup" className={styles.link}>Sign up</Link>
+            Não tem conta? <Link href="/signup" className={styles.link}>Cadastre-se</Link>
           </p>
         </div>
       </div>
     </div>
   );
+}
+
+function loginErrorMessage(error: unknown): string {
+  const normalized = normalizeError(error);
+  if (normalized.code === 'EMAIL_NOT_VERIFIED') return 'Confirme seu e-mail antes de entrar.';
+  if (normalized.status === INVALID_CREDENTIALS_STATUS) return 'E-mail ou senha incorretos.';
+  return GENERIC_LOGIN_ERROR;
 }

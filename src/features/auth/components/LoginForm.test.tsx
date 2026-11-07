@@ -30,6 +30,12 @@ function renderWithProviders(ui: React.ReactElement) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
+function fillAndSubmit() {
+  fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'user@example.com' } });
+  fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'super-secret' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+}
+
 const authResponse: AuthResponse = {
   user: { id: 'u1', email: 'user@example.com', displayName: 'User', role: 'USER', createdAt: '', updatedAt: '' },
   accessToken: 'access-token',
@@ -50,14 +56,29 @@ describe('LoginForm', () => {
     });
   });
 
+  it('renders the PT-BR labels, title and submit button', () => {
+    renderWithProviders(<LoginForm />);
+
+    expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument();
+    expect(screen.getByLabelText('E-mail')).toBeInTheDocument();
+    expect(screen.getByLabelText('Senha')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument();
+  });
+
+  it('links to the main site password recovery in a new tab', () => {
+    renderWithProviders(<LoginForm />);
+
+    const link = screen.getByRole('link', { name: /esqueci a senha/i });
+    expect(link).toHaveAttribute('href', 'https://showon.io/forgot-password');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
   it('submits credentials, stores the session, and navigates home', async () => {
     mockedAuthService.login.mockResolvedValueOnce(authResponse);
 
     renderWithProviders(<LoginForm />);
-
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+    fillAndSubmit();
 
     await waitFor(() => {
       expect(mockedAuthService.login).toHaveBeenCalledWith({ email: 'user@example.com', password: 'super-secret' });
@@ -77,9 +98,9 @@ describe('LoginForm', () => {
   it('validates fields before submitting', () => {
     renderWithProviders(<LoginForm />);
 
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/valid email/i);
+    expect(screen.getByRole('alert')).toHaveTextContent('Informe um e-mail válido.');
     expect(mockedAuthService.login).not.toHaveBeenCalled();
   });
 
@@ -88,12 +109,30 @@ describe('LoginForm', () => {
     mockedAuthService.login.mockResolvedValueOnce(authResponse);
 
     renderWithProviders(<LoginForm />);
-
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+    fillAndSubmit();
 
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/invite/abc'));
+  });
+
+  it('shows a PT-BR message when the credentials are wrong', async () => {
+    mockedAuthService.login.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 401, data: { message: 'Invalid credentials' } },
+    });
+
+    renderWithProviders(<LoginForm />);
+    fillAndSubmit();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('E-mail ou senha incorretos.');
+  });
+
+  it('shows a generic PT-BR message on network failure', async () => {
+    mockedAuthService.login.mockRejectedValueOnce({ isAxiosError: true, message: 'Network Error' });
+
+    renderWithProviders(<LoginForm />);
+    fillAndSubmit();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível entrar agora. Tente de novo.');
   });
 
   it('shows a clear message when the account email is not verified', async () => {
@@ -103,12 +142,9 @@ describe('LoginForm', () => {
     });
 
     renderWithProviders(<LoginForm />);
+    fillAndSubmit();
 
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(/confirm your email/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Confirme seu e-mail antes de entrar.');
   });
 
   it('falls back to / when ?redirect= is an open-redirect vector', async () => {
@@ -116,10 +152,7 @@ describe('LoginForm', () => {
     mockedAuthService.login.mockResolvedValueOnce(authResponse);
 
     renderWithProviders(<LoginForm />);
-
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'super-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+    fillAndSubmit();
 
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
   });

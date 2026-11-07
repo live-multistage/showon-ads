@@ -22,6 +22,13 @@ function renderForm() {
 describe('AdvertiserOnboardingForm', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('only promises targeting that the platform supports', () => {
+    const { container } = renderForm();
+
+    expect(container).not.toHaveTextContent(/gênero|cidade/i);
+    expect(screen.getByText(/categoria do evento, a faixa etária/i)).toBeInTheDocument();
+  });
+
   it('asks for the company name instead of submitting an empty one', () => {
     renderForm();
 

@@ -568,3 +568,23 @@
 .right {
   text-align: right;
 }
+
+@media (max-width: 820px) {
+  .page {
+    padding: 16px 16px 24px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .splitRow {
+    grid-template-columns: 1fr;
+  }
+}

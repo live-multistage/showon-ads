@@ -586,3 +586,13 @@ $gradient: linear-gradient(135deg, #ff2e9e, #9b7bff);
     margin-top: 10px;
   }
 }
+
+@media (max-width: 820px) {
+  .page {
+    padding: 16px 16px 24px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

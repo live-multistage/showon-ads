@@ -68,6 +68,23 @@ function WalletBalanceBadge() {
   );
 }
 
+// Saldo no topo do celular: lá a sidebar vira barra inferior e o saldo sai do menu.
+function MobileWalletLink() {
+  const { activeAccountId } = useActiveAdvertiserAccount();
+  const wallet = useWalletQuery(activeAccountId ?? undefined);
+  if (!wallet.data) return null;
+  const empty = wallet.data.balanceCents <= 0;
+  return (
+    <Link
+      href="/billing"
+      className={`${styles.mobileBalance} ${empty ? styles.mobileBalanceLow : ''}`}
+      aria-label={`Saldo da carteira: ${formatCentsToBRL(wallet.data.balanceCents)}`}
+    >
+      {formatCentsToBRL(wallet.data.balanceCents)}
+    </Link>
+  );
+}
+
 // Sidebar shell for the Ads Manager (Ads Manager design). Guarding lives one
 // level up (AuthGuard, wrapped around {children} by RootLayout) — this only
 // renders the sidebar nav + session footer.
@@ -81,13 +98,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.shell}>
+      <header className={styles.mobileTop}>
+        <Logo size={22} wordmarkClassName={styles.wordmark} />
+        <span className={styles.adsBadge}>ADS</span>
+        <MobileWalletLink />
+        {isAuthenticated && (
+          <button type="button" className={styles.mobileLogout} onClick={logout}>
+            Sair
+          </button>
+        )}
+      </header>
+
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
           <Logo size={26} wordmarkClassName={styles.wordmark} />
           <span className={styles.adsBadge}>ADS</span>
         </div>
 
-        <nav className={styles.nav}>
+        <nav className={styles.nav} aria-label="Menu principal">
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -113,7 +141,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className={styles.logoutIcon}>
               <IconLogout />
             </span>
-            <span className={styles.srOnly}>Log out</span>
+            <span className={styles.srOnly}>Sair</span>
           </button>
         )}
       </aside>

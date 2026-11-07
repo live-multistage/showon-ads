@@ -352,3 +352,29 @@
   border-radius: ads.$radius-field;
   background: ads.$accent-soft;
 }
+
+@media (max-width: 820px) {
+  .page {
+    padding: 16px 16px 24px;
+  }
+
+  .stepCard {
+    padding: 18px 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .stepper {
+    overflow-x: auto;
+  }
+
+  .footer,
+  .reviewFooter {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

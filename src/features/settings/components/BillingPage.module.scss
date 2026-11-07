@@ -174,3 +174,14 @@
     color: ads.$text-dim;
   }
 }
+
+@media (max-width: 820px) {
+  .page {
+    padding: 16px;
+  }
+
+  .history .historyRow {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+}

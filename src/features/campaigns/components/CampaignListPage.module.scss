@@ -650,3 +650,35 @@ $columns: minmax(240px, 2.4fr) 110px minmax(170px, 1.5fr) 90px 80px 70px 150px;
 .stepNumber {
   @include ads.mono-label(10px, ads.$accent);
 }
+
+// Celular: um respiro menor, cabeçalho empilhado e KPIs em 2×2.
+@media (max-width: 820px) {
+  .page {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statValue {
+    font-size: 20px;
+    overflow-wrap: anywhere;
+  }
+
+  .walletStrip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}

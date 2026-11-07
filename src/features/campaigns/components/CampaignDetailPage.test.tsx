@@ -251,7 +251,7 @@ describe('CampaignDetailPage', () => {
 
     expect(screen.getByText('1.000')).toBeInTheDocument();
     expect(screen.getByText('20')).toBeInTheDocument();
-    expect(screen.getByText('2.00%')).toBeInTheDocument();
+    expect(screen.getByText('2,00%')).toBeInTheDocument();
   });
 
   describe('status action matrix', () => {
@@ -505,6 +505,42 @@ describe('CampaignDetailPage', () => {
       mockAd({});
       render(<CampaignDetailPage id="ad-1" />);
       expect(screen.queryByText('LANCE MÍNIMO')).toBeNull();
+    });
+  });
+
+  describe('pt-BR percentages and the placement table', () => {
+    it('formats the CTR KPI and each placement CTR with a decimal comma', () => {
+      mockedUseAdReportQuery.mockReturnValue({
+        data: {
+          adId: 'ad-1', title: 'x', status: 'ACTIVE', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4,
+          dailyBreakdown: [],
+          placementBreakdown: [{ placement: 'FEED', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4 }],
+          video: { q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 },
+          pause: { closed: 0 },
+        },
+        isLoading: false,
+      } as unknown as ReturnType<typeof useAdReportQuery>);
+      mockAd({ status: 'ACTIVE' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText('33,33%')).toHaveLength(2);
+      expect(screen.queryByText('33.33%')).toBeNull();
+    });
+
+    it('labels every placement value so each one can stand alone as a card on a phone', () => {
+      mockedUseAdReportQuery.mockReturnValue({
+        data: {
+          adId: 'ad-1', title: 'x', status: 'ACTIVE', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4,
+          dailyBreakdown: [],
+          placementBreakdown: [{ placement: 'FEED', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4 }],
+          video: { q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 },
+          pause: { closed: 0 },
+        },
+        isLoading: false,
+      } as unknown as ReturnType<typeof useAdReportQuery>);
+      mockAd({ status: 'ACTIVE' });
+      const { container } = render(<CampaignDetailPage id="ad-1" />);
+      const labels = Array.from(container.querySelectorAll('[data-label]')).map((el) => el.getAttribute('data-label'));
+      expect(labels).toEqual(['IMPRESSÕES', 'CLIQUES', 'CTR', 'GASTO']);
     });
   });
 });

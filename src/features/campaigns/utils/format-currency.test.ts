@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCentsToBRL, reaisToCents } from './format-currency';
+import { formatCentsToBRL, formatPercent, reaisToCents } from './format-currency';
 
 describe('formatCentsToBRL', () => {
   it('converts cents to a BRL currency string', () => {
@@ -32,5 +32,17 @@ describe('reaisToCents', () => {
 
   it('treats non-numeric input as 0', () => {
     expect(reaisToCents('abc')).toBe(0);
+  });
+});
+
+describe('formatPercent', () => {
+  it('uses the pt-BR decimal comma with two places', () => {
+    expect(formatPercent(33.333)).toBe('33,33%');
+    expect(formatPercent(2)).toBe('2,00%');
+    expect(formatPercent(0)).toBe('0,00%');
+  });
+
+  it('groups thousands the pt-BR way', () => {
+    expect(formatPercent(1234.5)).toBe('1.234,50%');
   });
 });

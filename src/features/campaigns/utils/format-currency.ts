@@ -20,3 +20,8 @@ export function reaisToCents(reais: string): number {
 export function centsToReaisInput(cents: number): string {
   return (cents / 100).toString();
 }
+
+// CTR e afins em pt-BR: vírgula decimal, duas casas ("33,33%").
+export function formatPercent(value: number): string {
+  return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+}

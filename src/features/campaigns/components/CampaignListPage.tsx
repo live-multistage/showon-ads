@@ -30,7 +30,7 @@ import { useWalletQuery } from '@/features/settings/queries/use-wallet';
 import { useListAdsQuery } from '@/features/advertisements/queries/use-list-ads';
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 import type { AdResponse, AdStatus } from '@/features/advertisements/types/advertisement.types';
-import { formatCentsToBRL } from '../utils/format-currency';
+import { formatCentsToBRL, formatPercent } from '../utils/format-currency';
 import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, FORMAT_SHORT, CAMPAIGN_KIND_LABEL, campaignKindBadge, campaignKindOf, destinationLabel, gradientFor, type CampaignKind } from '../utils/ad-display';
 import { deriveDelivery, deliveryLabel, needsAction, DELIVERY_DISPLAY, type Delivery } from '../utils/derive-delivery';
 import styles from './CampaignListPage.module.scss';
@@ -179,7 +179,7 @@ export function CampaignListPage() {
               icon="clicks"
               label="CLIQUES · TOTAL"
               value={isLoading ? NO_DATA : totals.clicks.toLocaleString('pt-BR')}
-              hint={avgCtr === null ? undefined : `CTR médio ${avgCtr.toFixed(2).replace('.', ',')}%`}
+              hint={avgCtr === null ? undefined : `CTR médio ${formatPercent(avgCtr)}`}
             />
             <StatCard icon="campaigns" label="GASTO · TOTAL" value={isLoading ? NO_DATA : formatCentsToBRL(totals.spendCents)} />
             <StatCard
@@ -405,7 +405,7 @@ function CampaignRow({ ad, delivery }: { ad: AdResponse; delivery: Delivery }) {
       <span className={`${styles.num} ${styles.hideSmall}`}>{(ad.metrics?.impressions ?? 0).toLocaleString('pt-BR')}</span>
       <span className={`${styles.num} ${styles.hideSmall}`}>{(ad.metrics?.clicks ?? 0).toLocaleString('pt-BR')}</span>
       <span className={`${styles.num} ${styles.hideSmall}`}>
-        {ad.metrics?.ctr != null ? `${ad.metrics.ctr.toFixed(2)}%` : NO_DATA}
+        {ad.metrics?.ctr != null ? formatPercent(ad.metrics.ctr) : NO_DATA}
       </span>
 
       <div className={styles.budget}>

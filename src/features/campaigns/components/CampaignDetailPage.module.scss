@@ -592,3 +592,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+// Celular: cada posição vira um cartão de pares rótulo-valor, sem colunas coladas.
+@media (max-width: 820px) {
+  .placementHead {
+    display: none;
+  }
+
+  .placementRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    padding: 14px 0;
+
+    > span[data-label] {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      text-align: left;
+
+      &::before {
+        content: attr(data-label);
+        font-size: 9.5px;
+        letter-spacing: 0.1em;
+        color: #7d7d85;
+      }
+    }
+  }
+
+  .placementName {
+    grid-column: 1 / -1;
+    font-weight: 700;
+  }
+}

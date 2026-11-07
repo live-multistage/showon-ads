@@ -429,5 +429,12 @@ describe('CampaignListPage', () => {
       renderPage();
       expect(screen.queryByText('GASTO HOJE')).toBeNull();
     });
+
+    it('formats the row CTR in pt-BR', () => {
+      list([live({ title: 'A', metrics: { impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4, spentTodayCents: 0 } })]);
+      renderPage();
+      expect(screen.getAllByText('33,33%').length).toBeGreaterThan(0);
+      expect(screen.queryByText('33.33%')).toBeNull();
+    });
   });
 });

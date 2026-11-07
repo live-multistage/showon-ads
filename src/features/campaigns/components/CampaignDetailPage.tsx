@@ -36,7 +36,7 @@ import type {
   AdStatus,
   AdStatusAction,
 } from '@/features/advertisements/types/advertisement.types';
-import { formatCentsToBRL } from '../utils/format-currency';
+import { formatCentsToBRL, formatPercent } from '../utils/format-currency';
 import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, campaignKindBadge, campaignKindOf, placementLabel, destinationName } from '../utils/ad-display';
 import { deriveDelivery } from '../utils/derive-delivery';
 import { pauseMinimumLabel } from '../utils/pause-minimum';
@@ -262,7 +262,7 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
         <div className={styles.metricsGrid}>
           <Metric icon="impressions" label={impressionsLabel} value={report ? report.impressions.toLocaleString('pt-BR') : '—'} />
           <Metric icon="clicks" label="CLIQUES" value={report ? report.clicks.toLocaleString('pt-BR') : '—'} />
-          <Metric icon="ctr" label="CTR" value={report?.ctr != null ? `${report.ctr.toFixed(2)}%` : '—'} accent />
+          <Metric icon="ctr" label="CTR" value={report?.ctr != null ? formatPercent(report.ctr) : '—'} accent />
           <Metric icon="spend" label="GASTO" value={report ? formatCentsToBRL(report.spendCents) : '—'} />
         </div>
       </section>
@@ -342,11 +342,11 @@ export function CampaignDetailPage({ id }: CampaignDetailPageProps) {
               </div>
               {report.placementBreakdown.map((row) => (
                 <div key={row.placement} className={styles.placementRow}>
-                  <span>{placementLabel(row.placement)}</span>
-                  <span className={styles.right}>{row.impressions.toLocaleString('pt-BR')}</span>
-                  <span className={styles.right}>{row.clicks.toLocaleString('pt-BR')}</span>
-                  <span className={styles.right}>{row.ctr != null ? `${row.ctr.toFixed(2)}%` : '—'}</span>
-                  <span className={styles.right}>{formatCentsToBRL(row.spendCents)}</span>
+                  <span className={styles.placementName}>{placementLabel(row.placement)}</span>
+                  <span className={styles.right} data-label="IMPRESSÕES">{row.impressions.toLocaleString('pt-BR')}</span>
+                  <span className={styles.right} data-label="CLIQUES">{row.clicks.toLocaleString('pt-BR')}</span>
+                  <span className={styles.right} data-label="CTR">{row.ctr != null ? formatPercent(row.ctr) : '—'}</span>
+                  <span className={styles.right} data-label="GASTO">{formatCentsToBRL(row.spendCents)}</span>
                 </div>
               ))}
             </div>

@@ -10,6 +10,19 @@ vi.mock('@/features/advertisements/services/events.service', () => ({
   },
 }));
 
+const mockSettings = {
+  data: {
+    minTopupCents: 5000,
+    lowBalanceThresholdCents: 2000,
+    pauseMinBids: { STANDARD: { CPM: 800, CPC: 40 }, FULLSCREEN: { CPM: 1400, CPC: 70 } },
+  } as { minTopupCents: number; lowBalanceThresholdCents: number; pauseMinBids: unknown } | undefined,
+};
+let mockBalanceCents: number | undefined = 18240;
+vi.mock('@/features/settings/queries/use-wallet', () => ({
+  useAdvertiserSettingsQuery: () => mockSettings,
+  useWalletQuery: () => ({ data: mockBalanceCents === undefined ? undefined : { balanceCents: mockBalanceCents, lowBalance: false } }),
+}));
+
 vi.mock('@/features/advertisers/providers/ActiveAdvertiserAccountProvider', () => ({
   useActiveAdvertiserAccount: () => ({
     accounts: [],
@@ -53,25 +66,33 @@ vi.mock('sonner', () => ({
 
 const mockedEventsService = vi.mocked(eventsService, true);
 
-// Wizard order: budget -> targeting -> creative (creative + destination merged) -> review.
+// O wizard monta várias telas por teste; sob carga da suíte inteira 5 s não bastam.
+vi.setConfig({ testTimeout: 20_000 });
+
+// Wizard order: creative + destination -> where/for whom -> budget + period -> review.
 describe('CampaignWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    mockBalanceCents = 18240;
     mockCreateAdMutateAsync.mockResolvedValue({ id: 'ad-1' });
     mockUploadBannerMutateAsync.mockResolvedValue('https://cdn.example.com/banner.png');
     mockUploadVideoMutateAsync.mockResolvedValue({ videoUrl: 'https://cdn.example.com/video.mp4', videoDurationSec: 15 });
     mockChangeStatusMutateAsync.mockResolvedValue(undefined);
   });
 
+  const next = () => fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+
   function fillBudgetStep({
     bid = '10',
     daily = '50',
-    total = '500',
+    total = '1.500,00',
     starts = '2026-08-01T10:00',
     ends = '2026-09-01T10:00',
-  } = {}) {
+    model = /CPM/,
+  }: { bid?: string; daily?: string; total?: string; starts?: string; ends?: string; model?: RegExp } = {}) {
     fireEvent.click(screen.getByRole('combobox'));
-    fireEvent.click(screen.getByRole('option', { name: /CPM/ }));
+    fireEvent.click(screen.getByRole('option', { name: model }));
     fireEvent.change(screen.getByLabelText(/^Lance por/), { target: { value: bid } });
     fireEvent.change(screen.getByLabelText('Orçamento diário (R$)'), { target: { value: daily } });
     fireEvent.change(screen.getByLabelText('Limite total de gasto (R$)'), { target: { value: total } });
@@ -79,112 +100,187 @@ describe('CampaignWizard', () => {
     fireEvent.change(screen.getByLabelText('Fim da veiculação'), { target: { value: ends } });
   }
 
-  it('cannot advance the budget step with a non-positive bid', () => {
-    render(<CampaignWizard />);
-    fillBudgetStep({ bid: '0' });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByText('O lance deve ser maior que zero.')).toBeInTheDocument();
-  });
-
-  it('advances to targeting once budget inputs are valid', () => {
-    render(<CampaignWizard />);
-    fillBudgetStep();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByText('Interesses do público')).toBeInTheDocument();
-  });
-
-  function advanceToTargeting() {
-    fillBudgetStep();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // budget -> targeting
-  }
-
-  it('blocks advancing past targeting when every placement is unchecked', () => {
-    render(<CampaignWizard />);
-    advanceToTargeting();
-
-    // Default selection is the 4 page placements (Pausa do player starts
-    // unchecked), so unchecking these four is enough to hit zero placements.
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Feed' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Página do evento' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Checkout' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pós-compra' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByText('Selecione pelo menos um posicionamento.')).toBeInTheDocument();
-  });
-
-  it('blocks advancing past targeting when Pausa do player is combined with a page placement', () => {
-    render(<CampaignWizard />);
-    advanceToTargeting();
-
-    // Default already has the 4 page placements checked — opting into
-    // Pausa do player on top of them yields an empty format intersection.
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(
-      screen.getByText(
-        'Os posicionamentos selecionados não podem ser combinados, pois usam formatos incompatíveis.',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  function advanceToCreative() {
-    advanceToTargeting();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // targeting -> creative
-  }
-
-  it('advances to the merged creative+destination step from targeting', () => {
-    render(<CampaignWizard />);
-    advanceToCreative();
-
-    expect(screen.getByLabelText('Título')).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Tipo de destino' })).toBeInTheDocument();
-  });
-
-  it('cannot advance the merged step without a title and format', () => {
-    render(<CampaignWizard />);
-    advanceToCreative();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByText('Informe um título para a campanha.')).toBeInTheDocument();
-  });
-
   function fillCreativeFields() {
     fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Summer Promo' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Horizontal (728×90)' }));
   }
-
-  it('rejects http:// for the EXTERNAL_URL destination', () => {
-    render(<CampaignWizard />);
-    advanceToCreative();
-    fillCreativeFields();
-
-    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
-    fireEvent.change(screen.getByLabelText('URL de destino'), { target: { value: 'http://example.com' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-
-    expect(screen.getByText('A URL deve começar com https://.')).toBeInTheDocument();
-  });
 
   function fillExternalUrlDestination(url = 'https://example.com/landing') {
     fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
     fireEvent.change(screen.getByLabelText('URL de destino'), { target: { value: url } });
   }
 
-  it('accepts a valid https:// URL and advances to the review step', () => {
-    render(<CampaignWizard />);
-    advanceToCreative();
+  function advanceToTargeting() {
     fillCreativeFields();
     fillExternalUrlDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+    next();
+  }
 
-    expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeInTheDocument();
+  function advanceToBudget() {
+    advanceToTargeting();
+    next();
+  }
+
+  function advanceToReview() {
+    advanceToBudget();
+    fillBudgetStep();
+    next();
+  }
+
+  it('starts on the creative step with the type cards and the 4-step stepper', () => {
+    render(<CampaignWizard />);
+    expect(screen.getByRole('button', { name: /Banner nas páginas/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('navigation', { name: 'Etapas da campanha' })).toHaveTextContent('Onde e para quem');
+    expect(screen.getByRole('navigation', { name: 'Etapas da campanha' })).toHaveTextContent('Orçamento e período');
+  });
+
+  it('every step carries its "PASSO N DE 4" counter', () => {
+    render(<CampaignWizard />);
+    expect(screen.getByText('PASSO 1 DE 4')).toBeInTheDocument();
+    advanceToTargeting();
+    expect(screen.getByText('PASSO 2 DE 4')).toBeInTheDocument();
+    next();
+    expect(screen.getByText('PASSO 3 DE 4')).toBeInTheDocument();
+    fillBudgetStep();
+    next();
+    expect(screen.getByText('PASSO 4 DE 4')).toBeInTheDocument();
+  });
+
+  it('cannot advance the creative step without a title', () => {
+    render(<CampaignWizard />);
+    next();
+    expect(screen.getByText('Informe um título para a campanha.')).toBeInTheDocument();
+  });
+
+  it('rejects http:// for the EXTERNAL_URL destination', () => {
+    render(<CampaignWizard />);
+    fillCreativeFields();
+    fillExternalUrlDestination('http://example.com');
+    next();
+    expect(screen.getByText('A URL deve começar com https://.')).toBeInTheDocument();
+  });
+
+  it('advances to targeting once creative and destination are valid', () => {
+    render(<CampaignWizard />);
+    advanceToTargeting();
+    expect(screen.getByText('Interesses do público')).toBeInTheDocument();
+  });
+
+  it('blocks advancing past targeting when every position is unchecked', () => {
+    render(<CampaignWizard />);
+    advanceToTargeting();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Feed' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Página do evento' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Checkout' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Pós-compra' }));
+    next();
+
+    expect(screen.getByText('Selecione pelo menos um posicionamento.')).toBeInTheDocument();
+  });
+
+  it('cannot advance the budget step with a non-positive bid', () => {
+    render(<CampaignWizard />);
+    advanceToBudget();
+    fillBudgetStep({ bid: '0' });
+    next();
+    expect(screen.getByText('O lance deve ser maior que zero.')).toBeInTheDocument();
+  });
+
+  it('shows the cost per impression with four decimals for a CPM bid', () => {
+    render(<CampaignWizard />);
+    advanceToBudget();
+    fillBudgetStep({ bid: '12' });
+    expect(screen.getByText(/R\$\s?0,0120/)).toBeInTheDocument();
+  });
+
+  it('understands the thousands separator in the money fields', () => {
+    render(<CampaignWizard />);
+    advanceToReview();
+    expect(screen.getByText('R$ 1.500,00')).toBeInTheDocument();
+  });
+
+  it('pause: shows the minimum per variant and blocks a bid under the chosen variant minimum', () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Tela cheia/ }));
+    fillCreativeFields();
+    fillExternalUrlDestination();
+    next(); // -> targeting
+    next(); // -> budget
+
+    expect(screen.getByText('Padrão')).toBeInTheDocument();
+    expect(screen.getByText(/Tela cheia · sua escolha/)).toBeInTheDocument();
+
+    fillBudgetStep({ bid: '10' });
+    expect(screen.getByRole('alert')).toHaveTextContent('O lance mínimo da pausa Tela cheia é R$ 14,00 por mil exibições.');
+    next();
+    expect(screen.queryByRole('button', { name: 'Enviar para análise' })).toBeNull();
+    expect(screen.getByText('Orçamento e período', { selector: 'h2' })).toBeInTheDocument();
+  });
+
+  it('pause: a bid equal to the variant minimum passes', () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    fillCreativeFields();
+    fillExternalUrlDestination();
+    next();
+    next();
+    fillBudgetStep({ bid: '8,00' });
+    next();
+    expect(screen.getByRole('button', { name: 'Enviar para análise' })).toBeInTheDocument();
+  });
+
+  it('review: shows the grouped summary with the wallet balance and how many days it covers', () => {
+    render(<CampaignWizard />);
+    advanceToReview();
+
+    expect(screen.getByText('Summer Promo')).toBeInTheDocument();
+    expect(screen.getByText('Banner Horizontal 728×90')).toBeInTheDocument();
+    expect(screen.getByText('https://example.com/landing')).toBeInTheDocument();
+    expect(screen.getByText(/R\$\s?10,00 por mil impressões/)).toBeInTheDocument();
+    expect(screen.getByText(/Saldo de R\$\s?182,40 na carteira/)).toBeInTheDocument();
+    expect(screen.getByText(/Cobre cerca de 3 dias do orçamento diário de R\$\s?50,00/)).toBeInTheDocument();
+  });
+
+  it('review: warns but still allows sending when the wallet is empty', () => {
+    mockBalanceCents = 0;
+    render(<CampaignWizard />);
+    advanceToReview();
+    expect(screen.getByText('Sua carteira está sem saldo.')).toBeInTheDocument();
+  });
+
+  it('review: "Editar" jumps back to that step', () => {
+    render(<CampaignWizard />);
+    advanceToReview();
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Onde e para quem' }));
+    expect(screen.getByText('Interesses do público')).toBeInTheDocument();
+  });
+
+  it('shows the banner-required warning for EXTERNAL_URL without a staged file', () => {
+    render(<CampaignWizard />);
+    fillCreativeFields();
+    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
+
+    expect(
+      screen.getByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not show the banner-required warning for the EVENT destination', () => {
+    render(<CampaignWizard />);
+    fillCreativeFields();
+    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
+
+    expect(
+      screen.queryByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hard-blocks submit for an EXTERNAL_URL destination with no staged banner', () => {
+    render(<CampaignWizard />);
+    advanceToReview();
+
+    expect(screen.getByRole('button', { name: 'Enviar para análise' })).toBeDisabled();
   });
 
   async function fillEventDestination() {
@@ -211,11 +307,10 @@ describe('CampaignWizard', () => {
     mockedEventsService.search.mockResolvedValue(response);
 
     render(<CampaignWizard />);
-    advanceToCreative();
     fillCreativeFields();
 
     fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
+    next();
     expect(screen.getByText('Selecione um evento.')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Buscar evento'), { target: { value: 'Big' } });
@@ -229,60 +324,19 @@ describe('CampaignWizard', () => {
     expect(mockedEventsService.search).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('button', { name: 'Big Show' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' }));
-    expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeInTheDocument();
+    next();
+    expect(screen.getByText('Interesses do público')).toBeInTheDocument();
   });
 
-  it('shows the banner-required warning for EXTERNAL_URL without a staged file', () => {
-    render(<CampaignWizard />);
-    advanceToCreative();
+  async function reachReviewWithEvent(options: { file?: File } = {}) {
     fillCreativeFields();
-
-    fireEvent.click(screen.getByRole('button', { name: 'URL externa' }));
-
-    expect(
-      screen.getByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
-    ).toBeInTheDocument();
-  });
-
-  it('does not show the banner-required warning for the EVENT destination', () => {
-    render(<CampaignWizard />);
-    advanceToCreative();
-    fillCreativeFields();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Evento' }));
-
-    expect(
-      screen.queryByText('Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.'),
-    ).not.toBeInTheDocument();
-  });
-
-  function advanceToReview() {
-    advanceToCreative();
-    fillCreativeFields();
-    fillExternalUrlDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
+    if (options.file) fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [options.file] } });
+    await fillEventDestination();
+    next(); // creative -> targeting
+    next(); // targeting -> budget
+    fillBudgetStep();
+    next(); // budget -> review
   }
-
-  it('shows every entered value on the review step', () => {
-    render(<CampaignWizard />);
-    advanceToReview();
-
-    expect(screen.getByText('Summer Promo')).toBeInTheDocument();
-    expect(screen.getByText('Horizontal (728×90)')).toBeInTheDocument();
-    expect(screen.getByText('https://example.com/landing')).toBeInTheDocument();
-    expect(screen.getByText('CPM')).toBeInTheDocument();
-    expect(screen.getByText(/10,00 \/ 1k impressões/)).toBeInTheDocument();
-    expect(screen.getByText(/50,00/)).toBeInTheDocument();
-    expect(screen.getByText(/500,00/)).toBeInTheDocument();
-  });
-
-  it('hard-blocks submit for an EXTERNAL_URL destination with no staged banner', () => {
-    render(<CampaignWizard />);
-    advanceToReview();
-
-    expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeDisabled();
-  });
 
   it('submit chain calls create, upload banner, and change status in order', async () => {
     const callOrder: string[] = [];
@@ -299,17 +353,10 @@ describe('CampaignWizard', () => {
     });
 
     render(<CampaignWizard />);
-    advanceToCreative();
-    fillCreativeFields();
-
-    // Stage a banner while still on the merged creative+destination step.
     const file = new File(['x'], 'banner.png', { type: 'image/png' });
-    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
+    await reachReviewWithEvent({ file });
 
-    await fillEventDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
-
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar para revisão' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
 
     await waitFor(() => expect(callOrder).toEqual(['create', 'upload', 'status']));
 
@@ -324,44 +371,151 @@ describe('CampaignWizard', () => {
     mockChangeStatusMutateAsync.mockRejectedValue(new Error('network error'));
 
     render(<CampaignWizard />);
-    advanceToCreative();
-    fillCreativeFields();
-    await fillEventDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
+    await reachReviewWithEvent();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar para revisão' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/campaigns/ad-2'));
     expect(toastErrorMock).toHaveBeenCalledWith(expect.stringContaining('rascunho'));
     expect(mockUploadBannerMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('submit uploads via the video endpoint for a VIDEO_16_9 campaign, not the banner endpoint', async () => {
+  it('stays on the review with an error banner and a retry button when create fails', async () => {
+    mockCreateAdMutateAsync.mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 400, data: { message: 'O lance mínimo da pausa Tela cheia é R$ 14,00 por mil exibições.' } },
+      message: 'Request failed',
+    });
+
     render(<CampaignWizard />);
-    advanceToTargeting();
+    await reachReviewWithEvent();
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
 
-    // PRE_ROLL is exclusive — swap it in for the default page placements so
-    // VIDEO_16_9 is the only accepted format.
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Feed' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Página do evento' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Checkout' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pós-compra' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pre-roll (antes da live)' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // targeting -> creative
+    await waitFor(() => expect(screen.getByText('Não foi possível enviar a campanha.')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument();
+    expect(toastErrorMock).toHaveBeenCalledWith('O lance mínimo da pausa Tela cheia é R$ 14,00 por mil exibições.');
+    expect(pushMock).not.toHaveBeenCalled();
+  });
 
-    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Pre-roll Promo' } });
-    fireEvent.click(screen.getByRole('button', { name: /Vídeo 16:9/ }));
-
+  it('submit uploads via the video endpoint for a video campaign, not the banner endpoint', async () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Vídeo antes da transmissão/ }));
     const file = new File(['x'], 'ad.mp4', { type: 'video/mp4' });
-    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
+    await reachReviewWithEvent({ file });
 
-    await fillEventDestination();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo' })); // creative -> review
-
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar para revisão' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
 
     await waitFor(() => expect(mockUploadVideoMutateAsync).toHaveBeenCalledWith({ adId: 'ad-1', file }));
     expect(mockUploadBannerMutateAsync).not.toHaveBeenCalled();
+    expect(mockCreateAdMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ format: 'VIDEO_16_9', placements: ['PRE_ROLL'] }),
+    );
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/campaigns/ad-1'));
+  });
+
+  it('pause campaign sends the chosen variant', async () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Tela cheia/ }));
+    fillCreativeFields();
+    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [new File(['x'], 'p.png', { type: 'image/png' })] } });
+    await fillEventDestination();
+    next();
+    next();
+    fillBudgetStep({ bid: '14' });
+    next();
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
+
+    await waitFor(() =>
+      expect(mockCreateAdMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN', bidCents: 1400 }),
+      ),
+    );
+  });
+
+  describe('draft per step', () => {
+    it('saves the draft when a step is completed and restores it, at that step, on a new visit', () => {
+      const first = render(<CampaignWizard />);
+      advanceToTargeting();
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByText('Interesses do público')).toBeInTheDocument();
+    });
+
+    it('restores the typed values on the first step', () => {
+      const first = render(<CampaignWizard />);
+      fillCreativeFields();
+      fireEvent.click(screen.getByRole('button', { name: 'SAIR E MANTER RASCUNHO' }));
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByLabelText('Título')).toHaveValue('Summer Promo');
+      expect(screen.getByRole('status')).toHaveTextContent('Retomamos seu rascunho');
+    });
+
+    it('"Sair e manter rascunho" goes back to the list', () => {
+      render(<CampaignWizard />);
+      fireEvent.click(screen.getByRole('button', { name: 'SAIR E MANTER RASCUNHO' }));
+      expect(pushMock).toHaveBeenCalledWith('/');
+    });
+
+    it('discard deletes the saved draft', () => {
+      const first = render(<CampaignWizard />);
+      advanceToTargeting();
+      fireEvent.click(screen.getByRole('button', { name: 'DESCARTAR' }));
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByLabelText('Título')).toHaveValue('');
+    });
+
+    it('a successful submit clears the saved draft', async () => {
+      const first = render(<CampaignWizard />);
+      await reachReviewWithEvent();
+      fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
+      await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/campaigns/ad-1'));
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByLabelText('Título')).toHaveValue('');
+    });
+  });
+
+  it('video and pause cannot be sent for review without their file', async () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    await reachReviewWithEvent();
+    expect(screen.getByRole('button', { name: 'Enviar para análise' })).toBeDisabled();
+  });
+
+  it('explains a missing creative reported by the backend', async () => {
+    mockChangeStatusMutateAsync.mockRejectedValue({ isAxiosError: true, response: { status: 400, data: { code: 'AD_CREATIVE_REQUIRED', message: 'A pausa precisa de uma imagem.' } }, message: 'x' });
+    render(<CampaignWizard />);
+    await reachReviewWithEvent();
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
+    await waitFor(() =>
+      expect(toastErrorMock).toHaveBeenCalledWith('Campanha criada como rascunho. A pausa precisa de uma imagem.'),
+    );
+  });
+
+  it('review: a pause campaign shows the variant minimum', () => {
+    render(<CampaignWizard />);
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Tela cheia/ }));
+    fillCreativeFields();
+    fillExternalUrlDestination();
+    next();
+    next();
+    fillBudgetStep({ bid: '15' });
+    next();
+    expect(screen.getByText('Lance mínimo')).toBeInTheDocument();
+    expect(screen.getByText('R$ 14,00 por mil · Tela cheia')).toBeInTheDocument();
+  });
+
+  it('review: a banner campaign shows no minimum row', () => {
+    render(<CampaignWizard />);
+    advanceToReview();
+    expect(screen.queryByText('Lance mínimo')).toBeNull();
   });
 });

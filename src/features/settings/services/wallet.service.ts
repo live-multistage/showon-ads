@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client';
+import type { PauseMinBids } from '@/features/advertisements/types/advertisement.types';
 
 export interface WalletSummary {
   balanceCents: number;
@@ -14,9 +15,22 @@ export interface WalletTransactionView {
   createdAt: string;
 }
 
+
+export interface AdvertiserSettings {
+  minTopupCents: number;
+  lowBalanceThresholdCents: number;
+  pauseMinBids: PauseMinBids;
+}
+
 export const walletService = {
   get: async (accountId: string): Promise<WalletSummary> => {
     const { data } = await apiClient.get<WalletSummary>(`/advertisers/${accountId}/wallet`);
+    return data;
+  },
+
+  // Valores da plataforma, não da conta: a rota não leva accountId.
+  settings: async (): Promise<AdvertiserSettings> => {
+    const { data } = await apiClient.get<AdvertiserSettings>('/advertisers/settings');
     return data;
   },
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCentsToBRL, reaisToCents } from './format-currency';
+import { formatCentsToBRL, formatPercent, reaisToCents } from './format-currency';
 
 describe('formatCentsToBRL', () => {
   it('converts cents to a BRL currency string', () => {
@@ -14,10 +14,16 @@ describe('formatCentsToBRL', () => {
 describe('reaisToCents', () => {
   it('converts a reais string to integer cents', () => {
     expect(reaisToCents('15.5')).toBe(1550);
+    expect(reaisToCents('15,5')).toBe(1550);
+  });
+
+  it('understands the thousands separator', () => {
+    expect(reaisToCents('1.500,00')).toBe(150000);
+    expect(reaisToCents('1.500')).toBe(150000);
   });
 
   it('rounds fractional cents', () => {
-    expect(reaisToCents('10.005')).toBe(1001);
+    expect(reaisToCents('10,005')).toBe(1001);
   });
 
   it('treats empty input as 0', () => {
@@ -26,5 +32,17 @@ describe('reaisToCents', () => {
 
   it('treats non-numeric input as 0', () => {
     expect(reaisToCents('abc')).toBe(0);
+  });
+});
+
+describe('formatPercent', () => {
+  it('uses the pt-BR decimal comma with two places', () => {
+    expect(formatPercent(33.333)).toBe('33,33%');
+    expect(formatPercent(2)).toBe('2,00%');
+    expect(formatPercent(0)).toBe('0,00%');
+  });
+
+  it('groups thousands the pt-BR way', () => {
+    expect(formatPercent(1234.5)).toBe('1.234,50%');
   });
 });

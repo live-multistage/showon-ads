@@ -4,7 +4,10 @@ import { useState, type KeyboardEvent } from 'react';
 import { Checkbox, Chip, Input, Label } from '@live-show/design-system';
 import type { AdPlacement, AgeBracket } from '@/features/advertisements/types/advertisement.types';
 import { placementLabel } from '../../utils/ad-display';
-import { ALL_PLACEMENTS, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+
+const PAGE_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'];
+import { StepHeader } from './StepHeader';
 import styles from './TargetingStep.module.scss';
 
 // Ported from live-show-react's AdCreatePage.tsx INTERESTS list — the only
@@ -87,22 +90,48 @@ export function TargetingStep({ draft, updateDraft }: TargetingStepProps) {
 
   return (
     <div className={styles.step}>
-      <div className={styles.field}>
-        <Label>Posicionamentos</Label>
-        <p className={styles.hint}>Onde seu anúncio pode ser exibido.</p>
-        <div className={styles.checkboxList} role="group" aria-label="Posicionamentos">
-          {ALL_PLACEMENTS.map((placement) => (
-            <div key={placement} className={styles.checkboxRow}>
-              <Checkbox
-                id={`placement-${placement}`}
-                checked={draft.placements.includes(placement)}
-                onCheckedChange={() => togglePlacement(placement)}
-              />
-              <label htmlFor={`placement-${placement}`}>{placementLabel(placement)}</label>
-            </div>
-          ))}
+      <StepHeader step={2} title="Onde e para quem" />
+      {draft.kind === 'banner' ? (
+        <div className={styles.field}>
+          <Label>Posições</Label>
+          <p className={styles.hint}>Escolha as páginas. Vídeo e pausa são outros tipos de anúncio: troque no passo 1.</p>
+          <div className={styles.checkboxList} role="group" aria-label="Posições">
+            {PAGE_PLACEMENTS.map((placement) => (
+              <div key={placement} className={styles.checkboxRow}>
+                <Checkbox
+                  id={`placement-${placement}`}
+                  checked={draft.placements.includes(placement)}
+                  onCheckedChange={() => togglePlacement(placement)}
+                />
+                <label htmlFor={`placement-${placement}`}>{placementLabel(placement)}</label>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className={styles.field}>
+          <Label>Onde roda</Label>
+          <dl className={styles.facts}>
+            <dt>Posição</dt>
+            <dd>{draft.kind === 'preroll' ? 'Antes do vídeo' : 'Pausa no player'}</dd>
+            <dt>Transmissões</dt>
+            <dd>Eventos ao vivo e replays</dd>
+            <dt>Não roda em</dt>
+            <dd>{draft.kind === 'preroll' ? 'Canais 24h' : 'Canais 24h e prévia da live'}</dd>
+            <dt>Quando aparece</dt>
+            <dd>
+              {draft.kind === 'preroll'
+                ? 'Antes de começar, uma vez por evento em cada sessão'
+                : 'Depois de 2 s de pausa, a cada pausa'}
+            </dd>
+          </dl>
+          <p className={styles.hint}>
+            {draft.kind === 'preroll'
+              ? 'Só quem tem acesso à transmissão chega a ver o vídeo.'
+              : 'O anúncio sai quando a pessoa fecha ou dá play.'}
+          </p>
+        </div>
+      )}
 
       <div className={styles.field}>
         <Label>Faixa etária do público</Label>

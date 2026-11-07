@@ -68,6 +68,17 @@ export function destinationLabel(destination: AdDestination | null): string {
   return destination.type === 'EVENT' ? 'Evento' : 'URL externa';
 }
 
+// Destino com nome: evento pelo título (quando conhecido) e link externo pelo domínio.
+export function destinationName(destination: AdDestination | null, eventTitle?: string | null): string {
+  if (!destination) return 'Sem destino';
+  if (destination.type === 'EVENT') return eventTitle ? `Evento · ${eventTitle}` : 'Evento';
+  try {
+    return `Link · ${new URL(destination.url).hostname.replace(/^www\./, '')}`;
+  } catch {
+    return 'URL externa';
+  }
+}
+
 export const FORMAT_SHORT: Record<AdFormat, string> = {
   HORIZONTAL_728x90: '728×90',
   VERTICAL_300x600: '300×600',
@@ -104,4 +115,27 @@ export function gradientFor(id: string): string {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
   return THUMB_GRADIENTS[h % THUMB_GRADIENTS.length];
+}
+
+// Tipo de campanha para o anunciante, derivado do formato (cada formato de
+// vídeo/16:9 só vale em um posicionamento exclusivo).
+export type CampaignKind = 'banner' | 'preroll' | 'pause';
+
+export function campaignKindOf(format: AdFormat): CampaignKind {
+  if (format === 'VIDEO_16_9') return 'preroll';
+  if (format === 'WIDE_16_9') return 'pause';
+  return 'banner';
+}
+
+export const CAMPAIGN_KIND_LABEL: Record<CampaignKind, string> = {
+  banner: 'Banner',
+  preroll: 'Vídeo antes',
+  pause: 'Pausa',
+};
+
+// Selo do tipo na lista; a pausa mostra a variante ("Pausa · Tela cheia").
+export function campaignKindBadge(ad: { format: AdFormat; pauseVariant: 'STANDARD' | 'FULLSCREEN' | null }): string {
+  const kind = campaignKindOf(ad.format);
+  if (kind !== 'pause') return CAMPAIGN_KIND_LABEL[kind];
+  return `Pausa · ${ad.pauseVariant === 'FULLSCREEN' ? 'Tela cheia' : 'Padrão'}`;
 }

@@ -2,6 +2,7 @@
 
 import type { AdFormat } from '@/features/advertisements/types/advertisement.types';
 import type { CampaignWizardDraft } from '../hooks/use-campaign-wizard';
+import { PlayerPreview } from './PlayerPreview';
 import styles from './CampaignPreviewPanel.module.scss';
 
 const FORMAT_META: Record<AdFormat, { label: string; ratio: string; dims: string }> = {
@@ -15,9 +16,7 @@ interface CampaignPreviewPanelProps {
   draft: CampaignWizardDraft;
 }
 
-// Side rail: live banner preview + approval tips + a reach estimate placeholder.
-// The estimate is intentionally static — no reach-estimation endpoint exists;
-// showing "—" is honest rather than a fabricated number.
+// Side rail: live preview + approval tips. No reach estimate: the product has no estimation endpoint.
 export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
   const meta = draft.format ? FORMAT_META[draft.format] : FORMAT_META.HORIZONTAL_728x90;
 
@@ -26,25 +25,29 @@ export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
       {/* preview */}
       <div className={styles.card}>
         <div className={styles.cardHead}>
-          <span className={styles.cardTitle}>PRÉ-VISUALIZAÇÃO</span>
+          <span className={styles.cardTitle}>{draft.kind === 'banner' ? 'PRÉ-VISUALIZAÇÃO' : 'PRÉVIA NO PLAYER'}</span>
           <span className={styles.cardMeta}>{meta.label.toUpperCase()}</span>
         </div>
-        <div className={styles.preview} style={{ aspectRatio: meta.ratio }}>
-          {draft.bannerPreviewUrl ? (
-            draft.format === 'VIDEO_16_9' ? (
-              // eslint-disable-next-line jsx-a11y/media-has-caption -- advertiser-facing preview, not viewer-facing
-              <video src={draft.bannerPreviewUrl} className={styles.previewImg} controls muted />
-            ) : (
+        {draft.kind === 'banner' ? (
+          <div className={styles.preview} style={{ aspectRatio: meta.ratio }}>
+            {draft.bannerPreviewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- object URL preview
               <img src={draft.bannerPreviewUrl} alt="Pré-visualização do banner" className={styles.previewImg} />
-            )
-          ) : (
-            <>
-              <span className={styles.previewHatch} aria-hidden />
-              <span className={styles.previewPlaceholder}>SEU BANNER {meta.dims}</span>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <span className={styles.previewHatch} aria-hidden />
+                <span className={styles.previewPlaceholder}>SEU BANNER {meta.dims}</span>
+              </>
+            )}
+          </div>
+        ) : (
+          <PlayerPreview
+            kind={draft.kind}
+            pauseVariant={draft.pauseVariant}
+            title={draft.title}
+            creativeUrl={draft.bannerPreviewUrl}
+          />
+        )}
         <div className={styles.metaGrid}>
           <div>
             <div className={styles.metaLabel}>FORMATO</div>
@@ -52,7 +55,9 @@ export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
           </div>
           <div>
             <div className={styles.metaLabel}>POSIÇÕES</div>
-            <div className={styles.metaValue}>Feed · Evento</div>
+            <div className={styles.metaValue}>
+              {draft.kind === 'banner' ? 'Feed · Evento' : draft.kind === 'preroll' ? 'Antes do vídeo' : 'Pausa no player'}
+            </div>
           </div>
         </div>
       </div>
@@ -71,13 +76,6 @@ export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
           <li>Menção obrigatória à marca do anunciante</li>
           <li>Evite CTAs enganosos (&quot;clique aqui!&quot;)</li>
         </ul>
-      </div>
-
-      {/* estimate */}
-      <div className={styles.card}>
-        <div className={styles.estLabel}>ESTIMATIVA (CONFIGURE PASSOS 1–2)</div>
-        <div className={styles.estValue}>— –– impressões</div>
-        <div className={styles.estHint}>Alcance depende de público e orçamento.</div>
       </div>
     </aside>
   );

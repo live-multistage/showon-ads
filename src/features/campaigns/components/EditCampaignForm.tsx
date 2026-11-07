@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button, Card, CardContent } from '@live-show/design-system';
+import type { PauseMinBids } from '@/features/advertisements/types/advertisement.types';
 import { useUpdateAdMutation } from '@/features/advertisements/mutations/use-update-ad.mutation';
 import { useUploadBannerMutation } from '@/features/advertisements/mutations/use-upload-banner.mutation';
 import { useUploadVideoMutation } from '@/features/advertisements/mutations/use-upload-video.mutation';
 import type { AdResponse } from '@/features/advertisements/types/advertisement.types';
 import { validateCreativeStep, validateDestinationStep, validateStep, type CampaignWizardDraft } from '../hooks/use-campaign-wizard';
+import { useAdvertiserSettingsQuery } from '@/features/settings/queries/use-wallet';
 import { adToDraft, draftToUpdateAdRequest } from '../utils/ad-draft';
 import { CreativeStep } from './steps/CreativeStep';
 import { DestinationStep } from './steps/DestinationStep';
@@ -34,12 +36,12 @@ function validateDestinationForSave(draft: CampaignWizardDraft): string | null {
 // combination clears the format (CreativeStep's reset effect) and hides every
 // format card, so "Selecione um formato de anúncio." would be an unactionable
 // dead end — the targeting message names the actual problem.
-function validateForSave(draft: CampaignWizardDraft): string | null {
+function validateForSave(draft: CampaignWizardDraft, pauseMinBids?: PauseMinBids): string | null {
   return (
     validateStep('targeting', draft) ||
     validateCreativeStep(draft) ||
     validateDestinationForSave(draft) ||
-    validateStep('budget', draft)
+    validateStep('budget', draft, pauseMinBids)
   );
 }
 
@@ -48,6 +50,7 @@ function validateForSave(draft: CampaignWizardDraft): string | null {
 // campaign has no "review" step to build up to, every field is already known.
 export function EditCampaignForm({ ad, onCancel, onSaved }: EditCampaignFormProps) {
   const [draft, setDraft] = useState<CampaignWizardDraft>(() => adToDraft(ad));
+  const pauseMinBids = useAdvertiserSettingsQuery().data?.pauseMinBids;
   const [error, setError] = useState<string | null>(null);
   // VIDEO_16_9 ads never get a banner from the wizard — the video is the
   // creative, so seed from videoUrl instead or every video ad falsely warns
@@ -113,7 +116,7 @@ export function EditCampaignForm({ ad, onCancel, onSaved }: EditCampaignFormProp
       : null;
 
   async function handleSave() {
-    const validationError = validateForSave(draft);
+    const validationError = validateForSave(draft, pauseMinBids);
     if (validationError) {
       setError(validationError);
       return;
@@ -134,10 +137,10 @@ export function EditCampaignForm({ ad, onCancel, onSaved }: EditCampaignFormProp
     <div className={styles.form}>
       <Card>
         <CardContent className={styles.content}>
-          <CreativeStep draft={draft} updateDraft={updateDraft} setBanner={setBanner} />
+          <CreativeStep draft={draft} updateDraft={updateDraft} selectKind={() => {}} setBanner={setBanner} lockKind />
           <DestinationStep draft={draft} updateDraft={updateDraft} bannerRequiredWarning={bannerRequiredWarning} />
           <TargetingStep draft={draft} updateDraft={updateDraft} />
-          <BudgetStep draft={draft} updateDraft={updateDraft} />
+          <BudgetStep draft={draft} updateDraft={updateDraft} pauseMinBids={pauseMinBids} />
           {error && (
             <p className={styles.error} role="alert">
               {error}

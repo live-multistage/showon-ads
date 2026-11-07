@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { normalizeError } from '@/shared/api/client';
 import { useCreateAdMutation } from '@/features/advertisements/mutations/use-create-ad.mutation';
 import { useUploadBannerMutation } from '@/features/advertisements/mutations/use-upload-banner.mutation';
 import { useUploadVideoMutation } from '@/features/advertisements/mutations/use-upload-video.mutation';
@@ -14,6 +16,18 @@ import { draftToCreateAdRequest, type CampaignWizardDraft } from './use-campaign
 // other format still uses uploadBanner. If create succeeds but upload/submit
 // fails, the ad already exists as a retryable DRAFT — redirect to its detail
 // page (task 20) instead of silently losing it or retrying blindly here.
+const TYPED_CREATIVE_ERRORS = new Set([
+  'VIDEO_NOT_MP4',
+  'VIDEO_NOT_16_9',
+  'VIDEO_DIMENSIONS_UNREADABLE',
+  'VIDEO_DURATION_OUT_OF_RANGE',
+  'VIDEO_TOO_LARGE',
+  'AD_DESTINATION_REQUIRED',
+  'AD_VIDEO_REQUIRED',
+  'AD_BANNER_REQUIRED',
+  'AD_CREATIVE_REQUIRED',
+]);
+
 export function useSubmitCampaign() {
   const router = useRouter();
   const createAd = useCreateAdMutation();
@@ -23,16 +37,24 @@ export function useSubmitCampaign() {
 
   const isSubmitting = createAd.isPending || uploadBanner.isPending || uploadVideo.isPending || changeStatus.isPending;
 
-  async function submit(draft: CampaignWizardDraft, advertiserAccountId: string) {
+  // "Não foi possível enviar": o formulário continua na revisão com as escolhas.
+  const [createFailed, setCreateFailed] = useState(false);
+
+  // Resolve true quando o anúncio chegou a ser criado (mesmo que o envio para análise falhe).
+  async function submit(draft: CampaignWizardDraft, advertiserAccountId: string): Promise<boolean> {
+    setCreateFailed(false);
     const request = draftToCreateAdRequest(draft, advertiserAccountId);
 
     let adId: string;
     try {
       const created = await createAd.mutateAsync(request);
       adId = created.id;
-    } catch {
-      toast.error('Não foi possível criar a campanha. Verifique os dados e tente novamente.');
-      return;
+    } catch (error) {
+      setCreateFailed(true);
+      // 400 traz mensagem em PT-BR pronta para exibir (ex.: lance abaixo do mínimo da variante).
+      const { status, message } = normalizeError(error);
+      toast.error(status === 400 && message ? message : 'Não foi possível criar a campanha. Verifique os dados e tente novamente.');
+      return false;
     }
 
     try {
@@ -44,17 +66,23 @@ export function useSubmitCampaign() {
         }
       }
       await changeStatus.mutateAsync({ adId, action: 'submit' });
-    } catch {
+    } catch (error) {
+      const { code, message } = normalizeError(error);
+      // Erros tipados do backend (B5.1) já chegam com mensagem em PT-BR.
+      const typed = code ? TYPED_CREATIVE_ERRORS.has(code) : false;
       toast.error(
-        'Campanha criada como rascunho, mas o envio para revisão falhou. Tente novamente na página da campanha.',
+        typed
+          ? `Campanha criada como rascunho. ${message}`
+          : 'Campanha criada como rascunho, mas o envio para revisão falhou. Tente novamente na página da campanha.',
       );
       router.push(`/campaigns/${adId}`);
-      return;
+      return true;
     }
 
     toast.success('Campanha enviada para revisão — em análise.');
     router.push(`/campaigns/${adId}`);
+    return true;
   }
 
-  return { submit, isSubmitting };
+  return { submit, isSubmitting, createFailed };
 }

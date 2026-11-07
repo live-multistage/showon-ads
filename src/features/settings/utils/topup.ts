@@ -1,0 +1,25 @@
+import { parseBrlToCents } from '@/features/campaigns/utils/brl';
+
+const PRESET_STEPS_CENTS = [5000, 10000, 20000, 50000];
+
+// Presets nunca ficam abaixo do mínimo de recarga. Se o mínimo passa de todos
+// os degraus, o próprio mínimo vira a única opção.
+export function topUpPresets(minCents: number): number[] {
+  const presets = PRESET_STEPS_CENTS.filter((cents) => cents >= minCents);
+  return presets.length > 0 ? presets : [minCents];
+}
+
+// Vazio ou inválido vira null.
+export function parseReaisToCents(input: string): number | null {
+  const cents = parseBrlToCents(input);
+  return cents === null || cents <= 0 ? null : cents;
+}
+
+export type TopUpValidation = { ok: true; cents: number } | { ok: false; reason: 'invalid' | 'belowMin' };
+
+export function validateTopUp(input: string, minCents: number): TopUpValidation {
+  const cents = parseReaisToCents(input);
+  if (cents === null) return { ok: false, reason: 'invalid' };
+  if (cents < minCents) return { ok: false, reason: 'belowMin' };
+  return { ok: true, cents };
+}

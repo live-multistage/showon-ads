@@ -9,7 +9,7 @@ import styles from './AdvertiserOnboardingForm.module.scss';
 const BENEFITS = [
   {
     title: 'Segmentação por evento e público',
-    description: 'Escolha gênero, cidade e posição de exibição.',
+    description: 'Escolha a categoria do evento, a faixa etária e a posição de exibição.',
     icon: (
       <>
         <circle cx="12" cy="12" r="10" />
@@ -66,7 +66,7 @@ export function AdvertiserOnboardingForm() {
           </span>
           <p className={styles.promoTitle}>Anuncie para quem está ao vivo.</p>
           <p className={styles.promoText}>
-            Coloque sua marca dentro dos shows mais assistidos do Brasil. Abra sua conta de
+            Coloque sua marca dentro dos eventos mais assistidos do Brasil. Abra sua conta de
             anunciante em um minuto.
           </p>
         </div>

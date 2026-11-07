@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { CampaignDetailPage } from './CampaignDetailPage';
 import { useGetAdQuery } from '@/features/advertisements/queries/use-get-ad';
 import { useAdReportQuery } from '@/features/advertisements/queries/use-ad-report';
@@ -9,6 +9,19 @@ import type { AdResponse, AdReviewEntry } from '@/features/advertisements/types/
 
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
+}));
+
+let mockBalance: number | undefined = 18240;
+let mockEventTitle: string | undefined;
+vi.mock('@/features/advertisements/queries/use-event-title', () => ({
+  useEventTitleQuery: () => ({ data: mockEventTitle }),
+}));
+
+vi.mock('@/features/settings/queries/use-wallet', () => ({
+  useAdvertiserSettingsQuery: () => ({
+    data: { pauseMinBids: { STANDARD: { CPM: 800, CPC: 40 }, FULLSCREEN: { CPM: 1400, CPC: 70 } } },
+  }),
+  useWalletQuery: () => ({ data: mockBalance === undefined ? undefined : { balanceCents: mockBalance, lowBalance: false } }),
 }));
 
 vi.mock('@/features/advertisements/queries/use-get-ad', () => ({ useGetAdQuery: vi.fn() }));
@@ -52,6 +65,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     bannerUrl: 'https://cdn.example.com/banner.png',
     videoUrl: null,
     videoDurationSec: null,
+    pauseVariant: null,
     frequencyCapMax: null,
     frequencyCapWindow: null,
     billingModel: 'CPM',
@@ -96,13 +110,24 @@ function mockReviews(reviews: AdReviewEntry[]) {
   } as unknown as ReturnType<typeof useAdReviewsQuery>);
 }
 
+const ZERO_VIDEO = { q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 };
+
+function mockReport(impressions: number, extra: Record<string, unknown>) {
+  mockedUseAdReportQuery.mockReturnValue({
+    data: { adId: 'ad-1', title: 'x', status: 'ACTIVE', impressions, clicks: 0, ctr: null, spendCents: 0, dailyBreakdown: [], placementBreakdown: [], video: ZERO_VIDEO, pause: { closed: 0 }, ...extra },
+    isLoading: false,
+  } as unknown as ReturnType<typeof useAdReportQuery>);
+}
+
 const mutateSpy = vi.fn();
 
 describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockBalance = 18240;
+    mockEventTitle = undefined;
     mockedUseAdReportQuery.mockReturnValue({
-      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 2, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [] },
+      data: { adId: 'ad-1', title: 'Summer Promo', status: 'DRAFT', impressions: 1000, clicks: 20, ctr: 2, spendCents: 5000, dailyBreakdown: [], placementBreakdown: [], video: ZERO_VIDEO, pause: { closed: 0 } },
       isLoading: false,
     } as unknown as ReturnType<typeof useAdReportQuery>);
     mockReviews([]);
@@ -122,8 +147,10 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByLabelText('Carregando campanha')).toBeInTheDocument();
   });
 
-  it('shows a not-found state when the ad fails to load', () => {
-    mockedUseGetAdQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true } as unknown as ReturnType<
+  const httpError = (status: number) => ({ isAxiosError: true, response: { status, data: {} }, message: 'x' });
+
+  it('shows a not-found state only for a 404', () => {
+    mockedUseGetAdQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: httpError(404) } as unknown as ReturnType<
       typeof useGetAdQuery
     >);
 
@@ -132,13 +159,99 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText('Anúncio não encontrado.')).toBeInTheDocument();
   });
 
+  it('a failed load is an error with retry, not "não encontrada"', () => {
+    const refetch = vi.fn();
+    mockedUseGetAdQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: httpError(500), refetch } as unknown as ReturnType<
+      typeof useGetAdQuery
+    >);
+
+    render(<CampaignDetailPage id="ad-1" />);
+
+    expect(screen.queryByText('Anúncio não encontrado.')).toBeNull();
+    expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível carregar a campanha.');
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  describe('delivery diagnosis', () => {
+    const live = { status: 'ACTIVE' as const, endsAt: '2099-01-01T00:00:00.000Z' };
+
+    it('active with an empty wallet explains the stop and links to the wallet', () => {
+      mockBalance = 0;
+      mockAd(live);
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('status')).toHaveTextContent('Parada: a carteira está sem saldo');
+    });
+
+    it('shows the positive diagnosis while delivering', () => {
+      mockAd(live);
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('status')).toHaveTextContent('Entregando normalmente');
+    });
+
+    it('under review says it is waiting for the team', () => {
+      mockAd({ status: 'REVIEW' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('status')).toHaveTextContent('Aguardando análise');
+    });
+
+    it('a video draft without file says the video is missing', () => {
+      mockAd({ status: 'DRAFT', format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: null });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('status')).toHaveTextContent('Falta enviar o vídeo');
+    });
+  });
+
+  describe('video and pause creative', () => {
+    it('plays the video of a pre-roll campaign and shows its duration', () => {
+      mockAd({ format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: 'https://cdn.example.com/v.mp4', videoDurationSec: 20 });
+      const { container } = render(<CampaignDetailPage id="ad-1" />);
+      expect(container.querySelector('video')).toHaveAttribute('src', 'https://cdn.example.com/v.mp4');
+      expect(screen.getByText('20 s')).toBeInTheDocument();
+    });
+
+    it('shows the pause image and the variant in the type', () => {
+      mockAd({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN', bannerUrl: 'https://cdn.example.com/p.webp' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText('Pausa · Tela cheia').length).toBeGreaterThan(0);
+      expect(screen.getByRole('img', { name: 'Summer Promo' })).toHaveAttribute('src', 'https://cdn.example.com/p.webp');
+    });
+  });
+
+  describe('submit for review with a video', () => {
+    it('is not blocked for a video with an external destination once the video exists', () => {
+      mockAd({
+        status: 'DRAFT',
+        format: 'VIDEO_16_9',
+        placements: ['PRE_ROLL'],
+        bannerUrl: null,
+        videoUrl: 'https://cdn.example.com/v.mp4',
+        destination: { type: 'EXTERNAL_URL', url: 'https://example.com' },
+      });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeEnabled();
+    });
+
+    it('is blocked for a video ad without the file', () => {
+      mockAd({ status: 'DRAFT', format: 'VIDEO_16_9', placements: ['PRE_ROLL'], bannerUrl: null, videoUrl: null });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeDisabled();
+    });
+
+    it('is blocked for a pause ad without the image', () => {
+      mockAd({ status: 'DRAFT', format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], bannerUrl: null });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByRole('button', { name: 'Enviar para revisão' })).toBeDisabled();
+    });
+  });
+
   it('renders metrics from the report query', () => {
     mockAd({ status: 'ACTIVE' });
     render(<CampaignDetailPage id="ad-1" />);
 
     expect(screen.getByText('1.000')).toBeInTheDocument();
     expect(screen.getByText('20')).toBeInTheDocument();
-    expect(screen.getByText('2.00%')).toBeInTheDocument();
+    expect(screen.getByText('2,00%')).toBeInTheDocument();
   });
 
   describe('status action matrix', () => {
@@ -306,5 +419,128 @@ describe('CampaignDetailPage', () => {
 
     expect(screen.getByText('Feed')).toBeInTheDocument();
     expect(screen.getByText('800')).toBeInTheDocument();
+  });
+
+  describe('format-specific stats', () => {
+    it('video: shows starts KPI and retention percentages over impressions', () => {
+      mockAd({ format: 'VIDEO_16_9' });
+      mockReport(200, { video: { q25: 150, q50: 100, q75: 50, complete: 20, skip: 40, unmute: 10 } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('INÍCIOS DO VÍDEO')).toBeInTheDocument();
+      expect(screen.queryByText('IMPRESSÕES')).not.toBeInTheDocument();
+      const card = within(screen.getByRole('region', { name: 'Retenção do vídeo' }));
+      expect(card.getByRole('progressbar', { name: '25%' }).closest('li')).toHaveTextContent('75%150');
+      expect(card.getByText('Pularam').closest('div')).toHaveTextContent('20% · 40');
+      expect(card.getByText('Ativaram o som').closest('div')).toHaveTextContent('5% · 10');
+    });
+
+    it('video: shows a dash instead of dividing by zero', () => {
+      mockAd({ format: 'VIDEO_16_9' });
+      mockReport(0, {});
+      render(<CampaignDetailPage id="ad-1" />);
+      const card = within(screen.getByRole('region', { name: 'Retenção do vídeo' }));
+      expect(card.getByRole('progressbar', { name: 'Até o fim' }).closest('li')).toHaveTextContent('—');
+      expect(card.queryByText(/NaN|Infinity/)).not.toBeInTheDocument();
+    });
+
+    it('pause: shows exhibitions KPI and closed share', () => {
+      mockAd({ format: 'WIDE_16_9' });
+      mockReport(50, { pause: { closed: 17 } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('EXIBIÇÕES NA PAUSA')).toBeInTheDocument();
+      expect(within(screen.getByRole('region', { name: 'Na pausa' })).getByText('Fecharam o anúncio').closest('div')).toHaveTextContent('34% · 17');
+      expect(screen.queryByRole('region', { name: 'Retenção do vídeo' })).not.toBeInTheDocument();
+    });
+
+    it('banner: shows neither card', () => {
+      mockAd({ format: 'HORIZONTAL_728x90' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('IMPRESSÕES')).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Retenção do vídeo' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Na pausa' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('details copy', () => {
+    it('calls the section "Por posição" and shows no storage file name', () => {
+      mockAd({ status: 'ACTIVE', bannerUrl: 'https://cdn.example.com/ads/4b1f-uuid.png' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('Por posição')).toBeInTheDocument();
+      expect(screen.queryByText(/Breakdown/)).toBeNull();
+      expect(screen.queryByText('ARQUIVO')).toBeNull();
+      expect(screen.queryByText(/4b1f-uuid/)).toBeNull();
+    });
+
+    it('names the destination event', () => {
+      mockEventTitle = 'Rock in Rio 2026';
+      mockAd({ destination: { type: 'EVENT', eventId: 'e1' } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText(/Evento · Rock in Rio 2026/).length).toBeGreaterThan(0);
+    });
+
+    it('shows the domain of an external destination', () => {
+      mockAd({ destination: { type: 'EXTERNAL_URL', url: 'https://www.serraalta.com.br/x' } });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText(/Link · serraalta\.com\.br/).length).toBeGreaterThan(0);
+    });
+
+    it('stacks the title above its metadata', () => {
+      mockAd({});
+      render(<CampaignDetailPage id="ad-1" />);
+      const heading = screen.getByRole('heading', { level: 1, name: 'Summer Promo' });
+      const meta = screen.getByText(/Banner · /);
+      expect(heading.compareDocumentPosition(meta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+  });
+
+  describe('pause minimum bid', () => {
+    it('shows the variant minimum in the budget card', () => {
+      mockAd({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN', billingModel: 'CPM', bannerUrl: 'https://x/p.webp' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getByText('LANCE MÍNIMO')).toBeInTheDocument();
+      expect(screen.getByText('R$ 14,00 por mil · Tela cheia')).toBeInTheDocument();
+    });
+
+    it('banners show no minimum', () => {
+      mockAd({});
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.queryByText('LANCE MÍNIMO')).toBeNull();
+    });
+  });
+
+  describe('pt-BR percentages and the placement table', () => {
+    it('formats the CTR KPI and each placement CTR with a decimal comma', () => {
+      mockedUseAdReportQuery.mockReturnValue({
+        data: {
+          adId: 'ad-1', title: 'x', status: 'ACTIVE', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4,
+          dailyBreakdown: [],
+          placementBreakdown: [{ placement: 'FEED', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4 }],
+          video: { q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 },
+          pause: { closed: 0 },
+        },
+        isLoading: false,
+      } as unknown as ReturnType<typeof useAdReportQuery>);
+      mockAd({ status: 'ACTIVE' });
+      render(<CampaignDetailPage id="ad-1" />);
+      expect(screen.getAllByText('33,33%')).toHaveLength(2);
+      expect(screen.queryByText('33.33%')).toBeNull();
+    });
+
+    it('labels every placement value so each one can stand alone as a card on a phone', () => {
+      mockedUseAdReportQuery.mockReturnValue({
+        data: {
+          adId: 'ad-1', title: 'x', status: 'ACTIVE', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4,
+          dailyBreakdown: [],
+          placementBreakdown: [{ placement: 'FEED', impressions: 3, clicks: 1, ctr: 33.33, spendCents: 4 }],
+          video: { q25: 0, q50: 0, q75: 0, complete: 0, skip: 0, unmute: 0 },
+          pause: { closed: 0 },
+        },
+        isLoading: false,
+      } as unknown as ReturnType<typeof useAdReportQuery>);
+      mockAd({ status: 'ACTIVE' });
+      const { container } = render(<CampaignDetailPage id="ad-1" />);
+      const labels = Array.from(container.querySelectorAll('[data-label]')).map((el) => el.getAttribute('data-label'));
+      expect(labels).toEqual(['IMPRESSÕES', 'CLIQUES', 'CTR', 'GASTO']);
+    });
   });
 });

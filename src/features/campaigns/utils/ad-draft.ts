@@ -1,6 +1,7 @@
 import type { AdResponse, UpdateAdRequest } from '@/features/advertisements/types/advertisement.types';
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
 import { centsToReaisInput, reaisToCents } from './format-currency';
+import { campaignKindOf } from './ad-display';
 import { draftToDestination, type CampaignWizardDraft } from '../hooks/use-campaign-wizard';
 
 // GET /ads/:id only returns the destination's eventId (no title-by-id lookup
@@ -25,7 +26,11 @@ export function isoToDatetimeLocalValue(iso: string): string {
 // (Creative/Destination/Targeting/Budget) can be reused unmodified in the
 // campaign detail page's edit mode (task 20) — see CampaignWizardDraft.
 export function adToDraft(ad: AdResponse): CampaignWizardDraft {
+  const kind = campaignKindOf(ad.format);
   return {
+    kind,
+    // Anúncio de pausa legado (sem variante) vale Padrão.
+    pauseVariant: kind === 'pause' ? (ad.pauseVariant ?? 'STANDARD') : null,
     title: ad.title,
     format: ad.format,
     bannerFile: null,
@@ -59,6 +64,7 @@ export function draftToUpdateAdRequest(draft: CampaignWizardDraft): UpdateAdRequ
     title: draft.title.trim(),
     format: draft.format ?? undefined,
     placements: draft.placements,
+    pauseVariant: draft.kind === 'pause' ? draft.pauseVariant : undefined,
     targetDomains: draft.targetDomains,
     targetCategories: draft.targetCategories,
     targetAgeBrackets: draft.targetAgeBrackets,

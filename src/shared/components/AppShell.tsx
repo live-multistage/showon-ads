@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@live-show/design-system';
 import { useSession } from '@/features/auth/hooks/use-session';
+import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
+import { useWalletQuery } from '@/features/settings/queries/use-wallet';
+import { formatCentsToBRL } from '@/features/campaigns/utils/format-currency';
 import styles from './AppShell.module.scss';
 
 // Inline icons — a handful of glyphs doesn't justify an icon dependency.
@@ -13,11 +16,9 @@ const svg = (size: number, path: React.ReactNode) => (
   </svg>
 );
 const IconGrid = () => svg(18, <><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></>);
-const IconSettings = () => svg(18, <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>);
 const IconLogout = () => svg(16, <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>);
 const IconUser = (props?: { size?: number }) => svg(props?.size ?? 18, <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>);
-const IconChart = () => svg(18, <><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></>);
-const IconCard = () => svg(18, <><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></>);
+const IconWallet = () => svg(18, <><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></>);
 
 // The auth screens render their own full-bleed brand layout (AdsMarketingPanel),
 // so the sidebar chrome is suppressed there — same as the main app's login.
@@ -28,6 +29,7 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   match: (pathname: string) => boolean;
+  badge?: React.ReactNode;
 }
 
 const NAV: NavItem[] = [
@@ -38,10 +40,11 @@ const NAV: NavItem[] = [
     match: (p) => p === '/' || p.startsWith('/campaigns'),
   },
   {
-    href: '/reports',
-    label: 'Relatórios',
-    icon: <IconChart />,
-    match: (p) => p.startsWith('/reports'),
+    href: '/billing',
+    label: 'Carteira',
+    icon: <IconWallet />,
+    match: (p) => p.startsWith('/billing'),
+    badge: <WalletBalanceBadge />,
   },
   {
     href: '/account',
@@ -49,19 +52,38 @@ const NAV: NavItem[] = [
     icon: <IconUser />,
     match: (p) => p.startsWith('/account'),
   },
-  {
-    href: '/settings',
-    label: 'Configurações',
-    icon: <IconSettings />,
-    match: (p) => p.startsWith('/settings'),
-  },
-  {
-    href: '/billing',
-    label: 'Faturamento',
-    icon: <IconCard />,
-    match: (p) => p.startsWith('/billing'),
-  },
 ];
+
+// Saldo sempre visível no menu; some enquanto carrega ou se a carteira falhar
+// (a tela da Carteira mostra o erro — aqui um "R$ 0,00" falso assustaria).
+function WalletBalanceBadge() {
+  const { activeAccountId } = useActiveAdvertiserAccount();
+  const wallet = useWalletQuery(activeAccountId ?? undefined);
+  if (!wallet.data) return null;
+  const empty = wallet.data.balanceCents <= 0;
+  return (
+    <span className={`${styles.navBadge} ${empty ? styles.navBadgeLow : ''}`}>
+      {formatCentsToBRL(wallet.data.balanceCents)}
+    </span>
+  );
+}
+
+// Saldo no topo do celular: lá a sidebar vira barra inferior e o saldo sai do menu.
+function MobileWalletLink() {
+  const { activeAccountId } = useActiveAdvertiserAccount();
+  const wallet = useWalletQuery(activeAccountId ?? undefined);
+  if (!wallet.data) return null;
+  const empty = wallet.data.balanceCents <= 0;
+  return (
+    <Link
+      href="/billing"
+      className={`${styles.mobileBalance} ${empty ? styles.mobileBalanceLow : ''}`}
+      aria-label={`Saldo da carteira: ${formatCentsToBRL(wallet.data.balanceCents)}`}
+    >
+      {formatCentsToBRL(wallet.data.balanceCents)}
+    </Link>
+  );
+}
 
 // Sidebar shell for the Ads Manager (Ads Manager design). Guarding lives one
 // level up (AuthGuard, wrapped around {children} by RootLayout) — this only
@@ -76,13 +98,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.shell}>
+      <header className={styles.mobileTop}>
+        <Logo size={22} wordmarkClassName={styles.wordmark} />
+        <span className={styles.adsBadge}>ADS</span>
+        <MobileWalletLink />
+        {isAuthenticated && (
+          <button type="button" className={styles.mobileLogout} onClick={logout}>
+            Sair
+          </button>
+        )}
+      </header>
+
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
           <Logo size={26} wordmarkClassName={styles.wordmark} />
           <span className={styles.adsBadge}>ADS</span>
         </div>
 
-        <nav className={styles.nav}>
+        <nav className={styles.nav} aria-label="Menu principal">
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -91,6 +124,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <span className={styles.navIcon}>{item.icon}</span>
               <span>{item.label}</span>
+              {item.badge}
             </Link>
           ))}
         </nav>
@@ -107,7 +141,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className={styles.logoutIcon}>
               <IconLogout />
             </span>
-            <span className={styles.srOnly}>Log out</span>
+            <span className={styles.srOnly}>Sair</span>
           </button>
         )}
       </aside>

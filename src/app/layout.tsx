@@ -20,9 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Providers>
           <PlatformGate>
-            <AppShell>
-              <AuthGuard>{children}</AuthGuard>
-            </AppShell>
+            <AuthGuard>
+              <AppShell>{children}</AppShell>
+            </AuthGuard>
           </PlatformGate>
           <Toaster />
         </Providers>

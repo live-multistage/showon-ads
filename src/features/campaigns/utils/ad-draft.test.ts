@@ -17,6 +17,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     bannerUrl: 'https://cdn.example.com/banner.png',
     videoUrl: null,
     videoDurationSec: null,
+    pauseVariant: null,
     frequencyCapMax: 3,
     frequencyCapWindow: 'day',
     billingModel: 'CPM',
@@ -129,5 +130,27 @@ describe('draftToUpdateAdRequest', () => {
     const request = draftToUpdateAdRequest(draft);
 
     expect(request.destination).toBeUndefined();
+  });
+});
+
+describe('adToDraft — type and pause variant', () => {
+  it('derives the type from the format', () => {
+    expect(adToDraft(makeAd({})).kind).toBe('banner');
+    expect(adToDraft(makeAd({ format: 'VIDEO_16_9', placements: ['PRE_ROLL'] })).kind).toBe('preroll');
+    expect(adToDraft(makeAd({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN' }))).toMatchObject({
+      kind: 'pause',
+      pauseVariant: 'FULLSCREEN',
+    });
+  });
+
+  it('a legacy pause ad without variant is Padrão', () => {
+    expect(adToDraft(makeAd({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: null })).pauseVariant).toBe('STANDARD');
+  });
+
+  it('only pause sends a variant on update', () => {
+    expect(draftToUpdateAdRequest(adToDraft(makeAd({}))).pauseVariant).toBeUndefined();
+    expect(
+      draftToUpdateAdRequest(adToDraft(makeAd({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN' }))).pauseVariant,
+    ).toBe('FULLSCREEN');
   });
 });

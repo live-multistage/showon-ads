@@ -1,12 +1,52 @@
 @use '../../../../styles/ads-theme' as ads;
 
 .step {
-  @include ads.card;
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 480px;
+}
+
+.heading {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 20px;
+  color: ads.$text;
+}
+
+.lead {
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: ads.$text-dim;
+}
+
+.group {
+  @include ads.card;
+  padding: 16px 20px;
+}
+
+.groupHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.groupTitle {
+  font-family: ads.$ui;
+  color: ads.$text;
+}
+
+.editBtn {
+  @include ads.mono-label(11px, ads.$accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .row {
@@ -17,7 +57,7 @@
 }
 
 .label {
-  @include ads.mono-label(12px);
+  @include ads.mono-label(11px);
   letter-spacing: 0.08em;
 }
 

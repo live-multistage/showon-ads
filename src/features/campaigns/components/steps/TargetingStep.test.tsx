@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TargetingStep } from './TargetingStep';
-import { ALL_PLACEMENTS, validateStep, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import { draftPatchForKind, validateStep, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 
 function makeDraft(overrides: Partial<CampaignWizardDraft> = {}): CampaignWizardDraft {
   return {
+    kind: 'banner',
+    pauseVariant: null,
     title: '',
     format: null,
     bannerFile: null,
@@ -15,7 +17,7 @@ function makeDraft(overrides: Partial<CampaignWizardDraft> = {}): CampaignWizard
     targetDomains: [],
     targetCategories: [],
     targetAgeBrackets: [],
-    placements: ALL_PLACEMENTS,
+    placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'],
     billingModel: null,
     bidReais: '',
     dailyBudgetReais: '',
@@ -76,41 +78,37 @@ describe('TargetingStep — age brackets', () => {
 });
 
 describe('TargetingStep — placements', () => {
-  it('renders a checkbox per placement, all checked by default', () => {
+  it('banner: one checkbox per page position, all checked by default', () => {
     render(<TargetingStep draft={makeDraft()} updateDraft={vi.fn()} />);
 
-    const checkboxes = screen.getAllByRole('checkbox', {
-      name: /feed|página do evento|checkout|pós-compra|pausa do player|pre-roll/i,
-    });
-    expect(checkboxes).toHaveLength(6);
+    const checkboxes = screen.getAllByRole('checkbox', { name: /feed|página do evento|checkout|pós-compra/i });
+    expect(checkboxes).toHaveLength(4);
     checkboxes.forEach((c) => expect(c).toBeChecked());
+    expect(screen.queryByRole('checkbox', { name: 'Pausa do player' })).toBeNull();
   });
 
-  it('unchecking a placement removes it from the draft', () => {
+  it('banner: unchecking a position removes it from the draft', () => {
     const updateDraft = vi.fn();
     render(<TargetingStep draft={makeDraft()} updateDraft={updateDraft} />);
 
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Checkout' }));
 
-    expect(updateDraft).toHaveBeenCalledWith({
-      placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE', 'PRE_ROLL'],
-    });
+    expect(updateDraft).toHaveBeenCalledWith({ placements: ['FEED', 'EVENT_DETAIL', 'POST_PURCHASE'] });
   });
 
-  it('checking a previously-unselected placement adds it back to the draft', () => {
-    const updateDraft = vi.fn();
-    render(
-      <TargetingStep
-        draft={makeDraft({ placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'] })}
-        updateDraft={updateDraft}
-      />,
-    );
+  it('video: shows where it runs instead of position checkboxes', () => {
+    render(<TargetingStep draft={makeDraft(draftPatchForKind('preroll'))} updateDraft={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
+    expect(screen.queryByRole('checkbox', { name: 'Feed' })).toBeNull();
+    expect(screen.getByText('Antes do vídeo')).toBeInTheDocument();
+    expect(screen.getByText('Só quem tem acesso à transmissão chega a ver o vídeo.')).toBeInTheDocument();
+  });
 
-    expect(updateDraft).toHaveBeenCalledWith({
-      placements: ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE', 'PLAYER_PAUSE'],
-    });
+  it('pause: shows the player position', () => {
+    render(<TargetingStep draft={makeDraft(draftPatchForKind('pause'))} updateDraft={vi.fn()} />);
+
+    expect(screen.getByText('Pausa no player')).toBeInTheDocument();
+    expect(screen.getByText('Depois de 2 s de pausa, a cada pausa')).toBeInTheDocument();
   });
 });
 

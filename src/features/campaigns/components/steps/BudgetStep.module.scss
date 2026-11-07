@@ -22,3 +22,38 @@
   @include ads.mono-label(11px);
   letter-spacing: 0.02em;
 }
+
+.heading {
+  font-family: ads.$ui;
+  font-weight: 700;
+  font-size: 20px;
+  color: ads.$text;
+  margin-bottom: 4px;
+}
+
+.error {
+  font-family: ads.$ui;
+  font-size: 12px;
+  color: #f87171;
+  margin-top: 6px;
+}
+
+.minTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: ads.$text-dim;
+
+  th,
+  td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid ads.$border;
+  }
+
+  td {
+    font-family: ads.$mono;
+    color: ads.$text;
+  }
+}

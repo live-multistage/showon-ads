@@ -1,3 +1,5 @@
+import { parseBrlToCents } from '@/features/campaigns/utils/brl';
+
 const PRESET_STEPS_CENTS = [5000, 10000, 20000, 50000];
 
 // Presets nunca ficam abaixo do mínimo de recarga. Se o mínimo passa de todos
@@ -7,13 +9,10 @@ export function topUpPresets(minCents: number): number[] {
   return presets.length > 0 ? presets : [minCents];
 }
 
-// Aceita "200", "200,50" e "200.50". Vazio ou inválido vira null.
+// Vazio ou inválido vira null.
 export function parseReaisToCents(input: string): number | null {
-  const normalized = input.trim().replace(',', '.');
-  if (normalized === '') return null;
-  const reais = Number(normalized);
-  if (!Number.isFinite(reais) || reais <= 0) return null;
-  return Math.round(reais * 100);
+  const cents = parseBrlToCents(input);
+  return cents === null || cents <= 0 ? null : cents;
 }
 
 export type TopUpValidation = { ok: true; cents: number } | { ok: false; reason: 'invalid' | 'belowMin' };

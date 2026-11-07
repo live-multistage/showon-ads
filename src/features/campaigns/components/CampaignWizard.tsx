@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useAdvertiserSettingsQuery, useWalletQuery } from '@/features/settings/queries/use-wallet';
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 import { useCampaignWizard, type WizardStepId } from '../hooks/use-campaign-wizard';
 import { useSubmitCampaign } from '../hooks/use-submit-campaign';
@@ -13,16 +14,16 @@ import { CampaignPreviewPanel } from './CampaignPreviewPanel';
 import styles from './CampaignWizard.module.scss';
 
 const STEP_LABELS: Record<WizardStepId, string> = {
-  budget: 'Orçamento',
-  targeting: 'Segmentação',
   creative: 'Criativo e destino',
+  targeting: 'Onde e para quem',
+  budget: 'Orçamento e período',
   review: 'Revisão',
 };
 
 const STEP_DESC: Record<WizardStepId, string> = {
-  budget: 'INVESTIMENTO',
-  targeting: 'PÚBLICO-ALVO',
-  creative: 'BANNER, TÍTULO E DESTINO',
+  creative: 'TIPO, ARQUIVO E DESTINO',
+  targeting: 'POSIÇÕES E PÚBLICO',
+  budget: 'LANCE, LIMITE E DATAS',
   review: 'CONFIRA E ENVIE',
 };
 
@@ -45,10 +46,13 @@ function ChevronRight({ size = 14, className }: { size?: number; className?: str
 // Shell owns the stepper header, step outlet, back/next navigation and (on
 // the final step) the create→upload→submit orchestration.
 export function CampaignWizard() {
-  const { steps, step, stepIndex, draft, error, bannerRequiredWarning, updateDraft, setBanner, next, back, goToStep } =
-    useCampaignWizard();
+  const settings = useAdvertiserSettingsQuery();
+  const pauseMinBids = settings.data?.pauseMinBids;
+  const { steps, step, stepIndex, draft, error, bannerRequiredWarning, updateDraft, selectKind, setBanner, next, back, goToStep } =
+    useCampaignWizard({ pauseMinBids });
   const { activeAccountId } = useActiveAdvertiserAccount();
-  const { submit, isSubmitting } = useSubmitCampaign();
+  const wallet = useWalletQuery(activeAccountId ?? undefined);
+  const { submit, isSubmitting, createFailed } = useSubmitCampaign();
   const router = useRouter();
 
   const isLastStep = stepIndex === steps.length - 1;
@@ -83,7 +87,7 @@ export function CampaignWizard() {
             </span>
           </div>
           <h1 className={styles.title}>Nova campanha</h1>
-          <p className={styles.subtitle}>Configure orçamento, público, criativo e destino em 4 passos.</p>
+          <p className={styles.subtitle}>Rascunho salvo a cada passo. Nada vai ao ar antes da análise.</p>
         </div>
         <div className={styles.headerActions}>
           <button type="button" className={styles.btnGhost} onClick={() => router.push('/campaigns')}>
@@ -122,7 +126,7 @@ export function CampaignWizard() {
       {isReview ? (
         <div className={styles.reviewWrap}>
           <div className={styles.stepCard}>
-            <ReviewStep draft={draft} />
+            <ReviewStep draft={draft} balanceCents={wallet.data?.balanceCents ?? null} onEdit={goToStep} submitFailed={createFailed} />
             {submitBlockedByBanner && (
               <p className={styles.error} role="alert">
                 Anúncios com URL externa precisam de um banner antes de serem enviados para revisão.
@@ -138,14 +142,14 @@ export function CampaignWizard() {
       ) : (
         <div className={styles.grid}>
           <div className={styles.stepCard}>
-            {step === 'budget' && <BudgetStep draft={draft} updateDraft={updateDraft} />}
-            {step === 'targeting' && <TargetingStep draft={draft} updateDraft={updateDraft} />}
             {step === 'creative' && (
               <>
-                <CreativeStep draft={draft} updateDraft={updateDraft} setBanner={setBanner} />
+                <CreativeStep draft={draft} updateDraft={updateDraft} selectKind={selectKind} setBanner={setBanner} />
                 <DestinationStep draft={draft} updateDraft={updateDraft} bannerRequiredWarning={bannerRequiredWarning} />
               </>
             )}
+            {step === 'targeting' && <TargetingStep draft={draft} updateDraft={updateDraft} />}
+            {step === 'budget' && <BudgetStep draft={draft} updateDraft={updateDraft} pauseMinBids={pauseMinBids} />}
 
             {error && (
               <p className={styles.error} role="alert">
@@ -189,7 +193,7 @@ export function CampaignWizard() {
             onClick={handleSubmit}
             disabled={isSubmitting || submitBlockedByBanner || !activeAccountId}
           >
-            {isSubmitting ? 'Enviando...' : 'Enviar para revisão'}
+            {isSubmitting ? 'Enviando...' : createFailed ? 'Tentar de novo' : 'Enviar para análise'}
           </button>
         </div>
       )}

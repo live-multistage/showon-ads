@@ -1,12 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CreativeStep } from './CreativeStep';
-import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import { draftPatchForKind, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 
 function makeDraft(overrides: Partial<CampaignWizardDraft> = {}): CampaignWizardDraft {
   return {
+    kind: 'banner',
+    pauseVariant: null,
     title: '',
-    format: null,
+    format: 'HORIZONTAL_728x90',
     bannerFile: null,
     bannerPreviewUrl: null,
     destinationType: null,
@@ -28,93 +30,89 @@ function makeDraft(overrides: Partial<CampaignWizardDraft> = {}): CampaignWizard
   };
 }
 
-describe('CreativeStep — format cards filtered by placement', () => {
-  it('shows only the page-placement formats for the default 4-placement selection', () => {
-    render(<CreativeStep draft={makeDraft()} updateDraft={vi.fn()} setBanner={vi.fn()} />);
+const pauseDraft = (o: Partial<CampaignWizardDraft> = {}) => makeDraft({ ...draftPatchForKind('pause'), ...o });
+const prerollDraft = (o: Partial<CampaignWizardDraft> = {}) => makeDraft({ ...draftPatchForKind('preroll'), ...o });
 
-    expect(screen.getByRole('button', { name: /Horizontal/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Vertical/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Tela ampla 16:9/ })).not.toBeInTheDocument();
+function renderStep(draft: CampaignWizardDraft, props: Partial<React.ComponentProps<typeof CreativeStep>> = {}) {
+  const handlers = { updateDraft: vi.fn(), selectKind: vi.fn(), setBanner: vi.fn() };
+  render(<CreativeStep draft={draft} {...handlers} {...props} />);
+  return handlers;
+}
+
+describe('CreativeStep — type of ad', () => {
+  it('offers the three ad types and marks the current one', () => {
+    renderStep(makeDraft());
+    expect(screen.getByRole('button', { name: /Banner nas páginas/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /Vídeo antes da transmissão/ })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: /Anúncio na pausa/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('shows a single 16:9 card for a PLAYER_PAUSE-only selection', () => {
-    render(<CreativeStep draft={makeDraft({ placements: ['PLAYER_PAUSE'] })} updateDraft={vi.fn()} setBanner={vi.fn()} />);
-
-    expect(screen.getByRole('button', { name: /Tela ampla 16:9/ })).toBeInTheDocument();
-    expect(screen.getByText('mín. 1280×720, ideal 1920×1080')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Horizontal/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Vertical/ })).not.toBeInTheDocument();
+  it('picking a type calls selectKind', () => {
+    const { selectKind } = renderStep(makeDraft());
+    fireEvent.click(screen.getByRole('button', { name: /Anúncio na pausa/ }));
+    expect(selectKind).toHaveBeenCalledWith('pause');
   });
 
-  it('shows the 16:9 upload hint when the format is WIDE_16_9', () => {
-    render(
-      <CreativeStep
-        draft={makeDraft({ placements: ['PLAYER_PAUSE'], format: 'WIDE_16_9' })}
-        updateDraft={vi.fn()}
-        setBanner={vi.fn()}
-      />,
-    );
+  it('locks the other types while editing an existing campaign', () => {
+    renderStep(makeDraft(), { lockKind: true });
+    expect(screen.getByRole('button', { name: /Vídeo antes da transmissão/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Banner nas páginas/ })).toBeEnabled();
+  });
+});
 
+describe('CreativeStep — banner', () => {
+  it('offers the two sizes and updates the format', () => {
+    const { updateDraft } = renderStep(makeDraft());
+    fireEvent.click(screen.getByRole('button', { name: 'Vertical 300×600' }));
+    expect(updateDraft).toHaveBeenCalledWith({ format: 'VERTICAL_300x600' });
+  });
+
+  it('accepts images and hints at the ideal dimension', () => {
+    renderStep(makeDraft());
+    expect(screen.getByLabelText('Banner')).toHaveAttribute('accept', 'image/png,image/jpeg,image/webp');
+    expect(screen.getByText('DIMENSÃO IDEAL: 728×90')).toBeInTheDocument();
+  });
+
+  it('says the title is only for the advertiser', () => {
+    renderStep(makeDraft());
+    expect(screen.getByText('Só você vê. Aparece no Ads Manager e nos relatórios.')).toBeInTheDocument();
+  });
+});
+
+describe('CreativeStep — pause', () => {
+  it('shows the two variants and picks one', () => {
+    const { updateDraft } = renderStep(pauseDraft());
+    expect(screen.getByRole('button', { name: /Padrão/ })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: /Tela cheia/ }));
+    expect(updateDraft).toHaveBeenCalledWith({ pauseVariant: 'FULLSCREEN' });
+  });
+
+  it('warns that mobile is always fullscreen', () => {
+    renderStep(pauseDraft());
+    expect(screen.getByText(/No celular, a pausa é sempre Tela cheia/)).toBeInTheDocument();
+  });
+
+  it('shows the 16:9 upload hint and the public-title hint', () => {
+    renderStep(pauseDraft());
     expect(screen.getByText('DIMENSÃO IDEAL: 1920×1080')).toBeInTheDocument();
+    expect(screen.getByText('O público vê: é o título grande ao lado do player.')).toBeInTheDocument();
   });
+});
 
-  it('resets an now-invalid format to null when placements change to make it incompatible', () => {
-    const updateDraft = vi.fn();
-    const setBanner = vi.fn();
-    const { rerender } = render(
-      <CreativeStep
-        draft={makeDraft({ placements: ['PLAYER_PAUSE'], format: 'WIDE_16_9' })}
-        updateDraft={updateDraft}
-        setBanner={setBanner}
-      />,
-    );
-
-    // Advertiser goes back to Targeting and switches to page placements —
-    // WIDE_16_9 is no longer accepted, so the format must reset.
-    rerender(
-      <CreativeStep
-        draft={makeDraft({ placements: ['FEED'], format: 'WIDE_16_9' })}
-        updateDraft={updateDraft}
-        setBanner={setBanner}
-      />,
-    );
-
-    expect(updateDraft).toHaveBeenCalledWith({ format: null });
-    expect(setBanner).toHaveBeenCalledWith(null);
-  });
-
-  it('shows the video format card only when PRE_ROLL is the placement', () => {
-    const { rerender } = render(
-      <CreativeStep draft={makeDraft({ placements: ['PRE_ROLL'] })} updateDraft={vi.fn()} setBanner={vi.fn()} />,
-    );
-    expect(screen.getByRole('button', { name: /Vídeo 16:9/ })).toBeInTheDocument();
-
-    rerender(<CreativeStep draft={makeDraft({ placements: ['FEED'] })} updateDraft={vi.fn()} setBanner={vi.fn()} />);
-    expect(screen.queryByRole('button', { name: /Vídeo 16:9/ })).not.toBeInTheDocument();
-  });
-
-  it('accepts only mp4 files for VIDEO_16_9', () => {
-    render(
-      <CreativeStep
-        draft={makeDraft({ placements: ['PRE_ROLL'], format: 'VIDEO_16_9' })}
-        updateDraft={vi.fn()}
-        setBanner={vi.fn()}
-      />,
-    );
-
+describe('CreativeStep — video', () => {
+  it('accepts only mp4 files', () => {
+    renderStep(prerollDraft());
     expect(screen.getByLabelText('Banner')).toHaveAttribute('accept', 'video/mp4');
     expect(screen.getByText('MP4 · MÁX 50MB · ATÉ 30s')).toBeInTheDocument();
   });
 
+  it('says the title becomes the action button over the video', () => {
+    renderStep(prerollDraft());
+    expect(screen.getByText('O público vê: vira o botão de ação sobre o vídeo.')).toBeInTheDocument();
+  });
+
   it('rejects an mp4 over 50MB and does not stage it, but accepts a normal-size one', () => {
-    const setBanner = vi.fn();
-    render(
-      <CreativeStep
-        draft={makeDraft({ placements: ['PRE_ROLL'], format: 'VIDEO_16_9' })}
-        updateDraft={vi.fn()}
-        setBanner={setBanner}
-      />,
-    );
+    const { setBanner } = renderStep(prerollDraft());
     const input = screen.getByLabelText('Banner');
 
     const oversized = new File([''], 'big.mp4', { type: 'video/mp4' });
@@ -130,26 +128,5 @@ describe('CreativeStep — format cards filtered by placement', () => {
 
     expect(setBanner).toHaveBeenCalledWith(ok);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  it('does not reset the format when it stays compatible with the new placements', () => {
-    const updateDraft = vi.fn();
-    const { rerender } = render(
-      <CreativeStep
-        draft={makeDraft({ placements: ['FEED'], format: 'HORIZONTAL_728x90' })}
-        updateDraft={updateDraft}
-        setBanner={vi.fn()}
-      />,
-    );
-
-    rerender(
-      <CreativeStep
-        draft={makeDraft({ placements: ['FEED', 'EVENT_DETAIL'], format: 'HORIZONTAL_728x90' })}
-        updateDraft={updateDraft}
-        setBanner={vi.fn()}
-      />,
-    );
-
-    expect(updateDraft).not.toHaveBeenCalled();
   });
 });

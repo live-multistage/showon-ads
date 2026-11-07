@@ -81,6 +81,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     bannerUrl: null,
     videoUrl: null,
     videoDurationSec: null,
+    pauseVariant: null,
     frequencyCapMax: null,
     frequencyCapWindow: null,
     billingModel: 'CPM',

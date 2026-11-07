@@ -14,10 +14,16 @@ describe('formatCentsToBRL', () => {
 describe('reaisToCents', () => {
   it('converts a reais string to integer cents', () => {
     expect(reaisToCents('15.5')).toBe(1550);
+    expect(reaisToCents('15,5')).toBe(1550);
+  });
+
+  it('understands the thousands separator', () => {
+    expect(reaisToCents('1.500,00')).toBe(150000);
+    expect(reaisToCents('1.500')).toBe(150000);
   });
 
   it('rounds fractional cents', () => {
-    expect(reaisToCents('10.005')).toBe(1001);
+    expect(reaisToCents('10,005')).toBe(1001);
   });
 
   it('treats empty input as 0', () => {

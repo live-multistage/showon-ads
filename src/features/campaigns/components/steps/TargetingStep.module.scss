@@ -38,3 +38,21 @@
     cursor: pointer;
   }
 }
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 20px;
+  margin: 8px 0;
+  font-family: ads.$ui;
+  font-size: 13px;
+
+  dt {
+    color: ads.$text-muted;
+  }
+
+  dd {
+    color: ads.$text;
+    margin: 0;
+  }
+}

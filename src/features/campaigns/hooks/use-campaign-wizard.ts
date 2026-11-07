@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type {
   AdBillingModel,
+  AdPauseVariant,
+  PauseMinBids,
   AdDestination,
   AdFormat,
   AdPlacement,
@@ -11,20 +13,23 @@ import type {
   FrequencyCapWindow,
 } from '@/features/advertisements/types/advertisement.types';
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
-import { reaisToCents } from '../utils/format-currency';
-import { acceptedFormatsFor, ALL_PLACEMENTS, DEFAULT_PLACEMENTS } from '../utils/ad-display';
+import { reaisToCents, formatCentsToBRL } from '../utils/format-currency';
+import { acceptedFormatsFor, ALL_PLACEMENTS, DEFAULT_PLACEMENTS, campaignKindOf, type CampaignKind } from '../utils/ad-display';
 
 // Re-export for backward compatibility with TargetingStep.tsx
 export { ALL_PLACEMENTS };
 
-// Wizard order: budget -> targeting -> creative (creative + destination
-// merged into one step) -> review.
-export const WIZARD_STEPS = ['budget', 'targeting', 'creative', 'review'] as const;
+// Wizard order: creative + destination (merged) -> where/for whom -> budget
+// and period -> review. The creative comes first because its type decides
+// which placements and bids the later steps offer.
+export const WIZARD_STEPS = ['creative', 'targeting', 'budget', 'review'] as const;
 export type WizardStepId = (typeof WIZARD_STEPS)[number];
 
 export type DestinationType = 'EVENT' | 'EXTERNAL_URL';
 
 export interface CampaignWizardDraft {
+  kind: CampaignKind;
+  pauseVariant: AdPauseVariant | null;
   title: string;
   format: AdFormat | null;
   bannerFile: File | null;
@@ -47,8 +52,10 @@ export interface CampaignWizardDraft {
 }
 
 const INITIAL_DRAFT: CampaignWizardDraft = {
+  kind: 'banner',
+  pauseVariant: null,
   title: '',
-  format: null,
+  format: 'HORIZONTAL_728x90',
   bannerFile: null,
   bannerPreviewUrl: null,
   destinationType: null,
@@ -67,6 +74,14 @@ const INITIAL_DRAFT: CampaignWizardDraft = {
   startsAt: '',
   endsAt: '',
 };
+
+// Changing the type resets everything the type decides: format, placements,
+// variant and the staged file (a video is not a valid banner).
+export function draftPatchForKind(kind: CampaignKind): Partial<CampaignWizardDraft> {
+  if (kind === 'preroll') return { kind, format: 'VIDEO_16_9', placements: ['PRE_ROLL'], pauseVariant: null };
+  if (kind === 'pause') return { kind, format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'STANDARD' };
+  return { kind, format: 'HORIZONTAL_728x90', placements: DEFAULT_PLACEMENTS, pauseVariant: null };
+}
 
 // Mirrors orchestrator's IsHttpsUrl validator (shared/validators/is-https-url.validator.ts):
 // scheme must be exactly https, no embedded credentials, max 512 chars.
@@ -93,6 +108,8 @@ export function validateExternalUrl(value: string): string | null {
 export function validateCreativeStep(draft: CampaignWizardDraft): string | null {
   if (!draft.title.trim()) return 'Informe um título para a campanha.';
   if (!draft.format) return 'Selecione um formato de anúncio.';
+  if (campaignKindOf(draft.format) !== draft.kind) return 'O formato não combina com o tipo de anúncio.';
+  if (draft.kind === 'pause' && !draft.pauseVariant) return 'Escolha a variante da pausa.';
   return null;
 }
 
@@ -119,9 +136,24 @@ function validateTargetingStep(draft: CampaignWizardDraft): string | null {
 
 // Mirrors orchestrator's Ad.create validation (src/advertisements/domain/ad.ts)
 // so the wizard fails fast instead of round-tripping to the API.
-function validateBudgetStep(draft: CampaignWizardDraft): string | null {
+export const PAUSE_VARIANT_NAME: Record<AdPauseVariant, string> = { STANDARD: 'Padrão', FULLSCREEN: 'Tela cheia' };
+
+// Mínimo do lance da pausa por variante e modelo. Só pausa tem piso; vídeo e
+// banner seguem com bidCents ≥ 1. Sem as configurações carregadas, o backend
+// segue sendo a barreira (400 com mensagem legível).
+export function pauseMinimumError(draft: CampaignWizardDraft, minBids: PauseMinBids | undefined): string | null {
+  if (draft.kind !== 'pause' || !draft.pauseVariant || !draft.billingModel || !minBids) return null;
+  const min = minBids[draft.pauseVariant][draft.billingModel];
+  if (reaisToCents(draft.bidReais) >= min) return null;
+  const per = draft.billingModel === 'CPM' ? 'por mil exibições' : 'por clique';
+  return `O lance mínimo da pausa ${PAUSE_VARIANT_NAME[draft.pauseVariant]} é ${formatCentsToBRL(min)} ${per}.`;
+}
+
+function validateBudgetStep(draft: CampaignWizardDraft, minBids?: PauseMinBids): string | null {
   if (!draft.billingModel) return 'Selecione um modelo de cobrança.';
   if (reaisToCents(draft.bidReais) <= 0) return 'O lance deve ser maior que zero.';
+  const minimumError = pauseMinimumError(draft, minBids);
+  if (minimumError) return minimumError;
   if (reaisToCents(draft.dailyBudgetReais) <= 0) return 'O orçamento diário deve ser maior que zero.';
   if (reaisToCents(draft.totalLimitReais) < reaisToCents(draft.dailyBudgetReais)) {
     return 'O limite total deve ser maior ou igual ao orçamento diário.';
@@ -133,12 +165,12 @@ function validateBudgetStep(draft: CampaignWizardDraft): string | null {
 
 // Exported so the campaign detail page's edit mode (task 20) can reuse the
 // exact same per-step validation instead of re-implementing it.
-export function validateStep(id: WizardStepId, draft: CampaignWizardDraft): string | null {
+export function validateStep(id: WizardStepId, draft: CampaignWizardDraft, minBids?: PauseMinBids): string | null {
   // 'creative' now renders CreativeStep + DestinationStep stacked, so it
   // validates both — creative error surfaces first.
   if (id === 'creative') return validateCreativeStep(draft) || validateDestinationStep(draft);
   if (id === 'targeting') return validateTargetingStep(draft);
-  if (id === 'budget') return validateBudgetStep(draft);
+  if (id === 'budget') return validateBudgetStep(draft, minBids);
   return null;
 }
 
@@ -169,6 +201,7 @@ export function draftToCreateAdRequest(
     title: draft.title.trim(),
     format: draft.format as AdFormat,
     placements: draft.placements,
+    pauseVariant: draft.kind === 'pause' ? (draft.pauseVariant ?? undefined) : undefined,
     targetDomains: draft.targetDomains,
     targetCategories: draft.targetCategories,
     targetAgeBrackets: draft.targetAgeBrackets,
@@ -183,7 +216,7 @@ export function draftToCreateAdRequest(
   };
 }
 
-export function useCampaignWizard() {
+export function useCampaignWizard({ pauseMinBids }: { pauseMinBids?: PauseMinBids } = {}) {
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState<CampaignWizardDraft>(INITIAL_DRAFT);
   const [error, setError] = useState<string | null>(null);
@@ -207,6 +240,14 @@ export function useCampaignWizard() {
     setDraft((prev) => ({ ...prev, ...patch }));
   }
 
+  function selectKind(kind: CampaignKind) {
+    setDraft((prev) => {
+      if (prev.kind === kind) return prev;
+      if (prev.bannerPreviewUrl) URL.revokeObjectURL(prev.bannerPreviewUrl);
+      return { ...prev, ...draftPatchForKind(kind), bannerFile: null, bannerPreviewUrl: null };
+    });
+  }
+
   function setBanner(file: File | null) {
     setDraft((prev) => {
       if (prev.bannerPreviewUrl) URL.revokeObjectURL(prev.bannerPreviewUrl);
@@ -215,7 +256,7 @@ export function useCampaignWizard() {
   }
 
   function next() {
-    const validationError = validateStep(step, draft);
+    const validationError = validateStep(step, draft, pauseMinBids);
     if (validationError) {
       setError(validationError);
       return;
@@ -253,6 +294,7 @@ export function useCampaignWizard() {
     error,
     bannerRequiredWarning,
     updateDraft,
+    selectKind,
     setBanner,
     next,
     back,

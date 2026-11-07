@@ -21,6 +21,8 @@ describe('parseReaisToCents', () => {
     ['200,50', 20050],
     ['200.5', 20050],
     [' 50 ', 5000],
+    ['1.500,00', 150000],
+    ['1.500', 150000],
   ])('parses %s', (input, cents) => expect(parseReaisToCents(input)).toBe(cents));
 
   it.each(['', 'abc', '0', '-5'])('rejects %j', (input) => expect(parseReaisToCents(input)).toBeNull());

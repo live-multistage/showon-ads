@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { normalizeError } from '@/shared/api/client';
 import { useCreateAdMutation } from '@/features/advertisements/mutations/use-create-ad.mutation';
 import { useUploadBannerMutation } from '@/features/advertisements/mutations/use-upload-banner.mutation';
 import { useUploadVideoMutation } from '@/features/advertisements/mutations/use-upload-video.mutation';
@@ -23,15 +25,22 @@ export function useSubmitCampaign() {
 
   const isSubmitting = createAd.isPending || uploadBanner.isPending || uploadVideo.isPending || changeStatus.isPending;
 
+  // "Não foi possível enviar": o formulário continua na revisão com as escolhas.
+  const [createFailed, setCreateFailed] = useState(false);
+
   async function submit(draft: CampaignWizardDraft, advertiserAccountId: string) {
+    setCreateFailed(false);
     const request = draftToCreateAdRequest(draft, advertiserAccountId);
 
     let adId: string;
     try {
       const created = await createAd.mutateAsync(request);
       adId = created.id;
-    } catch {
-      toast.error('Não foi possível criar a campanha. Verifique os dados e tente novamente.');
+    } catch (error) {
+      setCreateFailed(true);
+      // 400 traz mensagem em PT-BR pronta para exibir (ex.: lance abaixo do mínimo da variante).
+      const { status, message } = normalizeError(error);
+      toast.error(status === 400 && message ? message : 'Não foi possível criar a campanha. Verifique os dados e tente novamente.');
       return;
     }
 
@@ -56,5 +65,5 @@ export function useSubmitCampaign() {
     router.push(`/campaigns/${adId}`);
   }
 
-  return { submit, isSubmitting };
+  return { submit, isSubmitting, createFailed };
 }

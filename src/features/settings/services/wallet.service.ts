@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client';
+import type { PauseMinBids } from '@/features/advertisements/types/advertisement.types';
 
 export interface WalletSummary {
   balanceCents: number;
@@ -14,13 +15,11 @@ export interface WalletTransactionView {
   createdAt: string;
 }
 
-export type PauseVariantKey = 'STANDARD' | 'FULLSCREEN';
-export type BillingModelKey = 'CPM' | 'CPC';
 
 export interface AdvertiserSettings {
   minTopupCents: number;
   lowBalanceThresholdCents: number;
-  pauseMinBids: Record<PauseVariantKey, Record<BillingModelKey, number>>;
+  pauseMinBids: PauseMinBids;
 }
 
 export const walletService = {

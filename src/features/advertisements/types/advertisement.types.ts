@@ -6,6 +6,9 @@ export type AdStatus = 'DRAFT' | 'REVIEW' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'REJ
 export type AdFormat = 'HORIZONTAL_728x90' | 'VERTICAL_300x600' | 'WIDE_16_9' | 'VIDEO_16_9';
 export type AdPlacement = 'FEED' | 'EVENT_DETAIL' | 'CHECKOUT' | 'POST_PURCHASE' | 'PLAYER_PAUSE' | 'PRE_ROLL';
 export type AdBillingModel = 'CPM' | 'CPC';
+export type AdPauseVariant = 'STANDARD' | 'FULLSCREEN';
+// Lance mínimo (centavos) da pausa por variante e modelo, de GET /advertisers/settings.
+export type PauseMinBids = Record<AdPauseVariant, Record<AdBillingModel, number>>;
 export type AdStatusAction = 'submit' | 'activate' | 'pause' | 'end';
 export type FrequencyCapWindow = 'day' | 'total';
 // Advertisers may only target the 5 adult brackets — AGE_13_17 is excluded
@@ -50,6 +53,8 @@ export interface AdResponse {
   bannerUrl: string | null;
   videoUrl: string | null;
   videoDurationSec: number | null;
+  // Só PLAYER_PAUSE tem variante; null nos demais (e em anúncios legados, que valem Padrão).
+  pauseVariant: AdPauseVariant | null;
   frequencyCapMax: number | null;
   frequencyCapWindow: FrequencyCapWindow | null;
   billingModel: AdBillingModel;
@@ -73,6 +78,7 @@ export interface CreateAdRequest {
   title: string;
   format: AdFormat;
   placements: AdPlacement[];
+  pauseVariant?: AdPauseVariant;
   targetDomains: string[];
   targetCategories: string[];
   // Empty/omitted = all ages.
@@ -92,6 +98,7 @@ export interface UpdateAdRequest {
   title?: string;
   format?: AdFormat;
   placements?: AdPlacement[];
+  pauseVariant?: AdPauseVariant | null;
   targetDomains?: string[];
   targetCategories?: string[];
   targetAgeBrackets?: AgeBracket[];

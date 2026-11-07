@@ -19,6 +19,10 @@ if (!Element.prototype.scrollIntoView) {
 }
 
 const mockUpdateMutateAsync = vi.fn();
+vi.mock('@/features/settings/queries/use-wallet', () => ({
+  useAdvertiserSettingsQuery: () => ({ data: undefined }),
+}));
+
 vi.mock('@/features/advertisements/mutations/use-update-ad.mutation', () => ({
   useUpdateAdMutation: vi.fn(),
 }));
@@ -61,6 +65,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     bannerUrl: 'https://cdn.example.com/banner.png',
     videoUrl: null,
     videoDurationSec: null,
+    pauseVariant: null,
     frequencyCapMax: null,
     frequencyCapWindow: null,
     billingModel: 'CPM',
@@ -147,19 +152,11 @@ describe('EditCampaignForm', () => {
     expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('blocks saving when checking Pausa do player alongside the existing page placement leaves an empty format intersection', () => {
+  it('does not offer to change the ad type while editing', () => {
     render(<EditCampaignForm ad={makeAd({})} onCancel={vi.fn()} onSaved={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Pausa do player' }));
-    // CreativeStep also resets the now-incompatible format to null, but the
-    // targeting message is the one surfaced — it names the actual problem,
-    // and no format card is selectable while the intersection is empty.
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
-
-    expect(
-      screen.getByText('Os posicionamentos selecionados não podem ser combinados, pois usam formatos incompatíveis.'),
-    ).toBeInTheDocument();
-    expect(mockUpdateMutateAsync).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /Vídeo antes da transmissão/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Anúncio na pausa/ })).toBeDisabled();
   });
 
   it('replaces the banner immediately via the upload endpoint, independent of Save', () => {

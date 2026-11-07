@@ -1,8 +1,10 @@
 'use client';
 
 import { Input, Label, SimpleCustomSelect, type SelectOption } from '@live-show/design-system';
-import type { AdBillingModel, FrequencyCapWindow } from '@/features/advertisements/types/advertisement.types';
-import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import type { AdBillingModel, FrequencyCapWindow, PauseMinBids } from '@/features/advertisements/types/advertisement.types';
+import { pauseMinimumError, PAUSE_VARIANT_NAME, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
+import { formatCostPerImpression } from '../../utils/brl';
+import { formatCentsToBRL, reaisToCents } from '../../utils/format-currency';
 import styles from './BudgetStep.module.scss';
 
 // Plain-language explainer per billing model (task brief) — same two models
@@ -20,20 +22,64 @@ const FREQUENCY_WINDOW_OPTIONS: (SelectOption & { value: FrequencyCapWindow })[]
 interface BudgetStepProps {
   draft: CampaignWizardDraft;
   updateDraft: (patch: Partial<CampaignWizardDraft>) => void;
+  pauseMinBids?: PauseMinBids;
 }
 
-export function BudgetStep({ draft, updateDraft }: BudgetStepProps) {
+const BILLING_HINT: Record<string, Record<AdBillingModel, string>> = {
+  preroll: { CPM: 'Conta quando o vídeo começa a tocar, mesmo que a pessoa pule depois.', CPC: 'Paga só quando alguém clica no anúncio.' },
+  pause: { CPM: 'Conta quando o anúncio aparece na pausa.', CPC: 'Paga só quando alguém clica no anúncio.' },
+  banner: { CPM: 'Bom para divulgar um evento para muita gente.', CPC: 'Paga só quando alguém clica no anúncio.' },
+};
+
+export function BudgetStep({ draft, updateDraft, pauseMinBids }: BudgetStepProps) {
+  const bidCents = reaisToCents(draft.bidReais);
+  const bidError = pauseMinimumError(draft, pauseMinBids);
+
   return (
     <div className={styles.step}>
+      <h2 className={styles.heading}>Orçamento e período</h2>
+      <p className={styles.hint}>Você só paga pelo que for entregue, descontado da carteira.</p>
+
       <div className={styles.field}>
-        <Label htmlFor="billing-model">Modelo de cobrança</Label>
+        <Label htmlFor="billing-model">Como pagar</Label>
         <SimpleCustomSelect
           value={draft.billingModel ?? undefined}
           onValueChange={(value) => updateDraft({ billingModel: value as AdBillingModel })}
-          options={BILLING_OPTIONS}
+          options={BILLING_OPTIONS.map((option) => ({ ...option, description: BILLING_HINT[draft.kind][option.value] }))}
           placeholder="Selecione um modelo"
         />
       </div>
+
+      {draft.kind === 'pause' && pauseMinBids && (
+        <div className={styles.field}>
+          <Label>Lance mínimo por variante</Label>
+          <table className={styles.minTable}>
+            <thead>
+              <tr>
+                <th scope="col">Variante</th>
+                <th scope="col">Por mil</th>
+                <th scope="col">Por clique</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(['STANDARD', 'FULLSCREEN'] as const).map((variant) => (
+                <tr key={variant}>
+                  <th scope="row">
+                    {PAUSE_VARIANT_NAME[variant]}
+                    {draft.pauseVariant === variant ? ' · sua escolha' : ''}
+                  </th>
+                  <td>{formatCentsToBRL(pauseMinBids[variant].CPM)}</td>
+                  <td>{formatCentsToBRL(pauseMinBids[variant].CPC)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className={styles.hint}>
+            Tela cheia ocupa a tela toda e esconde a transmissão, por isso custa mais.
+            {draft.pauseVariant === 'STANDARD' && ' No celular sua pausa aparece em Tela cheia.'}
+          </p>
+        </div>
+      )}
 
       <div className={styles.row}>
         <div className={styles.field}>
@@ -42,22 +88,33 @@ export function BudgetStep({ draft, updateDraft }: BudgetStepProps) {
           </Label>
           <Input
             id="bid-reais"
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={draft.bidReais}
             onChange={(event) => updateDraft({ bidReais: event.target.value })}
             placeholder="0,00"
+            aria-invalid={bidError !== null}
           />
+          {bidError ? (
+            <p className={styles.error} role="alert">
+              {bidError}
+            </p>
+          ) : draft.billingModel === 'CPM' && bidCents > 0 ? (
+            <p className={styles.hint}>
+              Cada impressão custa <b>{formatCostPerImpression(bidCents)}</b> (lance ÷ 1.000). As frações de centavo
+              se acumulam e são descontadas da carteira em centavos inteiros.
+            </p>
+          ) : draft.billingModel === 'CPC' ? (
+            <p className={styles.hint}>Lance maior ganha mais vezes o espaço, junto com quão bem o público combina.</p>
+          ) : null}
         </div>
 
         <div className={styles.field}>
           <Label htmlFor="daily-budget-reais">Orçamento diário (R$)</Label>
           <Input
             id="daily-budget-reais"
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={draft.dailyBudgetReais}
             onChange={(event) => updateDraft({ dailyBudgetReais: event.target.value })}
             placeholder="0,00"
@@ -69,9 +126,8 @@ export function BudgetStep({ draft, updateDraft }: BudgetStepProps) {
         <Label htmlFor="total-limit-reais">Limite total de gasto (R$)</Label>
         <Input
           id="total-limit-reais"
-          type="number"
-          min="0"
-          step="0.01"
+          type="text"
+            inputMode="decimal"
           value={draft.totalLimitReais}
           onChange={(event) => updateDraft({ totalLimitReais: event.target.value })}
           placeholder="0,00"

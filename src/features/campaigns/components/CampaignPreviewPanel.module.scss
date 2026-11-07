@@ -117,25 +117,3 @@
   color: #c8c8cc;
   line-height: 1.65;
 }
-
-// ── Estimate ──────────────────────────────────────────
-.estLabel {
-  @include ads.mono-label(0.625rem, #7d7d85);
-  letter-spacing: 0.12em;
-  margin-bottom: 6px;
-}
-
-.estValue {
-  font-family: ads.$mono;
-  font-size: 15px;
-  font-weight: 700;
-  color: #e7e7ea;
-  letter-spacing: -0.005em;
-}
-
-.estHint {
-  margin-top: 4px;
-  font-family: ads.$ui;
-  font-size: 11.5px;
-  color: #6f6f77;
-}

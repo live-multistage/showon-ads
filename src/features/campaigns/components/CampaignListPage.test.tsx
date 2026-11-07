@@ -89,7 +89,7 @@ function makeAd(overrides: Partial<AdResponse>): AdResponse {
     dailyBudgetCents: 1000,
     totalLimitCents: 100000,
     totalSpendCents: 25000,
-    metrics: { impressions: 0, clicks: 0, ctr: null, spendCents: 0 },
+    metrics: { impressions: 0, clicks: 0, ctr: null, spendCents: 0, spentTodayCents: 0 },
     startsAt: '2026-01-01T00:00:00.000Z',
     endsAt: '2026-02-01T00:00:00.000Z',
     createdBy: 'user-1',
@@ -242,8 +242,8 @@ describe('CampaignListPage', () => {
   it('sums impressions and clicks into the KPI strip and computes average CTR', () => {
     mockedUseListAdsQuery.mockReturnValue({
       data: [
-        makeAd({ id: 'ad-1', metrics: { impressions: 1000, clicks: 40, ctr: 4, spendCents: 2000 } }),
-        makeAd({ id: 'ad-2', metrics: { impressions: 500, clicks: 10, ctr: 2, spendCents: 1000 } }),
+        makeAd({ id: 'ad-1', metrics: { impressions: 1000, clicks: 40, ctr: 4, spendCents: 2000, spentTodayCents: 0 } }),
+        makeAd({ id: 'ad-2', metrics: { impressions: 500, clicks: 10, ctr: 2, spendCents: 1000, spentTodayCents: 0 } }),
       ],
       isLoading: false,
     } as unknown as ReturnType<typeof useListAdsQuery>);
@@ -424,8 +424,8 @@ describe('CampaignListPage', () => {
       expect(screen.getByText('Orçamento do dia atingido · volta às 21:00')).toBeInTheDocument();
     });
 
-    it('hides "Gasto hoje" while the backend does not send it', () => {
-      list([live({ title: 'A' })]);
+    it('hides "Gasto hoje" when the ad has no metrics', () => {
+      list([live({ title: 'A', metrics: undefined })]);
       renderPage();
       expect(screen.queryByText('GASTO HOJE')).toBeNull();
     });

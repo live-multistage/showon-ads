@@ -16,9 +16,7 @@ interface CampaignPreviewPanelProps {
   draft: CampaignWizardDraft;
 }
 
-// Side rail: live banner preview + approval tips + a reach estimate placeholder.
-// The estimate is intentionally static — no reach-estimation endpoint exists;
-// showing "—" is honest rather than a fabricated number.
+// Side rail: live preview + approval tips. No reach estimate: the product has no estimation endpoint.
 export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
   const meta = draft.format ? FORMAT_META[draft.format] : FORMAT_META.HORIZONTAL_728x90;
 
@@ -78,13 +76,6 @@ export function CampaignPreviewPanel({ draft }: CampaignPreviewPanelProps) {
           <li>Menção obrigatória à marca do anunciante</li>
           <li>Evite CTAs enganosos (&quot;clique aqui!&quot;)</li>
         </ul>
-      </div>
-
-      {/* estimate */}
-      <div className={styles.card}>
-        <div className={styles.estLabel}>ESTIMATIVA (CONFIGURE PASSOS 1–2)</div>
-        <div className={styles.estValue}>— –– impressões</div>
-        <div className={styles.estHint}>Alcance depende de público e orçamento.</div>
       </div>
     </aside>
   );

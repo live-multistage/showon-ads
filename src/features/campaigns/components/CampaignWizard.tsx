@@ -48,9 +48,9 @@ function ChevronRight({ size = 14, className }: { size?: number; className?: str
 export function CampaignWizard() {
   const settings = useAdvertiserSettingsQuery();
   const pauseMinBids = settings.data?.pauseMinBids;
-  const { steps, step, stepIndex, draft, error, bannerRequiredWarning, updateDraft, selectKind, setBanner, next, back, goToStep } =
-    useCampaignWizard({ pauseMinBids });
   const { activeAccountId } = useActiveAdvertiserAccount();
+  const { steps, step, stepIndex, draft, error, bannerRequiredWarning, wasRestored, saveDraft, discardDraft, updateDraft, selectKind, setBanner, next, back, goToStep } =
+    useCampaignWizard({ pauseMinBids, accountId: activeAccountId });
   const wallet = useWalletQuery(activeAccountId ?? undefined);
   const { submit, isSubmitting, createFailed } = useSubmitCampaign();
   const router = useRouter();
@@ -63,7 +63,19 @@ export function CampaignWizard() {
 
   function handleSubmit() {
     if (!activeAccountId || submitBlockedByBanner) return;
-    void submit(draft, activeAccountId);
+    void submit(draft, activeAccountId).then((created) => {
+      if (created) discardDraft();
+    });
+  }
+
+  function handleLeaveKeepingDraft() {
+    saveDraft();
+    router.push('/');
+  }
+
+  function handleDiscard() {
+    discardDraft();
+    router.push('/');
   }
 
   return (
@@ -90,11 +102,20 @@ export function CampaignWizard() {
           <p className={styles.subtitle}>Rascunho salvo a cada passo. Nada vai ao ar antes da análise.</p>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={styles.btnGhost} onClick={() => router.push('/campaigns')}>
+          <button type="button" className={styles.btnGhost} onClick={handleLeaveKeepingDraft}>
+            SAIR E MANTER RASCUNHO
+          </button>
+          <button type="button" className={styles.btnGhost} onClick={handleDiscard}>
             DESCARTAR
           </button>
         </div>
       </header>
+
+      {wasRestored && stepIndex === 0 && !draft.bannerFile && (
+        <p className={styles.restored} role="status">
+          Retomamos seu rascunho. O arquivo do criativo não é guardado: envie de novo.
+        </p>
+      )}
 
       {/* stepper */}
       <nav className={styles.stepper} aria-label="Etapas da campanha">

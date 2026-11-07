@@ -73,6 +73,7 @@ vi.setConfig({ testTimeout: 20_000 });
 describe('CampaignWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     mockBalanceCents = 18240;
     mockCreateAdMutateAsync.mockResolvedValue({ id: 'ad-1' });
     mockUploadBannerMutateAsync.mockResolvedValue('https://cdn.example.com/banner.png');
@@ -417,5 +418,54 @@ describe('CampaignWizard', () => {
         expect.objectContaining({ format: 'WIDE_16_9', placements: ['PLAYER_PAUSE'], pauseVariant: 'FULLSCREEN', bidCents: 1400 }),
       ),
     );
+  });
+
+  describe('draft per step', () => {
+    it('saves the draft when a step is completed and restores it, at that step, on a new visit', () => {
+      const first = render(<CampaignWizard />);
+      advanceToTargeting();
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByText('Interesses do público')).toBeInTheDocument();
+    });
+
+    it('restores the typed values on the first step', () => {
+      const first = render(<CampaignWizard />);
+      fillCreativeFields();
+      fireEvent.click(screen.getByRole('button', { name: 'SAIR E MANTER RASCUNHO' }));
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByLabelText('Título')).toHaveValue('Summer Promo');
+      expect(screen.getByRole('status')).toHaveTextContent('Retomamos seu rascunho');
+    });
+
+    it('"Sair e manter rascunho" goes back to the list', () => {
+      render(<CampaignWizard />);
+      fireEvent.click(screen.getByRole('button', { name: 'SAIR E MANTER RASCUNHO' }));
+      expect(pushMock).toHaveBeenCalledWith('/');
+    });
+
+    it('discard deletes the saved draft', () => {
+      const first = render(<CampaignWizard />);
+      advanceToTargeting();
+      fireEvent.click(screen.getByRole('button', { name: 'DESCARTAR' }));
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByLabelText('Título')).toHaveValue('');
+    });
+
+    it('a successful submit clears the saved draft', async () => {
+      const first = render(<CampaignWizard />);
+      await reachReviewWithEvent();
+      fireEvent.click(screen.getByRole('button', { name: 'Enviar para análise' }));
+      await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/campaigns/ad-1'));
+      first.unmount();
+
+      render(<CampaignWizard />);
+      expect(screen.getByLabelText('Título')).toHaveValue('');
+    });
   });
 });

@@ -28,7 +28,8 @@ export function useSubmitCampaign() {
   // "Não foi possível enviar": o formulário continua na revisão com as escolhas.
   const [createFailed, setCreateFailed] = useState(false);
 
-  async function submit(draft: CampaignWizardDraft, advertiserAccountId: string) {
+  // Resolve true quando o anúncio chegou a ser criado (mesmo que o envio para análise falhe).
+  async function submit(draft: CampaignWizardDraft, advertiserAccountId: string): Promise<boolean> {
     setCreateFailed(false);
     const request = draftToCreateAdRequest(draft, advertiserAccountId);
 
@@ -41,7 +42,7 @@ export function useSubmitCampaign() {
       // 400 traz mensagem em PT-BR pronta para exibir (ex.: lance abaixo do mínimo da variante).
       const { status, message } = normalizeError(error);
       toast.error(status === 400 && message ? message : 'Não foi possível criar a campanha. Verifique os dados e tente novamente.');
-      return;
+      return false;
     }
 
     try {
@@ -58,11 +59,12 @@ export function useSubmitCampaign() {
         'Campanha criada como rascunho, mas o envio para revisão falhou. Tente novamente na página da campanha.',
       );
       router.push(`/campaigns/${adId}`);
-      return;
+      return true;
     }
 
     toast.success('Campanha enviada para revisão — em análise.');
     router.push(`/campaigns/${adId}`);
+    return true;
   }
 
   return { submit, isSubmitting, createFailed };

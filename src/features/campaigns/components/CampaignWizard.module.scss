@@ -341,3 +341,14 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.restored {
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: ads.$text-dim;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border: 1px solid ads.$accent-border;
+  border-radius: ads.$radius-field;
+  background: ads.$accent-soft;
+}

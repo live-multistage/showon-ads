@@ -13,6 +13,7 @@ import type {
   FrequencyCapWindow,
 } from '@/features/advertisements/types/advertisement.types';
 import type { EventSearchResult } from '@/features/advertisements/types/event-search.types';
+import { loadWizardDraft, saveWizardDraft, clearWizardDraft } from '../utils/wizard-draft-storage';
 import { reaisToCents, formatCentsToBRL } from '../utils/format-currency';
 import { acceptedFormatsFor, ALL_PLACEMENTS, DEFAULT_PLACEMENTS, campaignKindOf, type CampaignKind } from '../utils/ad-display';
 
@@ -216,9 +217,19 @@ export function draftToCreateAdRequest(
   };
 }
 
-export function useCampaignWizard({ pauseMinBids }: { pauseMinBids?: PauseMinBids } = {}) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const [draft, setDraft] = useState<CampaignWizardDraft>(INITIAL_DRAFT);
+interface WizardOptions {
+  pauseMinBids?: PauseMinBids;
+  // Conta anunciante: com ela o rascunho é salvo a cada passo e restaurado ao voltar.
+  accountId?: string | null;
+}
+
+export function useCampaignWizard({ pauseMinBids, accountId }: WizardOptions = {}) {
+  const [restored] = useState(() => (accountId ? loadWizardDraft(accountId) : null));
+  const [stepIndex, setStepIndex] = useState(() => (restored ? WIZARD_STEPS.indexOf(restored.step) : 0));
+  const [draft, setDraft] = useState<CampaignWizardDraft>(() =>
+    restored ? { ...INITIAL_DRAFT, ...restored.draft } : INITIAL_DRAFT,
+  );
+  const wasRestored = restored !== null;
   const [error, setError] = useState<string | null>(null);
 
   const step = WIZARD_STEPS[stepIndex];
@@ -262,7 +273,18 @@ export function useCampaignWizard({ pauseMinBids }: { pauseMinBids?: PauseMinBid
       return;
     }
     setError(null);
-    setStepIndex((i) => Math.min(i + 1, WIZARD_STEPS.length - 1));
+    const nextIndex = Math.min(stepIndex + 1, WIZARD_STEPS.length - 1);
+    setStepIndex(nextIndex);
+    // Rascunho salvo a cada passo concluído.
+    if (accountId) saveWizardDraft(accountId, WIZARD_STEPS[nextIndex], draft);
+  }
+
+  function saveDraft() {
+    if (accountId) saveWizardDraft(accountId, step, draft);
+  }
+
+  function discardDraft() {
+    if (accountId) clearWizardDraft(accountId);
   }
 
   function back() {
@@ -293,6 +315,9 @@ export function useCampaignWizard({ pauseMinBids }: { pauseMinBids?: PauseMinBid
     draft,
     error,
     bannerRequiredWarning,
+    wasRestored,
+    saveDraft,
+    discardDraft,
     updateDraft,
     selectKind,
     setBanner,

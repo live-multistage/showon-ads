@@ -1,5 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+const readMediaFactsMock = vi.hoisted(() => vi.fn(() => Promise.resolve<unknown>(null)));
+vi.mock('../../utils/validate-creative-file', async (importActual) => ({
+  ...(await importActual<typeof import('../../utils/validate-creative-file')>()),
+  readMediaFacts: readMediaFactsMock,
+}));
+
 import { CreativeStep } from './CreativeStep';
 import { draftPatchForKind, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 
@@ -128,5 +135,42 @@ describe('CreativeStep — video', () => {
 
     expect(setBanner).toHaveBeenCalledWith(ok);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});
+
+describe('CreativeStep — reading the file before keeping it', () => {
+  it('drops a vertical video after reading its dimensions and says why', async () => {
+    readMediaFactsMock.mockResolvedValue({ width: 1080, height: 1920, durationSec: 15 });
+    const { setBanner } = renderStep(prerollDraft());
+    const file = new File(['x'], 'story.mp4', { type: 'video/mp4' });
+
+    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
+
+    expect(setBanner).toHaveBeenCalledWith(file);
+    await waitFor(() => expect(setBanner).toHaveBeenLastCalledWith(null));
+    expect(screen.getByRole('alert')).toHaveTextContent('O vídeo é vertical (9:16). Este formato pede 16:9.');
+  });
+
+  it('keeps a banner whose size matches', async () => {
+    readMediaFactsMock.mockResolvedValue({ width: 728, height: 90 });
+    const { setBanner } = renderStep(makeDraft());
+    const file = new File(['x'], 'b.png', { type: 'image/png' });
+
+    fireEvent.change(screen.getByLabelText('Banner'), { target: { files: [file] } });
+
+    await waitFor(() => expect(readMediaFactsMock).toHaveBeenCalled());
+    expect(setBanner).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('rejects a .mov right away without reading it', () => {
+    readMediaFactsMock.mockClear();
+    const { setBanner } = renderStep(prerollDraft());
+    fireEvent.change(screen.getByLabelText('Banner'), {
+      target: { files: [new File(['x'], 'making-of.mov', { type: 'video/quicktime' })] },
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('Envie um arquivo MP4.');
+    expect(setBanner).not.toHaveBeenCalled();
+    expect(readMediaFactsMock).not.toHaveBeenCalled();
   });
 });

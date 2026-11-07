@@ -4,13 +4,10 @@ import { useState, type ChangeEvent } from 'react';
 import type { AdFormat, AdPauseVariant } from '@/features/advertisements/types/advertisement.types';
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 import type { CampaignKind } from '../../utils/ad-display';
+import { readMediaFacts, validateFileBasics, validateMedia } from '../../utils/validate-creative-file';
 import styles from './CreativeStep.module.scss';
 
 const TITLE_MAX = 80;
-
-// Mirrors the backend's video upload limit (Task 4) — rejecting the file
-// client-side avoids a full upload just to get the server's 400.
-const MAX_VIDEO_BYTES = 52_428_800;
 
 const KIND_CARDS: { kind: CampaignKind; name: string; desc: string; spec: string }[] = [
   {
@@ -80,15 +77,36 @@ export function CreativeStep({ draft, updateDraft, selectKind, setBanner, lockKi
   const [fileError, setFileError] = useState<string | null>(null);
   const kind = draft.kind;
 
+  // Tipo e tamanho barram na hora. As medidas (e a duração do vídeo) só dá
+  // para ler depois de abrir o arquivo: ele entra no rascunho de imediato e
+  // sai de lá se a medida não servir.
   function handleBannerChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null;
-    if (file && draft.format === 'VIDEO_16_9' && file.size > MAX_VIDEO_BYTES) {
-      setFileError('O vídeo deve ter no máximo 50MB.');
-      event.target.value = '';
+    const input = event.target;
+    const file = input.files?.[0] ?? null;
+    if (!file) {
+      setFileError(null);
+      setBanner(null);
+      return;
+    }
+    const format = draft.format;
+    if (!format) return;
+
+    const basicsError = validateFileBasics(format, file);
+    if (basicsError) {
+      setFileError(basicsError);
+      input.value = '';
       return;
     }
     setFileError(null);
     setBanner(file);
+
+    void readMediaFacts(file, format).then((facts) => {
+      const mediaError = facts ? validateMedia(format, facts) : null;
+      if (!mediaError) return;
+      setFileError(mediaError);
+      setBanner(null);
+      input.value = '';
+    });
   }
 
   const idealDim = draft.format ? IDEAL_DIM[draft.format] : '728×90';

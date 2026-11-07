@@ -5,6 +5,7 @@ import type { AdBillingModel, FrequencyCapWindow, PauseMinBids } from '@/feature
 import { pauseMinimumError, PAUSE_VARIANT_NAME, type CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 import { formatCostPerImpression } from '../../utils/brl';
 import { formatCentsToBRL, reaisToCents } from '../../utils/format-currency';
+import { StepHeader } from './StepHeader';
 import styles from './BudgetStep.module.scss';
 
 // Plain-language explainer per billing model (task brief) — same two models
@@ -37,8 +38,7 @@ export function BudgetStep({ draft, updateDraft, pauseMinBids }: BudgetStepProps
 
   return (
     <div className={styles.step}>
-      <h2 className={styles.heading}>Orçamento e período</h2>
-      <p className={styles.hint}>Você só paga pelo que for entregue, descontado da carteira.</p>
+      <StepHeader step={3} title="Orçamento e período" lead="Você só paga pelo que for entregue, descontado da carteira." />
 
       <div className={styles.field}>
         <Label htmlFor="billing-model">Como pagar</Label>

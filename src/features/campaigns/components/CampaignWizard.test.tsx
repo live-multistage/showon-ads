@@ -133,6 +133,18 @@ describe('CampaignWizard', () => {
     expect(screen.getByRole('navigation', { name: 'Etapas da campanha' })).toHaveTextContent('Orçamento e período');
   });
 
+  it('every step carries its "PASSO N DE 4" counter', () => {
+    render(<CampaignWizard />);
+    expect(screen.getByText('PASSO 1 DE 4')).toBeInTheDocument();
+    advanceToTargeting();
+    expect(screen.getByText('PASSO 2 DE 4')).toBeInTheDocument();
+    next();
+    expect(screen.getByText('PASSO 3 DE 4')).toBeInTheDocument();
+    fillBudgetStep();
+    next();
+    expect(screen.getByText('PASSO 4 DE 4')).toBeInTheDocument();
+  });
+
   it('cannot advance the creative step without a title', () => {
     render(<CampaignWizard />);
     next();

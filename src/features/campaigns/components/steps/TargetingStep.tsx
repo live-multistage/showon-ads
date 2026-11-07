@@ -7,6 +7,7 @@ import { placementLabel } from '../../utils/ad-display';
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 
 const PAGE_PLACEMENTS: AdPlacement[] = ['FEED', 'EVENT_DETAIL', 'CHECKOUT', 'POST_PURCHASE'];
+import { StepHeader } from './StepHeader';
 import styles from './TargetingStep.module.scss';
 
 // Ported from live-show-react's AdCreatePage.tsx INTERESTS list — the only
@@ -89,6 +90,7 @@ export function TargetingStep({ draft, updateDraft }: TargetingStepProps) {
 
   return (
     <div className={styles.step}>
+      <StepHeader step={2} title="Onde e para quem" />
       {draft.kind === 'banner' ? (
         <div className={styles.field}>
           <Label>Posições</Label>

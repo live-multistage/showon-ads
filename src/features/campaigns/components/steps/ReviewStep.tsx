@@ -5,6 +5,7 @@ import { PAUSE_VARIANT_NAME, type CampaignWizardDraft, type WizardStepId } from 
 import { formatCostPerImpression } from '../../utils/brl';
 import { PLACEMENT_LABEL } from '../../utils/ad-display';
 import { formatCentsToBRL, reaisToCents } from '../../utils/format-currency';
+import { StepHeader } from './StepHeader';
 import styles from './ReviewStep.module.scss';
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -69,8 +70,7 @@ export function ReviewStep({ draft, balanceCents, onEdit, submitFailed = false }
 
   return (
     <div className={styles.step}>
-      <h2 className={styles.heading}>Revisão</h2>
-      <p className={styles.lead}>Confira antes de enviar. A análise costuma sair no mesmo dia útil.</p>
+      <StepHeader step={4} title="Revisão" lead="Confira antes de enviar. A análise costuma sair no mesmo dia útil." />
 
       {submitFailed && (
         <Banner tone="err" title="Não foi possível enviar a campanha.">

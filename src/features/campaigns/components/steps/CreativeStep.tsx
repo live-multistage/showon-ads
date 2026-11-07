@@ -5,6 +5,7 @@ import type { AdFormat, AdPauseVariant } from '@/features/advertisements/types/a
 import type { CampaignWizardDraft } from '../../hooks/use-campaign-wizard';
 import type { CampaignKind } from '../../utils/ad-display';
 import { readMediaFacts, validateFileBasics, validateMedia } from '../../utils/validate-creative-file';
+import { StepHeader } from './StepHeader';
 import styles from './CreativeStep.module.scss';
 
 const TITLE_MAX = 80;
@@ -26,7 +27,7 @@ const KIND_CARDS: { kind: CampaignKind; name: string; desc: string; spec: string
     kind: 'pause',
     name: 'Anúncio na pausa',
     desc: 'Aparece quando a pessoa pausa a live ou o replay por 2 s.',
-    spec: 'PNG ou JPG · 16:9 · mínimo 1280×720 · até 2 MB',
+    spec: 'PNG, JPG ou WEBP · 16:9 · mínimo 1280×720 · até 2 MB',
   },
 ];
 
@@ -111,14 +112,12 @@ export function CreativeStep({ draft, updateDraft, selectKind, setBanner, lockKi
 
   const idealDim = draft.format ? IDEAL_DIM[draft.format] : '728×90';
   const isVideo = kind === 'preroll';
+  // O ideal da pausa é 1920×1080, mas o mínimo aceito é 1280×720.
+  const minDim = kind === 'pause' ? '1280×720' : idealDim;
 
   return (
     <div className={styles.step}>
-      <div className={styles.eyebrow}>
-        <span className={styles.eyebrowText}>PASSO 1 DE 4</span>
-      </div>
-      <h2 className={styles.heading}>Criativo e destino</h2>
-      <p className={styles.lead}>Que tipo de anúncio, o arquivo e para onde a pessoa vai ao clicar.</p>
+      <StepHeader step={1} title="Criativo e destino" lead="Que tipo de anúncio, o arquivo e para onde a pessoa vai ao clicar." />
 
       <div className={styles.field}>
         <div className={styles.labelRow}>
@@ -260,7 +259,7 @@ export function CreativeStep({ draft, updateDraft, selectKind, setBanner, lockKi
                 )}
               </span>
               <span className={styles.dropzoneMeta}>
-                {isVideo ? 'MP4 · MÁX 50MB · ATÉ 30s' : `PNG · JPG · WEBP · MÁX 2MB · MÍNIMO ${idealDim}`}
+                {isVideo ? 'MP4 · MÁX 50MB · ATÉ 30s' : `PNG · JPG · WEBP · MÁX 2MB · MÍNIMO ${minDim}`}
               </span>
             </span>
           )}

@@ -174,3 +174,27 @@ describe('CreativeStep — reading the file before keeping it', () => {
     expect(readMediaFactsMock).not.toHaveBeenCalled();
   });
 });
+
+describe('CreativeStep — upload copy', () => {
+  it('says step 1 of 4', () => {
+    renderStep(makeDraft());
+    expect(screen.getByText('PASSO 1 DE 4')).toBeInTheDocument();
+  });
+
+  it('pause card accepts WEBP too', () => {
+    renderStep(makeDraft());
+    expect(screen.getByText(/PNG, JPG ou WEBP · 16:9 · mínimo 1280×720/)).toBeInTheDocument();
+  });
+
+  it('pause upload asks for at least 1280×720 and keeps 1920×1080 as the ideal', () => {
+    renderStep(pauseDraft());
+    expect(screen.getByText(/MÍNIMO 1280×720/)).toBeInTheDocument();
+    expect(screen.queryByText(/MÍNIMO 1920×1080/)).toBeNull();
+    expect(screen.getByText('DIMENSÃO IDEAL: 1920×1080')).toBeInTheDocument();
+  });
+
+  it('banner upload keeps the banner size as minimum', () => {
+    renderStep(makeDraft());
+    expect(screen.getByText(/MÍNIMO 728×90/)).toBeInTheDocument();
+  });
+});

@@ -77,6 +77,14 @@ describe('TargetingStep — age brackets', () => {
   });
 });
 
+describe('TargetingStep — header', () => {
+  it('says step 2 of 4', () => {
+    render(<TargetingStep draft={makeDraft()} updateDraft={vi.fn()} />);
+    expect(screen.getByText('PASSO 2 DE 4')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Onde e para quem' })).toBeInTheDocument();
+  });
+});
+
 describe('TargetingStep — placements', () => {
   it('banner: one checkbox per page position, all checked by default', () => {
     render(<TargetingStep draft={makeDraft()} updateDraft={vi.fn()} />);

@@ -1,0 +1,26 @@
+@use '../../../../styles/ads-theme' as ads;
+
+.header {
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  @include ads.mono-label(0.656rem, #ff7ec2);
+  letter-spacing: 0.14em;
+}
+
+.title {
+  margin: 4px 0;
+  font-family: ads.$ui;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: ads.$text;
+}
+
+.lead {
+  font-family: ads.$ui;
+  font-size: 13px;
+  color: ads.$text-dim;
+  line-height: 1.5;
+}

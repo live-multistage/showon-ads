@@ -31,7 +31,7 @@ export function BillingPage() {
   const wallet = useWalletQuery(accountId);
   const transactions = useWalletTransactionsQuery(accountId);
   const topUp = useCreateTopUpMutation(accountId);
-  const settings = useAdvertiserSettingsQuery(accountId);
+  const settings = useAdvertiserSettingsQuery();
   const minCents = settings.data?.minTopupCents ?? null;
   const presets = minCents === null ? [] : topUpPresets(minCents);
   const [amount, setAmount] = useState(centsToInput(DEFAULT_AMOUNT_CENTS));

@@ -29,8 +29,9 @@ export const walletService = {
     return data;
   },
 
-  settings: async (accountId: string): Promise<AdvertiserSettings> => {
-    const { data } = await apiClient.get<AdvertiserSettings>(`/advertisers/${accountId}/settings`);
+  // Valores da plataforma, não da conta: a rota não leva accountId.
+  settings: async (): Promise<AdvertiserSettings> => {
+    const { data } = await apiClient.get<AdvertiserSettings>('/advertisers/settings');
     return data;
   },
 

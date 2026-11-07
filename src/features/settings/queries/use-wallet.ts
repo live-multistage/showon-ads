@@ -36,11 +36,10 @@ export function useCreateTopUpMutation(accountId: string | undefined) {
   });
 }
 
-export function useAdvertiserSettingsQuery(accountId: string | undefined) {
+export function useAdvertiserSettingsQuery() {
   return useQuery({
-    queryKey: ['advertiser-settings', accountId ?? ''],
-    queryFn: () => walletService.settings(accountId!),
-    enabled: Boolean(accountId),
+    queryKey: ['advertiser-settings'],
+    queryFn: () => walletService.settings(),
     staleTime: 5 * 60_000,
   });
 }

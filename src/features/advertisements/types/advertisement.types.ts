@@ -37,6 +37,8 @@ export interface AdMetricsSummary {
   clicks: number;
   ctr: number | null;
   spendCents: number;
+  // Gasto do dia (UTC), entregue pelo B7; ausente até lá.
+  spentTodayCents?: number;
 }
 
 export interface AdResponse {

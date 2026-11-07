@@ -31,8 +31,8 @@ import { useListAdsQuery } from '@/features/advertisements/queries/use-list-ads'
 import { useActiveAdvertiserAccount } from '@/features/advertisers/providers/ActiveAdvertiserAccountProvider';
 import type { AdResponse, AdStatus } from '@/features/advertisements/types/advertisement.types';
 import { formatCentsToBRL } from '../utils/format-currency';
-import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, FORMAT_SHORT, CAMPAIGN_KIND_LABEL, campaignKindOf, destinationLabel, gradientFor, type CampaignKind } from '../utils/ad-display';
-import { deriveDelivery, needsAction, DELIVERY_DISPLAY, type Delivery } from '../utils/derive-delivery';
+import { STATUS_LABEL, STATUS_BADGE_VARIANT, FORMAT_LABEL, FORMAT_SHORT, CAMPAIGN_KIND_LABEL, campaignKindBadge, campaignKindOf, destinationLabel, gradientFor, type CampaignKind } from '../utils/ad-display';
+import { deriveDelivery, deliveryLabel, needsAction, DELIVERY_DISPLAY, type Delivery } from '../utils/derive-delivery';
 import styles from './CampaignListPage.module.scss';
 
 const NO_DATA = '—';
@@ -90,12 +90,15 @@ export function CampaignListPage() {
     [ads, activeAccountId],
   );
 
-  // O gasto do dia não vem na lista de campanhas: a entrega "orçamento do dia
-  // atingido" só aparece onde o relatório diário está carregado (detalhe).
+  // `metrics.spentTodayCents` (gasto do dia) vem do backend quando disponível;
+  // sem ele a lista não afirma "orçamento do dia atingido".
   const deliveries = useMemo(() => {
     const now = new Date();
     return new Map<string, Delivery>(
-      campaigns.map((c) => [c.id, deriveDelivery(c, { now, walletBalanceCents: balanceCents, spentTodayCents: null })]),
+      campaigns.map((c) => [
+        c.id,
+        deriveDelivery(c, { now, walletBalanceCents: balanceCents, spentTodayCents: c.metrics?.spentTodayCents ?? null }),
+      ]),
     );
   }, [campaigns, balanceCents]);
 
@@ -106,8 +109,10 @@ export function CampaignListPage() {
           impressions: acc.impressions + (c.metrics?.impressions ?? 0),
           clicks: acc.clicks + (c.metrics?.clicks ?? 0),
           spendCents: acc.spendCents + (c.metrics?.spendCents ?? 0),
+          spentTodayCents: acc.spentTodayCents + (c.metrics?.spentTodayCents ?? 0),
+          hasSpentToday: acc.hasSpentToday || c.metrics?.spentTodayCents !== undefined,
         }),
-        { impressions: 0, clicks: 0, spendCents: 0 },
+        { impressions: 0, clicks: 0, spendCents: 0, spentTodayCents: 0, hasSpentToday: false },
       ),
     [campaigns],
   );
@@ -162,21 +167,21 @@ export function CampaignListPage() {
 
       {isAdsError ? null : (
         <>
-          <WalletStrip balanceCents={balanceCents} />
+          <WalletStrip balanceCents={balanceCents} spentTodayCents={totals.hasSpentToday ? totals.spentTodayCents : null} />
           <BalanceBanner
             balanceCents={balanceCents}
             lowBalance={wallet.data?.lowBalance ?? false}
             activeCount={campaigns.filter((c) => c.status === 'ACTIVE').length}
           />
           <section className={styles.stats}>
-            <StatCard icon="impressions" label="IMPRESSÕES" value={isLoading ? NO_DATA : totals.impressions.toLocaleString('pt-BR')} />
+            <StatCard icon="impressions" label="IMPRESSÕES · TOTAL" value={isLoading ? NO_DATA : totals.impressions.toLocaleString('pt-BR')} />
             <StatCard
               icon="clicks"
-              label="CLIQUES"
+              label="CLIQUES · TOTAL"
               value={isLoading ? NO_DATA : totals.clicks.toLocaleString('pt-BR')}
               hint={avgCtr === null ? undefined : `CTR médio ${avgCtr.toFixed(2).replace('.', ',')}%`}
             />
-            <StatCard icon="campaigns" label="GASTO" value={isLoading ? NO_DATA : formatCentsToBRL(totals.spendCents)} />
+            <StatCard icon="campaigns" label="GASTO · TOTAL" value={isLoading ? NO_DATA : formatCentsToBRL(totals.spendCents)} />
             <StatCard
               icon="ctr"
               label="PRECISAM DE AÇÃO"
@@ -276,7 +281,16 @@ export function CampaignListPage() {
 
       {!isLoading && !isAdsError && campaigns.length > 0 && (
         <>
-          <div className={styles.table}>
+          <div className={styles.table} role="table" aria-label="Campanhas">
+            <div className={styles.tableHead} role="row">
+              <span role="columnheader">CAMPANHA</span>
+              <span role="columnheader">STATUS</span>
+              <span role="columnheader">ENTREGA</span>
+              <span role="columnheader" className={styles.num}>IMPRESSÕES</span>
+              <span role="columnheader" className={styles.num}>CLIQUES</span>
+              <span role="columnheader" className={styles.num}>CTR</span>
+              <span role="columnheader">GASTO / LIMITE</span>
+            </div>
             {paged.map((ad) => (
               <CampaignRow key={ad.id} ad={ad} delivery={deliveries.get(ad.id)!} />
             ))}
@@ -359,67 +373,50 @@ function StatCard({ icon, label, value, accent, hint }: { icon: string; label: s
 }
 
 function CampaignRow({ ad, delivery }: { ad: AdResponse; delivery: Delivery }) {
-  const { tone, label: deliveryLabel } = DELIVERY_DISPLAY[delivery];
+  const { tone } = DELIVERY_DISPLAY[delivery];
   const pct = ad.totalLimitCents > 0 ? Math.min(100, Math.round((ad.totalSpendCents / ad.totalLimitCents) * 100)) : 0;
   const thumbBg = ad.bannerUrl ? `url(${ad.bannerUrl}) center/cover no-repeat` : gradientFor(ad.id);
 
   return (
-    <Link href={`/campaigns/${ad.id}`} className={styles.row}>
-      <div className={styles.thumb} style={{ background: thumbBg }}>
-        <span className={styles.thumbFormat}>{FORMAT_SHORT[ad.format]}</span>
-      </div>
-
-      <div className={styles.info}>
-        <div className={styles.infoTop}>
-          <Badge variant={STATUS_BADGE_VARIANT[ad.status]}>{STATUS_LABEL[ad.status]}</Badge>
-          <span className={`${styles.delivery} ${styles[`delivery_${tone}`]}`}>
-            <span className={styles.deliveryDot} aria-hidden />
-            {deliveryLabel}
-          </span>
-          <span className={styles.kindTag}>{CAMPAIGN_KIND_LABEL[campaignKindOf(ad.format)]}</span>
-          <span className={ad.destination ? styles.cellMono : styles.cellHint}>
-            {destinationLabel(ad.destination)}
-          </span>
+    <Link href={`/campaigns/${ad.id}`} className={styles.row} role="row" aria-label={`Abrir ${ad.title}`}>
+      <div className={styles.adCell}>
+        <div className={styles.thumb} style={{ background: thumbBg }}>
+          <span className={styles.thumbFormat}>{FORMAT_SHORT[ad.format]}</span>
         </div>
-        <div className={styles.cellTitle}>{ad.title}</div>
-        <div className={styles.infoMeta}>
-          <span>
-            <b>FMT</b> {FORMAT_LABEL[ad.format]}
-          </span>
-          <span>
-            <b>PER</b> {formatPeriod(ad.startsAt, ad.endsAt)}
-          </span>
+        <div className={styles.info}>
+          <div className={styles.cellTitle}>{ad.title}</div>
+          <div className={styles.infoMeta}>
+            <span>{campaignKindBadge(ad)}</span>
+            <span>{formatPeriod(ad.startsAt, ad.endsAt)}</span>
+            <span className={ad.destination ? undefined : styles.cellHint}>{destinationLabel(ad.destination)}</span>
+          </div>
         </div>
       </div>
 
-      <div className={styles.metrics}>
-        <RowMetric label="IMPRESS." value={(ad.metrics?.impressions ?? 0).toLocaleString('pt-BR')} />
-        <RowMetric label="CLIQUES" value={(ad.metrics?.clicks ?? 0).toLocaleString('pt-BR')} />
-        <RowMetric label="CTR" value={ad.metrics?.ctr != null ? `${ad.metrics.ctr.toFixed(2)}%` : NO_DATA} accent />
-        <RowMetric label="GASTO" value={formatCentsToBRL(ad.metrics?.spendCents ?? 0)} accent />
+      <div>
+        <Badge variant={STATUS_BADGE_VARIANT[ad.status]}>{STATUS_LABEL[ad.status]}</Badge>
       </div>
+
+      <div className={`${styles.delivery} ${styles[`delivery_${tone}`]}`}>
+        <span className={styles.deliveryDot} aria-hidden />
+        {deliveryLabel(delivery, ad.startsAt)}
+      </div>
+
+      <span className={`${styles.num} ${styles.hideSmall}`}>{(ad.metrics?.impressions ?? 0).toLocaleString('pt-BR')}</span>
+      <span className={`${styles.num} ${styles.hideSmall}`}>{(ad.metrics?.clicks ?? 0).toLocaleString('pt-BR')}</span>
+      <span className={`${styles.num} ${styles.hideSmall}`}>
+        {ad.metrics?.ctr != null ? `${ad.metrics.ctr.toFixed(2)}%` : NO_DATA}
+      </span>
 
       <div className={styles.budget}>
         <span className={styles.budgetText}>
           {formatCentsToBRL(ad.totalSpendCents)} / {formatCentsToBRL(ad.totalLimitCents)}
         </span>
         <div className={styles.budgetTrack}>
-          <div
-            className={`${styles.budgetFill} ${pct >= 80 ? styles.budgetFillWarn : ''}`}
-            style={{ width: `${pct}%` }}
-          />
+          <div className={`${styles.budgetFill} ${pct >= 80 ? styles.budgetFillWarn : ''}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
     </Link>
-  );
-}
-
-function RowMetric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className={styles.rowMetric}>
-      <div className={styles.rowMetricLabel}>{label}</div>
-      <div className={`${styles.rowMetricValue} ${accent ? styles.rowMetricAccent : ''}`}>{value}</div>
-    </div>
   );
 }
 
@@ -431,7 +428,7 @@ function actionHint({ rejected, noVideo }: { rejected: number; noVideo: number }
   return parts.length > 0 ? parts.join(' · ') : undefined;
 }
 
-function WalletStrip({ balanceCents }: { balanceCents: number | null }) {
+function WalletStrip({ balanceCents, spentTodayCents }: { balanceCents: number | null; spentTodayCents: number | null }) {
   const empty = balanceCents !== null && balanceCents <= 0;
   return (
     <div className={styles.walletStrip}>
@@ -441,6 +438,12 @@ function WalletStrip({ balanceCents }: { balanceCents: number | null }) {
           {balanceCents === null ? NO_DATA : formatCentsToBRL(balanceCents)}
         </div>
       </div>
+      {spentTodayCents !== null && (
+        <div>
+          <div className={styles.statLabel}>GASTO HOJE</div>
+          <div className={styles.walletValueSmall}>{formatCentsToBRL(spentTodayCents)}</div>
+        </div>
+      )}
       <p className={styles.walletHint}>
         {empty
           ? 'Sem saldo, nenhuma campanha é exibida. O saldo novo vale na hora.'

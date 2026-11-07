@@ -121,3 +121,10 @@ export const CAMPAIGN_KIND_LABEL: Record<CampaignKind, string> = {
   preroll: 'Vídeo antes',
   pause: 'Pausa',
 };
+
+// Selo do tipo na lista; a pausa mostra a variante ("Pausa · Tela cheia").
+export function campaignKindBadge(ad: { format: AdFormat; pauseVariant: 'STANDARD' | 'FULLSCREEN' | null }): string {
+  const kind = campaignKindOf(ad.format);
+  if (kind !== 'pause') return CAMPAIGN_KIND_LABEL[kind];
+  return `Pausa · ${ad.pauseVariant === 'FULLSCREEN' ? 'Tela cheia' : 'Padrão'}`;
+}

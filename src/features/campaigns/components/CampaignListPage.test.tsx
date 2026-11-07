@@ -382,5 +382,52 @@ describe('CampaignListPage', () => {
       renderPage();
       expect(screen.getByText('✓ FEITO')).toBeInTheDocument();
     });
+
+    it('renders a table with column headers on desktop', () => {
+      list([live({ title: 'A' })]);
+      renderPage();
+      const table = screen.getByRole('table', { name: 'Campanhas' });
+      for (const h of ['CAMPANHA', 'STATUS', 'ENTREGA', 'IMPRESSÕES', 'CLIQUES', 'CTR', 'GASTO / LIMITE']) {
+        expect(within(table).getByRole('columnheader', { name: h })).toBeInTheDocument();
+      }
+    });
+
+    it('names the pause variant in the type badge', () => {
+      list([live({ title: 'P', format: 'WIDE_16_9', pauseVariant: 'FULLSCREEN' })]);
+      renderPage();
+      expect(screen.getByText('Pausa · Tela cheia')).toBeInTheDocument();
+    });
+
+    it('says "Período terminou" for an active campaign past its end date and "Começa em" before the start', () => {
+      list([
+        makeAd({ id: 'old', title: 'Old', startsAt: '2026-01-01T00:00:00Z', endsAt: '2026-02-01T00:00:00Z' }),
+        makeAd({ id: 'fut', title: 'Fut', startsAt: '2099-03-10T12:00:00Z', endsAt: '2099-04-01T00:00:00Z' }),
+      ]);
+      renderPage();
+      expect(screen.getByText('Período terminou')).toBeInTheDocument();
+      expect(screen.getByText('Começa em 10/03')).toBeInTheDocument();
+    });
+
+    it('labels KPIs as totals', () => {
+      list([live({ title: 'A' })]);
+      renderPage();
+      expect(screen.getByText('IMPRESSÕES · TOTAL')).toBeInTheDocument();
+      expect(screen.getByText('GASTO · TOTAL')).toBeInTheDocument();
+    });
+
+    it('shows "Gasto hoje" and the daily-budget delivery once the backend sends spentTodayCents', () => {
+      list([
+        live({ title: 'A', dailyBudgetCents: 8000, metrics: { impressions: 1, clicks: 0, ctr: null, spendCents: 100, spentTodayCents: 8000 } }),
+      ]);
+      renderPage();
+      expect(screen.getByText('GASTO HOJE')).toBeInTheDocument();
+      expect(screen.getByText('Orçamento do dia atingido · volta às 21:00')).toBeInTheDocument();
+    });
+
+    it('hides "Gasto hoje" while the backend does not send it', () => {
+      list([live({ title: 'A' })]);
+      renderPage();
+      expect(screen.queryByText('GASTO HOJE')).toBeNull();
+    });
   });
 });

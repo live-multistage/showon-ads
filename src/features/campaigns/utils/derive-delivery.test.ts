@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deriveDelivery, needsAction, type DeliveryContext } from './derive-delivery';
+import { deriveDelivery, deliveryLabel, needsAction, type DeliveryContext } from './derive-delivery';
 
 const NOW = new Date('2026-11-07T12:00:00Z');
 const ctx = (o: Partial<DeliveryContext> = {}): DeliveryContext => ({
@@ -45,8 +45,8 @@ describe('deriveDelivery', () => {
     expect(deriveDelivery(ad({ totalSpendCents: 150000 }), ctx())).toBe('limit');
   });
 
-  it('active but past its end date is ended', () => {
-    expect(deriveDelivery(ad({ endsAt: '2026-11-06T00:00:00Z' }), ctx())).toBe('ended');
+  it('active but past its end date is an expired period, not "Encerrada"', () => {
+    expect(deriveDelivery(ad({ endsAt: '2026-11-06T00:00:00Z' }), ctx())).toBe('expired');
   });
 
   it('active but before its start date is scheduled', () => {
@@ -82,5 +82,19 @@ describe('needsAction', () => {
     expect(needsAction('novideo')).toBe(true);
     expect(needsAction('nofunds')).toBe(false);
     expect(needsAction('ok')).toBe(false);
+  });
+});
+
+describe('deliveryLabel', () => {
+  it('uses the start date for scheduled campaigns', () => {
+    expect(deliveryLabel('scheduled', '2026-11-10T12:00:00Z')).toBe('Começa em 10/11');
+  });
+
+  it('daily budget label says when it comes back', () => {
+    expect(deliveryLabel('daily', '2026-11-01T00:00:00Z')).toBe('Orçamento do dia atingido · volta às 21:00');
+  });
+
+  it('expired period', () => {
+    expect(deliveryLabel('expired', '2026-11-01T00:00:00Z')).toBe('Período terminou');
   });
 });
